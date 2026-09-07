@@ -1,44 +1,50 @@
 #!/usr/bin/env python3
-"""Genera la versión de archivo único del sitio, para publicarla como Artifact.
+"""Genera las versiones de archivo único, para publicarlas como Artifact.
 
-El sitio del repositorio (index.html + assets/) es la fuente de verdad.
-Este script incrusta el CSS y el JS en un solo archivo y quita el esqueleto
+Los sitios del repositorio son la fuente de verdad. Este script arma, para
+cada uno, un archivo con el CSS y el JS incrustados y sin el esqueleto
 <!doctype>/<html>/<head>/<body>, que el servicio de Artifacts agrega por su
-cuenta. Correr después de cualquier cambio en index.html o assets/:
+cuenta. Correr después de cualquier cambio:
 
     python3 tools/build-artifact.py
 """
 import pathlib
 import re
 
-raiz    = pathlib.Path(__file__).resolve().parent.parent
-html    = (raiz / "index.html").read_text(encoding="utf-8")
-css     = (raiz / "assets/css/styles.css").read_text(encoding="utf-8")
-js      = (raiz / "assets/js/main.js").read_text(encoding="utf-8")
-destino = raiz / "dist/casa-quiron.html"
+RAIZ = pathlib.Path(__file__).resolve().parent.parent
+SITIOS = [
+    ("index.html",                "dist/casa-quiron-app.html"),
+    ("especificacion/index.html", "dist/casa-quiron-especificacion.html"),
+]
 
-titulo = re.search(r"<title>(.*?)</title>", html, re.S).group(1).strip()
-cuerpo = re.search(r"<body>(.*)</body>", html, re.S).group(1).strip()
 
-# El <link> a la hoja de estilo local sobra: el CSS va incrustado.
-cuerpo = cuerpo.replace('<script src="assets/js/main.js"></script>', "").strip()
+def construir(origen: pathlib.Path, destino: pathlib.Path) -> None:
+    html = origen.read_text(encoding="utf-8")
+    base = origen.parent
 
-destino.parent.mkdir(exist_ok=True)
-destino.write_text(
-    f"""<title>{titulo}</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
-<style>
-{css}
-</style>
+    titulo = re.search(r"<title>(.*?)</title>", html, re.S).group(1).strip()
+    cabeza = re.search(r"<head>(.*?)</head>", html, re.S).group(1)
+    cuerpo = re.search(r"<body>(.*)</body>", html, re.S).group(1).strip()
 
-{cuerpo}
+    # De la cabeza sobreviven las tipografías y los estilos propios; el resto
+    # (charset, viewport, favicon) lo pone el servicio.
+    piezas = re.findall(r'<link rel="(?:preconnect|stylesheet)"[^>]*fonts\.g[^>]*>', cabeza)
+    piezas += re.findall(r"<style>.*?</style>", cabeza, re.S)
 
-<script>
-{js}
-</script>
-""",
-    encoding="utf-8",
-)
+    # Hojas y guiones externos: se incrustan y se quita la etiqueta original.
+    for href in re.findall(r'<link rel="stylesheet" href="((?!http)[^"]+)"', cabeza):
+        piezas.append("<style>\n" + (base / href).read_text(encoding="utf-8") + "\n</style>")
+    for src in re.findall(r'<script src="((?!http)[^"]+)"></script>', cuerpo):
+        codigo = (base / src).read_text(encoding="utf-8")
+        cuerpo = cuerpo.replace(f'<script src="{src}"></script>', f"<script>\n{codigo}\n</script>")
 
-print(f"{destino.relative_to(raiz)} — {destino.stat().st_size:,} bytes")
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    destino.write_text(
+        f"<title>{titulo}</title>\n" + "\n".join(piezas) + "\n\n" + cuerpo + "\n",
+        encoding="utf-8",
+    )
+    print(f"{destino.relative_to(RAIZ)} — {destino.stat().st_size:,} bytes")
+
+
+for origen, destino in SITIOS:
+    construir(RAIZ / origen, RAIZ / destino)

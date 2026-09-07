@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casa Quirón · Sistema de Reservas y Portal de Clientes</title>
+<meta name="description" content="Especificación funcional v2.0 del Sistema de Reservas y Portal de Clientes de Casa Quirón. Reglas de negocio cerradas por dirección.">
+<meta name="theme-color" content="#2F4A3C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%232F4A3C'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='58' fill='%23E8DCC2' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+
+<header class="topbar">
+  <a class="brand" href="#portada">
+    <span class="monogram" aria-hidden="true">Q</span>
+    <span class="brand-text">
+      <b>Casa Quirón</b>
+      <em>Sistema de Reservas</em>
+    </span>
+  </a>
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="indice">
+    <span class="bars" aria-hidden="true"></span>
+    <span class="nav-toggle-label">Índice</span>
+  </button>
+</header>
+
+<div class="shell">
+
+  <nav class="toc" id="indice" aria-label="Índice del documento">
+    <p class="toc-title">Contenido</p>
+    <ol>
+      <li><a href="#objetivo"><span class="num">01</span> Objetivo y contexto</a></li>
+      <li><a href="#perfiles"><span class="num">02</span> Perfiles y permisos</a></li>
+      <li><a href="#modulos"><span class="num">03</span> Módulos funcionales</a></li>
+      <li><a href="#reglas"><span class="num">04</span> Reglas de negocio</a></li>
+      <li><a href="#datos"><span class="num">05</span> Modelo de datos</a></li>
+      <li><a href="#pantallas"><span class="num">06</span> Pantallas por perfil</a></li>
+      <li><a href="#fases"><span class="num">07</span> Fases de entrega</a></li>
+      <li><a href="#tecnico"><span class="num">08</span> Requisitos técnicos</a></li>
+      <li><a href="#decisiones"><span class="num">09</span> Decisiones cerradas</a></li>
+      <li><a href="#supuestos"><span class="num">10</span> Supuestos por confirmar</a></li>
+    </ol>
+    <p class="toc-foot">Versión 2.0 · Agosto 2026</p>
+  </nav>
+
+  <main id="contenido">
+
+    <!-- ============ PORTADA ============ -->
+    <section class="cover" id="portada">
+      <div class="cover-mark" aria-hidden="true">Q</div>
+      <p class="wordmark">C A S A &nbsp; Q U I R Ó N</p>
+      <h1>Sistema de Reservas<br>y Portal de Clientes</h1>
+      <p class="lead">Especificación funcional para desarrollo</p>
+      <p class="version">Versión 2.0 — reglas de negocio cerradas por dirección</p>
+      <dl class="cover-meta">
+        <div><dt>Fecha</dt><dd>Agosto 2026</dd></div>
+        <div><dt>Solicita</dt><dd>Romy Uresti Cardona — Dirección</dd></div>
+        <div><dt>Destinatario</dt><dd>Equipo de desarrollo</dd></div>
+        <div><dt>Alcance</dt><dd>Web app responsiva (mobile-first) + panel administrativo</dd></div>
+      </dl>
+    </section>
+
+    <!-- ============ 01 ============ -->
+    <section id="objetivo" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>Objetivo y contexto</h2>
+      </header>
+
+      <p class="intro">Casa Quirón necesita un sistema que permita a alumnos y propietarios reservar clases en línea sin pasar por WhatsApp, con la misma facilidad de un estudio de Pilates, pero respetando una restricción que ningún sistema genérico contempla: <strong>el cupo no es una silla, es un caballo vivo con carga de trabajo limitada.</strong></p>
+
+      <div class="callout">
+        <p class="callout-title">Sobre esta versión</p>
+        <p>Todas las reglas de negocio de este documento están cerradas y definidas por dirección. El desarrollador no necesita tomar decisiones de negocio: debe implementar lo aquí descrito. Las excepciones o supuestos pendientes están marcados explícitamente en la <a href="#supuestos">sección 10</a>.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h3>Lo que el sistema debe resolver</h3>
+          <ul class="ticks">
+            <li>Eliminar la coordinación manual de horarios por mensajería.</li>
+            <li>Evitar sobrecarga de caballos por doble asignación.</li>
+            <li>Asegurar que cada jinete monte solo caballos autorizados para él.</li>
+            <li>Aplicar automáticamente la política de cancelación de 10 horas.</li>
+            <li>Dar a los propietarios visibilidad del trabajo, requisitos y estado de su caballo.</li>
+            <li>Centralizar avisos, reglamento y contratos del club.</li>
+            <li>Permitir que el equipo de cuadra avise al propietario qué le falta a su caballo.</li>
+          </ul>
+        </div>
+        <div class="panel panel-muted">
+          <h3>Fuera de alcance</h3>
+          <p>Cobros en línea, contabilidad, nómina, inventario de forraje, inscripciones a concursos externos y catálogo de venta de caballos.</p>
+          <p>El cobro es presencial y el administrador carga manualmente las clases disponibles de cada alumno.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 02 ============ -->
+    <section id="perfiles" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>Perfiles de usuario y permisos</h2>
+      </header>
+
+      <div class="rows rows-3">
+        <div class="rows-head" aria-hidden="true"><span>Perfil</span><span>Quién es</span><span>Puede hacer</span></div>
+
+        <article class="row">
+          <h3>Administrador</h3>
+          <p class="who">Dirección y operaciones</p>
+          <p class="can">Acceso total. Configura catálogos, horarios, precios, paquetes, documentos y anuncios. Carga manualmente las clases disponibles de cada alumno. Puede sobrescribir cualquier regla.</p>
+        </article>
+
+        <article class="row">
+          <h3>Entrenador</h3>
+          <p class="who">Instructores de clase</p>
+          <p class="can">Define qué caballos puede montar cada alumno. Ve su agenda y lista de jinetes, toma asistencia, marca no-shows y registra notas de clase. No modifica paquetes ni cobros.</p>
+        </article>
+
+        <article class="row">
+          <h3>Propietario</h3>
+          <p class="who">Dueño de caballo en pupilaje</p>
+          <p class="can">Reserva clases y pista, ve la ficha y bitácora de su caballo, sus requisitos mensuales, las notas del equipo de cuadra, su contrato y el reglamento.</p>
+        </article>
+
+        <article class="row">
+          <h3>Alumno</h3>
+          <p class="who">Jinete de escuela sin caballo propio</p>
+          <p class="can">Reserva clases dentro de sus horarios autorizados, eligiendo entre los caballos que su entrenador le habilitó. Ve sus clases restantes, el reglamento y su contrato de jinete.</p>
+        </article>
+
+        <article class="row">
+          <h3>Caballerango / equipo de cuadra</h3>
+          <p class="who">Personal de caballerizas</p>
+          <p class="can">Ve el programa del día y escribe notas y recordatorios dirigidos al propietario sobre lo que le falta a cada caballo. Sin acceso a datos financieros.</p>
+        </article>
+
+        <article class="row">
+          <h3>Tutor</h3>
+          <p class="who">Padre o madre de jinete menor de edad</p>
+          <p class="can">Control total sobre la cuenta del menor: reserva, cancela, acepta contratos y reglamento en su nombre, y recibe todas sus notificaciones.</p>
+        </article>
+      </div>
+
+      <div class="callout callout-alt">
+        <p class="callout-title">Nota de arquitectura</p>
+        <p>Un mismo usuario puede tener más de un perfil simultáneo. Un propietario que además toma clases de escuela, o un entrenador que también es propietario, son casos reales y frecuentes. <strong>Los permisos deben ser acumulativos, no excluyentes.</strong></p>
+      </div>
+    </section>
+
+    <!-- ============ 03 ============ -->
+    <section id="modulos" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>Módulos funcionales</h2>
+      </header>
+
+      <article class="mod" id="m1">
+        <h3><span class="mchip">M1</span> Catálogos base</h3>
+        <div class="rows rows-2">
+          <div class="rows-head" aria-hidden="true"><span>Catálogo</span><span>Campos mínimos</span></div>
+          <article class="row"><h4>Niveles</h4><p>Cuatro niveles fijos, en este orden: <b>Cuerdita · Principiantes · Intermedio · Avanzado</b></p></article>
+          <article class="row"><h4>Caballos</h4><p>Nombre, foto, propietario, uso (escuelita / propietario / desarrollo), nivel mínimo y máximo, máximo de clases por día, estatus (activo / descanso / lesionado / retirado), notas de manejo</p></article>
+          <article class="row"><h4>Entrenadores</h4><p>Nombre, foto, niveles que imparte, disponibilidad semanal</p></article>
+          <article class="row"><h4>Espacios</h4><p>Nombre de pista o picadero, capacidad simultánea de jinetes, techado sí/no</p></article>
+          <article class="row"><h4>Tipos de clase</h4><p>Nombre, duración, cupo máximo, niveles permitidos, clases que consume, requiere caballo sí/no</p></article>
+          <article class="row"><h4>Paquetes</h4><p>Nombre, número de clases incluidas, horarios a los que da derecho. El precio es referencial: el cobro es presencial.</p></article>
+        </div>
+      </article>
+
+      <article class="mod" id="m2">
+        <h3><span class="mchip">M2</span> Plantilla de horarios</h3>
+        <p>El administrador define una plantilla semanal recurrente: día, hora, duración, entrenador, espacio, tipo de clase, cupo y niveles permitidos. El sistema genera las sesiones reales a partir de ella.</p>
+        <ul class="ticks">
+          <li>Editar una sesión individual no altera la plantilla.</li>
+          <li>Editar la plantilla solo afecta sesiones futuras sin reservas.</li>
+          <li>El administrador puede crear sesiones sueltas fuera de plantilla.</li>
+        </ul>
+      </article>
+
+      <article class="mod" id="m3">
+        <h3><span class="mchip">M3</span> Flujo de reserva</h3>
+        <div class="callout callout-key">
+          <p class="callout-title">Ventana de reserva: lunes</p>
+          <p>La agenda de la semana se abre y se cierra el lunes. El alumno debe dejar reservadas ese día todas sus clases de la semana. Fuera de esa ventana no puede reservar; solo cancelar o pedir apoyo al administrador.</p>
+        </div>
+        <ol class="steps">
+          <li><b>Ver la semana.</b> El alumno ve únicamente las sesiones que su nivel y su paquete le autorizan. Lo demás se oculta, no se muestra en gris.</li>
+          <li><b>Elegir sesión.</b> Muestra hora, entrenador, espacio, lugares restantes y clases que consume.</li>
+          <li><b>Elegir caballo.</b> El alumno elige, pero solo entre los caballos que su entrenador le habilitó y que estén libres en ese horario. Un caballo ya reservado por otro jinete a esa hora desaparece de su lista en tiempo real.</li>
+          <li><b>Confirmar.</b> Se descuenta la clase del saldo y se envía confirmación con la hora límite de cancelación.</li>
+        </ol>
+      </article>
+
+      <article class="mod" id="m4">
+        <h3><span class="mchip">M4</span> Autorización de caballos por alumno</h3>
+        <p class="tagline">Función crítica y propia de Casa Quirón. Cada entrenador administra, por alumno, la lista de caballos habilitados para él.</p>
+        <ul class="ticks">
+          <li>El entrenador ve a sus alumnos y marca qué caballos puede montar cada uno.</li>
+          <li>Esa lista se puede ampliar o reducir en cualquier momento, sin afectar reservas ya confirmadas.</li>
+          <li>El filtro de nivel del caballo opera además como segundo candado.</li>
+          <li>Si un alumno no tiene caballos habilitados, no puede completar una reserva y el sistema lo avisa al entrenador.</li>
+        </ul>
+      </article>
+
+      <article class="mod" id="m5">
+        <h3><span class="mchip">M5</span> Política de cancelación</h3>
+        <div class="callout callout-key">
+          <p class="callout-title">Regla central del sistema</p>
+          <p>Cancelación permitida hasta <b>10 horas antes</b> de la hora de inicio. Dentro de ese plazo la clase se devuelve al saldo. Pasado el límite, la clase se cobra y el botón de cancelar desaparece, sustituido por la leyenda de la política.</p>
+        </div>
+        <p>Cada tarjeta de reserva debe mostrar la hora exacta límite. No basta con decir «10 horas»: el alumno debe leer <em>«Cancelación sin costo hasta el jueves 7:00 a.m.»</em></p>
+        <p>No presentarse cuesta la clase igual que cancelar tarde. El entrenador marca el no-show y la clase se descuenta definitivamente.</p>
+      </article>
+
+      <article class="mod" id="m6">
+        <h3><span class="mchip">M6</span> Paquetes y saldo de clases</h3>
+        <p><b>No hay cobro en línea.</b> El flujo es:</p>
+        <ol class="steps">
+          <li>El alumno paga en persona.</li>
+          <li>El administrador registra el paquete y carga manualmente el número de clases disponibles.</li>
+          <li>El paquete define a qué horarios tiene derecho ese alumno.</li>
+          <li>Cada reserva descuenta del saldo; cada cancelación a tiempo lo devuelve.</li>
+          <li>El administrador puede ajustar el saldo en cualquier momento, con motivo registrado en bitácora.</li>
+        </ol>
+        <p>La vigencia del saldo la define el administrador por paquete. No hay regla automática de expiración.</p>
+      </article>
+
+      <article class="mod" id="m7">
+        <h3><span class="mchip">M7</span> Documentos, reglamento y contratos</h3>
+        <p>Sección visible desde el inicio de la app, con contenido distinto según el perfil del usuario. Los documentos marcados como obligatorios deben aceptarse antes de poder reservar la primera clase.</p>
+        <div class="two-col">
+          <div class="panel">
+            <h4>Para alumnos</h4>
+            <ul class="ticks">
+              <li><b>Reglamento del club</b> — normas de convivencia, uso de instalaciones, equipo obligatorio, horarios.</li>
+              <li><b>Contrato de jinete</b> — deslinde de responsabilidad. El club no se hace responsable de incidentes derivados del incumplimiento del reglamento.</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h4>Para propietarios</h4>
+            <ul class="ticks">
+              <li>Contrato de pupilaje.</li>
+              <li>Reglamento del club.</li>
+              <li><b>Requisitos</b>, desglosados en tres bloques:
+                <ul class="sub">
+                  <li><b>Lo que necesitas tú:</b> equipo del jinete, seguro, documentación.</li>
+                  <li><b>Lo que necesita tu caballo para vivir aquí:</b> equipo, manta, cabezada, vendas, botiquín.</li>
+                  <li><b>Suplementos y electrolitos:</b> qué lleva, en qué cantidad, y calendario mensual de fechas de entrega.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <h4 class="sub-head">Comportamiento del módulo</h4>
+        <ul class="ticks">
+          <li>Cada documento tiene versión y fecha. Si se publica una versión nueva, el sistema vuelve a pedir aceptación.</li>
+          <li>La aceptación registra usuario, fecha, hora y nombre completo como firma.</li>
+          <li>El administrador ve un tablero de quién aceptó y quién no.</li>
+          <li>Los documentos se cargan como archivo o se editan como texto dentro del sistema.</li>
+          <li>Un usuario nunca ve documentos de un perfil que no le corresponde.</li>
+        </ul>
+      </article>
+
+      <article class="mod" id="m8">
+        <h3><span class="mchip">M8</span> Notas y pendientes de cuadra</h3>
+        <p class="tagline">Canal directo entre el equipo de caballerizas y el propietario, dentro de la sección del propietario. Sustituye los mensajes sueltos de WhatsApp.</p>
+        <ul class="ticks">
+          <li>El caballerango abre el caballo y escribe una nota con tipo: suplemento, electrolitos, equipo, medicamento, herrador, veterinario u otro.</li>
+          <li>La nota lleva texto libre, foto opcional y fecha límite.</li>
+          <li>El propietario recibe notificación y ve el pendiente marcado en rojo hasta resolverlo.</li>
+          <li>El propietario responde en el hilo o marca como resuelto; el caballerango confirma.</li>
+          <li>El administrador ve todos los pendientes abiertos del club en un solo tablero.</li>
+          <li>Los suplementos con fecha de entrega mensual generan el recordatorio automáticamente, sin que nadie tenga que escribirlo.</li>
+        </ul>
+      </article>
+
+      <article class="mod" id="m9">
+        <h3><span class="mchip">M9</span> Portal de propietarios</h3>
+        <div class="cards">
+          <div class="card"><h4>Ficha del caballo</h4><p>Foto, edad, origen, nivel, entrenador asignado.</p></div>
+          <div class="card"><h4>Bitácora de trabajo</h4><p>Qué hizo el caballo cada día, con quién y qué tipo de sesión. Se alimenta de las sesiones confirmadas.</p></div>
+          <div class="card"><h4>Salud</h4><p>Vacunas, desparasitaciones, próximas citas de veterinario y herrador.</p></div>
+          <div class="card"><h4>Pendientes</h4><p>Notas del equipo de cuadra (M8).</p></div>
+          <div class="card"><h4>Requisitos y suplementos</h4><p>Con calendario mensual de entregas (M7).</p></div>
+          <div class="card"><h4>Reserva de pista y clases</h4><p>Mismas reglas que los alumnos.</p></div>
+          <div class="card"><h4>Autorización de uso</h4><p>Interruptor para permitir o no que su caballo entre al pool de escuela.</p></div>
+        </div>
+      </article>
+
+      <article class="mod" id="m10">
+        <h3><span class="mchip">M10</span> Tablero de anuncios</h3>
+        <ul class="ticks">
+          <li>Título, cuerpo, imagen y archivo adjunto opcionales.</li>
+          <li>Audiencia segmentada: todos, solo propietarios, solo alumnos, o un nivel específico.</li>
+          <li>Fecha de publicación y expiración automática.</li>
+          <li>Marca de «fijado» para avisos prioritarios.</li>
+          <li>Notificación opcional al publicar.</li>
+        </ul>
+        <p class="note">Casos reales: cierre por lluvia, cambio de horario por concurso, aviso de vacunación, convocatoria a clínica, resultados de concurso.</p>
+      </article>
+
+      <article class="mod" id="m11">
+        <h3><span class="mchip">M11</span> Panel administrativo</h3>
+        <ul class="ticks">
+          <li>Calendario maestro con vista día, semana y mes; filtros por entrenador, espacio y caballo.</li>
+          <li>Carga de paquetes y saldos tras el cobro presencial.</li>
+          <li><b>Bloqueos.</b> Marcar caballo, entrenador o pista como no disponible por rango de fechas y motivo. Las sesiones afectadas se cancelan y el saldo se devuelve automáticamente.</li>
+          <li>Reasignación masiva de sesiones cuando falta un entrenador.</li>
+          <li>Tablero de documentos: quién aceptó reglamento y contrato.</li>
+          <li>Tablero de pendientes de cuadra abiertos.</li>
+          <li>Reportes: ocupación por horario, clases trabajadas por caballo, alumnos por entrenador, tasa de cancelación tardía y no-show por alumno.</li>
+          <li>Bitácora de auditoría de todo cambio manual.</li>
+        </ul>
+      </article>
+
+      <article class="mod" id="m12">
+        <h3><span class="mchip">M12</span> Notificaciones</h3>
+        <div class="rows rows-2">
+          <div class="rows-head" aria-hidden="true"><span>Evento</span><span>Destinatario y momento</span></div>
+          <article class="row"><h4>Apertura de la ventana de reserva</h4><p>Alumnos y propietarios, lunes por la mañana</p></article>
+          <article class="row"><h4>Cierre próximo de la ventana</h4><p>Quien no haya reservado, lunes por la tarde</p></article>
+          <article class="row"><h4>Reserva confirmada</h4><p>Alumno, inmediato, con hora límite de cancelación</p></article>
+          <article class="row"><h4>Recordatorio de clase</h4><p>Alumno, 24 h y 2 h antes</p></article>
+          <article class="row"><h4>Aviso de límite de cancelación</h4><p>Alumno, 1 h antes de que se cierre la ventana de 10 h</p></article>
+          <article class="row"><h4>Cancelación por parte del club</h4><p>Alumno afectado, inmediato, con devolución de clase</p></article>
+          <article class="row"><h4>Nota o pendiente de cuadra</h4><p>Propietario, inmediato</p></article>
+          <article class="row"><h4>Entrega de suplementos del mes</h4><p>Propietario, según calendario</p></article>
+          <article class="row"><h4>Documento nuevo por aceptar</h4><p>Perfil correspondiente, al publicarse</p></article>
+          <article class="row"><h4>Programa del día</h4><p>Entrenadores y equipo de cuadra, cada mañana</p></article>
+          <article class="row"><h4>Cita de veterinario o herrador</h4><p>Propietario, 48 h antes</p></article>
+        </div>
+      </article>
+    </section>
+
+    <!-- ============ 04 ============ -->
+    <section id="reglas" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Reglas de negocio</h2>
+      </header>
+      <p class="intro">Deben implementarse <strong>en el servidor</strong>, no solo en la interfaz. Son el filtro que hace que el sistema funcione para un hípico y no para un gimnasio.</p>
+
+      <ol class="rules">
+        <li id="rn-01"><span class="rn">RN-01</span><div><b>Ventana de cancelación.</b> Sin costo hasta 10 horas antes del inicio. Después, la clase se cobra. El cálculo usa la zona horaria del club, nunca la del dispositivo.</div></li>
+        <li id="rn-02"><span class="rn">RN-02</span><div><b>No-show.</b> Si el jinete no se presenta, se cobra la clase igual. El entrenador lo marca; solo el administrador puede revertirlo.</div></li>
+        <li id="rn-03"><span class="rn">RN-03</span><div><b>Saldo requerido.</b> No se reserva sin clases disponibles. El saldo lo carga manualmente el administrador tras el cobro presencial.</div></li>
+        <li id="rn-04"><span class="rn">RN-04</span><div><b>Caballos habilitados por alumno.</b> El alumno elige caballo, pero solo entre los que su entrenador le autorizó expresamente. Es bloqueo, no sugerencia.</div></li>
+        <li id="rn-05"><span class="rn">RN-05</span><div><b>Filtro de nivel.</b> Además de RN-04, el caballo debe ser compatible con el nivel del jinete: Cuerdita, Principiantes, Intermedio o Avanzado.</div></li>
+        <li id="rn-06"><span class="rn">RN-06</span><div><b>Carga de trabajo.</b> Los caballos de escuelita tienen un máximo de 3 clases por día. Al alcanzarlo desaparecen del selector. El tope es configurable por caballo.</div></li>
+        <li id="rn-07"><span class="rn">RN-07</span><div><b>Sin descanso mínimo.</b> No se exige intervalo entre sesiones del mismo caballo. El tope diario de RN-06 es el único control de carga.</div></li>
+        <li id="rn-08"><span class="rn">RN-08</span><div><b>Disponibilidad en tiempo real.</b> Un caballo reservado por otro jinete a esa hora deja de aparecer de inmediato para los demás. El sistema debe bloquear el caballo al confirmar, no al iniciar la reserva.</div></li>
+        <li id="rn-09"><span class="rn">RN-09</span><div><b>Cupo de sesión y de espacio.</b> No puede excederse ni el cupo del tipo de clase ni la capacidad simultánea de la pista.</div></li>
+        <li id="rn-10"><span class="rn">RN-10</span><div><b>Sin traslapes.</b> Un jinete no puede tener dos reservas encimadas. Un caballo tampoco. Un entrenador tampoco.</div></li>
+        <li id="rn-11"><span class="rn">RN-11</span><div><b>Ventana de reserva semanal.</b> La agenda se abre y se cierra el lunes. Solo ese día puede el alumno reservar sus clases de la semana. Fuera de la ventana, únicamente el administrador puede agendar.</div></li>
+        <li id="rn-12"><span class="rn">RN-12</span><div><b>Derechos de horario.</b> El alumno solo ve y reserva sesiones autorizadas por su paquete. Lo no autorizado se oculta.</div></li>
+        <li id="rn-13"><span class="rn">RN-13</span><div><b>Cancelación por el club.</b> Bloqueos por clima, lesión, concurso o mantenimiento cancelan las sesiones afectadas y devuelven la clase al saldo, sin importar la ventana de 10 horas.</div></li>
+        <li id="rn-14"><span class="rn">RN-14</span><div><b>Caballo de propietario.</b> No entra al pool de escuelita salvo autorización explícita del dueño, revocable en cualquier momento.</div></li>
+        <li id="rn-15"><span class="rn">RN-15</span><div><b>Documentos obligatorios.</b> Un usuario no puede completar su primera reserva sin haber aceptado el reglamento y el contrato que le corresponden. Al publicarse una versión nueva, se vuelve a pedir aceptación.</div></li>
+        <li id="rn-16"><span class="rn">RN-16</span><div><b>Visibilidad por perfil.</b> Cada usuario ve exclusivamente los documentos, requisitos y notas de su perfil. Un alumno nunca accede a contenido de propietario, ni un propietario a información de otro propietario.</div></li>
+        <li id="rn-17"><span class="rn">RN-17</span><div><b>Notas de cuadra.</b> Solo el equipo de caballerizas y el administrador crean notas. El propietario responde y marca como resuelto, pero no borra. Toda nota queda en el historial del caballo.</div></li>
+        <li id="rn-18"><span class="rn">RN-18</span><div><b>Menores de edad.</b> Todo jinete menor requiere cuenta de tutor vinculada. El tutor acepta documentos, reserva, cancela y recibe las notificaciones.</div></li>
+        <li id="rn-19"><span class="rn">RN-19</span><div><b>Propietarios.</b> Reservan clases con las mismas reglas que los alumnos, incluidas RN-01, RN-02 y RN-11.</div></li>
+        <li id="rn-20"><span class="rn">RN-20</span><div><b>Sobrescritura administrativa.</b> El administrador puede violar cualquier regla anterior, siempre que quede registro en la bitácora de auditoría con motivo.</div></li>
+      </ol>
+    </section>
+
+    <!-- ============ 05 ============ -->
+    <section id="datos" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Modelo de datos sugerido</h2>
+      </header>
+      <p class="intro">Estructura orientativa. El desarrollador puede ajustarla, pero las relaciones críticas deben conservarse.</p>
+
+      <div class="rows rows-2 rows-data">
+        <div class="rows-head" aria-hidden="true"><span>Entidad</span><span>Campos clave y relaciones</span></div>
+        <article class="row"><h4><code>usuarios</code></h4><p>id, nombre, teléfono, email, nivel_id, tutor_id, es_menor, estatus, fecha_alta</p></article>
+        <article class="row"><h4><code>roles_usuario</code></h4><p>usuario_id, rol (admin / entrenador / propietario / alumno / caballerango / tutor)</p></article>
+        <article class="row"><h4><code>niveles</code></h4><p>id, nombre, orden — Cuerdita, Principiantes, Intermedio, Avanzado</p></article>
+        <article class="row"><h4><code>caballos</code></h4><p>id, nombre, propietario_id, uso, nivel_min_id, nivel_max_id, max_clases_dia, estatus, autoriza_escuela</p></article>
+        <article class="row row-key"><h4><code>caballos_habilitados</code></h4><p>id, alumno_id, caballo_id, entrenador_id, fecha_alta, activo — <b>tabla clave de RN-04</b></p></article>
+        <article class="row"><h4><code>entrenadores</code></h4><p>usuario_id, niveles_imparte, disponibilidad</p></article>
+        <article class="row"><h4><code>espacios</code></h4><p>id, nombre, capacidad_simultanea, techado</p></article>
+        <article class="row"><h4><code>tipos_clase</code></h4><p>id, nombre, duracion_min, cupo_max, clases_consume, requiere_caballo</p></article>
+        <article class="row"><h4><code>plantilla_horarios</code></h4><p>id, dia_semana, hora_inicio, tipo_clase_id, entrenador_id, espacio_id, cupo, niveles_permitidos, vigente_desde</p></article>
+        <article class="row"><h4><code>sesiones</code></h4><p>id, plantilla_id, fecha_hora_inicio, fecha_hora_fin, entrenador_id, espacio_id, cupo, estatus</p></article>
+        <article class="row"><h4><code>reservas</code></h4><p>id, sesion_id, usuario_id, caballo_id, estatus (confirmada / cancelada_a_tiempo / cancelada_tarde / no_show / asistio), fecha_reserva, fecha_cancelacion</p></article>
+        <article class="row"><h4><code>paquetes</code></h4><p>id, nombre, num_clases, horarios_permitidos, vigencia_dias</p></article>
+        <article class="row"><h4><code>saldos</code></h4><p>id, usuario_id, paquete_id, clases_cargadas, clases_usadas, saldo, cargado_por, fecha_carga, vigencia</p></article>
+        <article class="row"><h4><code>derechos_horario</code></h4><p>id, paquete_id o usuario_id, plantilla_horario_id</p></article>
+        <article class="row"><h4><code>bloqueos</code></h4><p>id, tipo_recurso, recurso_id, fecha_inicio, fecha_fin, motivo</p></article>
+        <article class="row"><h4><code>documentos</code></h4><p>id, titulo, tipo (reglamento / contrato / requisitos), audiencia, contenido, archivo, version, requiere_aceptacion, vigente_desde</p></article>
+        <article class="row"><h4><code>aceptaciones</code></h4><p>id, documento_id, version, usuario_id, nombre_firma, fecha_hora, ip</p></article>
+        <article class="row"><h4><code>requisitos_caballo</code></h4><p>id, caballo_id, categoria (jinete / caballo / suplemento), concepto, cantidad, frecuencia, dia_entrega_mes</p></article>
+        <article class="row"><h4><code>entregas_suplemento</code></h4><p>id, caballo_id, requisito_id, mes, fecha_programada, fecha_real, estatus</p></article>
+        <article class="row"><h4><code>notas_cuadra</code></h4><p>id, caballo_id, autor_id, tipo, texto, foto, fecha_limite, estatus, resuelto_por, fecha_resolucion</p></article>
+        <article class="row"><h4><code>bitacora_caballo</code></h4><p>id, caballo_id, fecha, tipo_actividad, jinete_id, entrenador_id, notas</p></article>
+        <article class="row"><h4><code>salud_caballo</code></h4><p>id, caballo_id, tipo, fecha, proxima_fecha, notas</p></article>
+        <article class="row"><h4><code>anuncios</code></h4><p>id, titulo, cuerpo, imagen, audiencia, fijado, fecha_publicacion, fecha_expiracion</p></article>
+        <article class="row"><h4><code>auditoria</code></h4><p>id, usuario_id, accion, entidad, entidad_id, valor_anterior, valor_nuevo, motivo, timestamp</p></article>
+      </div>
+    </section>
+
+    <!-- ============ 06 ============ -->
+    <section id="pantallas" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Pantallas por perfil</h2>
+      </header>
+
+      <div class="screens">
+        <article class="screen">
+          <h3>Alumno <span class="count">5 pantallas</span></h3>
+          <ol>
+            <li><b>Inicio.</b> Próxima clase, clases restantes, anuncios fijados y accesos directos a Reglamento y Contrato de jinete.</li>
+            <li><b>Reservar.</b> Vista semanal, activa solo los lunes. Fuera de la ventana muestra cuándo vuelve a abrir.</li>
+            <li><b>Mis clases.</b> Próximas e historial, con hora límite de cancelación en cada tarjeta.</li>
+            <li><b>Documentos.</b> Reglamento y contrato, con estatus de aceptación.</li>
+            <li><b>Perfil.</b> Nivel, paquete, saldo y datos de contacto.</li>
+          </ol>
+        </article>
+
+        <article class="screen">
+          <h3>Propietario <span class="count">7 pantallas</span></h3>
+          <ol>
+            <li><b>Inicio.</b> Próxima clase, pendientes abiertos de su caballo y anuncios.</li>
+            <li><b>Mi caballo.</b> Ficha, bitácora de trabajo y salud.</li>
+            <li><b>Pendientes.</b> Notas del equipo de cuadra, con hilo de respuesta.</li>
+            <li><b>Requisitos.</b> Lo que necesita el jinete, lo que necesita el caballo, y suplementos con calendario mensual de entregas.</li>
+            <li><b>Reservar.</b> Clases y apartado de pista.</li>
+            <li><b>Documentos.</b> Contrato de pupilaje y reglamento.</li>
+            <li><b>Perfil y autorizaciones.</b> Permisos de uso de su caballo.</li>
+          </ol>
+        </article>
+
+        <article class="screen">
+          <h3>Entrenador <span class="count">4 pantallas</span></h3>
+          <ol>
+            <li><b>Mi agenda del día.</b> Sesiones, jinetes y caballos.</li>
+            <li><b>Lista de sesión.</b> Asistencia, marcado de no-show y notas por jinete.</li>
+            <li><b>Mis alumnos.</b> Administración de la lista de caballos habilitados por alumno.</li>
+            <li><b>Mi semana.</b> Vista de carga propia.</li>
+          </ol>
+        </article>
+
+        <article class="screen">
+          <h3>Caballerango <span class="count">2 pantallas</span></h3>
+          <ol>
+            <li><b>Programa del día.</b> Lista por hora: caballo, jinete, entrenador, espacio y equipo. Solo lectura, imprimible.</li>
+            <li><b>Notas.</b> Alta rápida de pendientes por caballo, con foto y fecha límite.</li>
+          </ol>
+        </article>
+
+        <article class="screen screen-wide">
+          <h3>Administrador <span class="count">Panel completo</span></h3>
+          <p>Calendario maestro, catálogos, paquetes y saldos, usuarios, caballos, caballos habilitados, documentos y aceptaciones, requisitos y suplementos, pendientes de cuadra, anuncios, bloqueos, reportes y auditoría.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 07 ============ -->
+    <section id="fases" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>Fases de entrega</h2>
+      </header>
+
+      <div class="phases">
+        <article class="phase phase-1">
+          <p class="phase-tag">Fase 1</p>
+          <h3>Núcleo operativo</h3>
+          <p class="phase-note">Lo mínimo para dejar de usar WhatsApp. Debe entregarse completo antes de pasar a la siguiente fase.</p>
+          <ul class="ticks">
+            <li>Catálogos base (M1) y plantilla de horarios (M2).</li>
+            <li>Flujo de reserva con ventana de lunes (M3, RN-11).</li>
+            <li>Caballos habilitados por alumno (M4, RN-04).</li>
+            <li>Cancelación de 10 horas y no-show (M5, RN-01, RN-02).</li>
+            <li>Paquetes y carga manual de saldo (M6, RN-03).</li>
+            <li>Documentos, reglamento y contratos con aceptación (M7, RN-15, RN-16).</li>
+            <li>Tablero de anuncios (M10).</li>
+            <li>Panel administrativo con calendario maestro y bloqueos.</li>
+            <li>Reglas RN-01 a RN-20.</li>
+          </ul>
+        </article>
+
+        <article class="phase phase-2">
+          <p class="phase-tag">Fase 2</p>
+          <h3>Portal de propietarios</h3>
+          <ul class="ticks">
+            <li>Portal completo (M9): ficha, bitácora y salud.</li>
+            <li>Notas y pendientes de cuadra (M8, RN-17).</li>
+            <li>Requisitos y calendario mensual de suplementos.</li>
+            <li>Lista de espera automática.</li>
+            <li>Reportes de ocupación y carga de caballos.</li>
+          </ul>
+        </article>
+
+        <article class="phase phase-3">
+          <p class="phase-tag">Fase 3</p>
+          <h3>Optimización</h3>
+          <ul class="ticks">
+            <li>App instalable con notificaciones push.</li>
+            <li>Sugerencia de caballo según historial y rotación de trabajo.</li>
+            <li>Integración de la bitácora con el programa de desarrollo de caballos jóvenes.</li>
+            <li>Módulo de inscripción a clínicas y eventos internos.</li>
+            <li>Cobro en línea, si dirección decide adoptarlo.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 08 ============ -->
+    <section id="tecnico" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Requisitos técnicos</h2>
+      </header>
+
+      <div class="rows rows-2">
+        <div class="rows-head" aria-hidden="true"><span>Aspecto</span><span>Requisito</span></div>
+        <article class="row"><h4>Plataforma</h4><p>Aplicación web responsiva, diseñada primero para celular. Instalable como app (PWA) preferentemente.</p></article>
+        <article class="row"><h4>Idioma</h4><p>Español de México en toda la interfaz, incluidos mensajes de error.</p></article>
+        <article class="row"><h4>Zona horaria</h4><p>Fija del club. Todo cálculo de ventanas de tiempo debe usarla, nunca la del dispositivo.</p></article>
+        <article class="row"><h4>Autenticación</h4><p>Teléfono o correo con contraseña. Recuperación por SMS o WhatsApp.</p></article>
+        <article class="row"><h4>Notificaciones</h4><p>WhatsApp como canal principal, correo como respaldo.</p></article>
+        <article class="row"><h4>Pagos</h4><p>Sin pasarela. El cobro es presencial y el administrador carga el saldo manualmente.</p></article>
+        <article class="row"><h4>Concurrencia</h4><p>El sistema debe manejar reservas simultáneas sin duplicar caballo ni exceder cupo. Crítico por la ventana concentrada de los lunes.</p></article>
+        <article class="row"><h4>Identidad visual</h4><p>Paleta y tipografía de Casa Quirón. Se entregará el manual de marca al inicio del desarrollo.</p></article>
+        <article class="row"><h4>Respaldos</h4><p>Respaldo automático diario y exportación a Excel bajo demanda.</p></article>
+        <article class="row"><h4>Entrega</h4><p>Código y base de datos propiedad de Casa Quirón, con documentación de despliegue.</p></article>
+      </div>
+    </section>
+
+    <!-- ============ 09 ============ -->
+    <section id="decisiones" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>Decisiones cerradas por dirección</h2>
+      </header>
+
+      <dl class="decisions">
+        <div class="dec"><dt>Quién asigna el caballo</dt><dd>El alumno elige, dentro de la lista que el entrenador le habilitó</dd></div>
+        <div class="dec"><dt>Carga máxima del caballo</dt><dd>3 clases por día en caballos de escuelita</dd></div>
+        <div class="dec"><dt>Descanso mínimo entre sesiones</dt><dd>No se exige</dd></div>
+        <div class="dec"><dt>Ventana de reserva</dt><dd>Lunes, para toda la semana</dd></div>
+        <div class="dec"><dt>Vigencia de clases</dt><dd>La define el administrador por paquete; sin regla automática</dd></div>
+        <div class="dec"><dt>No-show</dt><dd>Se cobra la clase</dd></div>
+        <div class="dec"><dt>Propietarios</dt><dd>Mismas reglas que los alumnos</dd></div>
+        <div class="dec"><dt>Cobro</dt><dd>Presencial; el administrador carga el saldo manualmente</dd></div>
+        <div class="dec"><dt>Niveles</dt><dd>Cuerdita · Principiantes · Intermedio · Avanzado</dd></div>
+        <div class="dec"><dt>Menores de edad</dt><dd>Sí; requieren cuenta de tutor</dd></div>
+      </dl>
+    </section>
+
+    <!-- ============ 10 ============ -->
+    <section id="supuestos" class="sec">
+      <header class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>Supuestos por confirmar</h2>
+      </header>
+      <p class="intro">Tres puntos de detalle que el desarrollador debe validar con dirección antes de programar. No bloquean el arranque.</p>
+
+      <ol class="steps steps-open">
+        <li><b>Hora exacta de apertura y cierre de la ventana del lunes.</b> Se asume que abre a las 8:00 a.m. y cierra a las 10:00 p.m. del mismo lunes, y que aplica a la semana en curso.</li>
+        <li><b>Qué pasa si un alumno no reservó el lunes.</b> Se asume que pierde la posibilidad de reservar solo, y que el administrador puede agendarlo manualmente si hay lugar.</li>
+        <li><b>Tope diario de caballos que no son de escuelita.</b> Se asume 1 sesión por día para caballos de desarrollo y de propietario, configurable por caballo.</li>
+      </ol>
+
+      <div class="acceptance">
+        <p class="callout-title">Criterio de aceptación general</p>
+        <p>El sistema se considera entregado cuando una alumna puede <b>reservar, cambiar y cancelar sus clases de la semana desde su celular sin escribir un solo mensaje</b>; cuando <b>ningún caballo puede quedar asignado a dos jinetes a la misma hora</b> ni exceder sus tres clases diarias; y cuando un propietario puede ver, sin preguntarle a nadie, <b>qué le falta a su caballo este mes</b>.</p>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p class="foot-mark" aria-hidden="true">Q</p>
+      <p><b>Casa Quirón</b> · Sistema de Reservas y Portal de Clientes</p>
+      <p class="foot-meta">Especificación funcional v2.0 · Agosto 2026 · Documento interno para el equipo de desarrollo</p>
+    </footer>
+
+  </main>
+</div>
+
+<button class="totop" id="totop" aria-label="Volver al inicio">↑</button>
+<div class="nav-scrim" id="nav-scrim" hidden></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,64 +1,86 @@
-# Casa Quirón — Sistema de Reservas y Portal de Clientes
+# Casa Quirón — Sistema de Reservas
 
-Sitio web de la **especificación funcional v2.0** (agosto 2026) del sistema de reservas
-y portal de clientes de Casa Quirón. Convierte el documento entregado por dirección en
-un sitio consultable desde el celular, con índice navegable, enlaces directos a cada
-regla de negocio y versión imprimible.
+App web del club: reserva de clases, reglamento y contratos, calendario de
+competencias y recordatorios. Mobile-first, en español de México, sin
+dependencias ni compilación.
 
-## Contenido
+```
+index.html            La app
+especificacion/       El documento fuente (especificación funcional v2.0) como sitio
+tools/                Genera las versiones de archivo único de dist/
+dist/                 Versiones de archivo único, para publicar como Artifact
+```
 
-El sitio reproduce íntegro el documento fuente:
+## Qué hace la app
 
-| Sección | Tema |
+**Reservar.** Vista semanal con las clases que el nivel y el paquete del jinete
+autorizan; lo demás se oculta. Se elige sesión y después caballo, solo entre los
+que el entrenador habilitó y estén libres a esa hora. Al confirmar se descuenta
+la clase y se muestra la hora exacta del límite de cancelación.
+
+**Reglamento y contratos.** Cada perfil ve solo sus documentos. Los obligatorios
+se firman escribiendo el nombre completo, y sin esa firma no se puede reservar.
+Cada documento lleva versión: al publicar una nueva se vuelve a pedir la firma.
+
+**Competencias.** Calendario con sede, disciplina, categorías y fecha de cierre.
+El jinete se anota y el club ve cuántos van.
+
+**Recordatorios.** Los propios, con fecha; y los automáticos que salen de las
+reservas y del calendario — el límite de cancelación de cada clase, el cierre de
+inscripciones, la apertura de la agenda del lunes.
+
+## Reglas de negocio aplicadas
+
+Las de la especificación (§04), calculadas siempre en la zona horaria del club:
+
+| Clave | Regla |
 |---|---|
-| 01 | Objetivo y contexto · alcance y fuera de alcance |
-| 02 | Perfiles de usuario y permisos (acumulativos) |
-| 03 | Módulos funcionales M1–M12 |
-| 04 | Reglas de negocio RN-01 a RN-20 |
-| 05 | Modelo de datos sugerido |
-| 06 | Pantallas por perfil |
-| 07 | Fases de entrega |
-| 08 | Requisitos técnicos |
-| 09 | Decisiones cerradas por dirección |
-| 10 | Supuestos por confirmar y criterio de aceptación |
+| RN-01 | Cancelación sin costo hasta 10 horas antes; después la clase se cobra |
+| RN-03 | No se reserva sin saldo; lo carga el administrador tras el cobro presencial |
+| RN-04 | Solo caballos que el entrenador habilitó para ese alumno |
+| RN-05 | El caballo debe ser compatible con el nivel del jinete |
+| RN-06 | Máximo de clases por día por caballo; al llegar al tope desaparece |
+| RN-08 | Un caballo apartado deja de ofrecerse a los demás, al confirmar |
+| RN-09 | No se excede el cupo de la sesión ni la capacidad de la pista |
+| RN-10 | Sin traslapes de jinete ni de caballo |
+| RN-11 | La agenda se abre y se cierra el lunes |
+| RN-12 | Solo se ven las sesiones que el paquete autoriza |
+| RN-15 | Sin documentos firmados no hay primera reserva |
+| RN-16 | Cada perfil ve solo sus documentos |
+| RN-20 | Dirección puede saltarse la ventana; la reserva queda marcada |
 
-## Estructura
+## Lo que este prototipo todavía no es
 
-```
-index.html            Documento completo
-assets/css/styles.css Estilos (mobile-first, modo claro/oscuro, hoja de impresión)
-assets/js/main.js     Índice lateral, sección activa, barra de progreso
-```
+Es una app funcional, no el sistema de producción. Falta lo que necesita un
+servidor:
+
+- **Sin autenticación.** Se elige un perfil de ejemplo desde el encabezado.
+  El sistema real pide teléfono o correo con contraseña (§08).
+- **Las reglas se aplican en el navegador.** La especificación pide que se
+  apliquen en el servidor. Al apartar un caballo se usa una reserva de lugar
+  antes de escribir, así que dos jinetes no se lo ganan a la vez, pero el resto
+  de los topes se revisan del lado del cliente.
+- **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
+- **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
+  cuadra (M8).
+- **Catálogo de ejemplo.** Caballos, entrenadores, horarios, miembros y
+  competencias son datos de prueba, no los del club.
 
 ## Cómo verlo
 
-Es un sitio estático sin dependencias ni compilación. Basta abrir `index.html`
-en el navegador, o servirlo:
-
 ```bash
 python3 -m http.server 8000
-# http://localhost:8000
+# http://localhost:8000            la app
+# http://localhost:8000/especificacion/   el documento
 ```
 
-Se publica tal cual en GitHub Pages, Netlify o cualquier hosting estático.
-
-## Criterios de diseño
-
-- **Mobile-first**, igual que el sistema que especifica (§08).
-- **Español de México** en toda la interfaz.
-- Enlaces profundos a cada regla: `#rn-06`, `#rn-11`, y a cada módulo: `#m4`, `#m8`.
-- Índice fijo en escritorio, cajón lateral en celular.
-- Modo claro y oscuro según la preferencia del sistema.
-- Hoja de impresión: al imprimir vuelve a leerse como el PDF original.
+Publicado como Artifact, la app guarda las reservas en el almacén compartido: lo
+que aparta un jinete lo ven los demás. Abierta como archivo local guarda en el
+navegador.
 
 ## Identidad visual
 
-La paleta y la tipografía actuales son **provisionales** —verde de cuadra, latón y
-hueso, con Cormorant Garamond e Inter— porque el manual de marca de Casa Quirón se
-entrega al inicio del desarrollo (§08, *Identidad visual*). Al recibirlo basta
-sustituir los tokens del bloque `:root` en `assets/css/styles.css`; ningún color está
-escrito directamente en los componentes.
-
----
-
-Documento interno para el equipo de desarrollo. Solicita: Romy Uresti Cardona — Dirección.
+Paleta y tipografía provisionales —verde de cuadra, latón y hueso, con Cormorant
+Garamond e Inter—: el manual de marca se entrega al inicio del desarrollo (§08).
+Todos los colores son tokens en `:root`; ninguno está escrito dentro de los
+componentes.
