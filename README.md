@@ -47,6 +47,13 @@ Cada documento lleva versión: al publicar una nueva se vuelve a pedir la firma.
 horarios de cada prueba y cierre de inscripciones. El jinete se anota eligiendo
 categoría; solo dirección ve la lista de quién está anotado y en qué.
 
+**Lo que administra dirección.** Desde Inicio: el **personal y los socios** (nombre,
+perfil, nivel, usuario y contraseña, clases cargadas, caballos desbloqueados, y si
+da clases); el **catálogo de caballos** (alta, baja, nivel que admiten, tope diario
+y estatus — uno en descanso, lesionado o retirado desaparece del selector aunque
+esté desbloqueado); y los **paquetes** de 4, 8, 10 y 15 clases, editables. El jinete
+ve en su inicio cuántas lleva usadas de su paquete.
+
 **La semana (solo dirección).** El calendario maestro. Arriba, el pulso de la
 semana: clases reservadas, jinetes distintos, caballos en uso y cuál es el que más
 trabaja. Debajo, una tira de siete días con una barra por día para ver de un
@@ -81,7 +88,7 @@ Las contraseñas se guardan como huella SHA-256, no en claro.
 
 | Perfil | Ve | Notas |
 |---|---|---|
-| Dirección | Todo, con su propio usuario. Da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
+| Dirección | Todo, con su propio usuario. Administra caballos, paquetes y personal; da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
 | Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
 | Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |
 | Tutor | Lo de jinete, sobre la cuenta del menor | Reserva, cancela y firma en nombre del menor (RN-18) |
@@ -95,9 +102,9 @@ qué documentos firma, qué días puede reservar y qué caballos monta.
 
 **Qué se aplica de verdad y qué no.** El inicio de sesión decide qué ve cada
 quien dentro de la app. Publicada como Artifact, el almacén aplica
-cinco reglas que el navegador no puede saltarse: el padrón de personas, el horario
-semanal, los documentos, los anuncios y el calendario de competencias solo los
-escribe quien tenga permiso de edición de la página. La cuenta de dirección de
+siete reglas que el navegador no puede saltarse: el padrón de personas, el catálogo
+de caballos, los paquetes, el horario semanal, los documentos, los anuncios y el
+calendario de competencias solo los escribe quien tenga permiso de edición. La cuenta de dirección de
 la app solo se abre para esa persona, y se comprueba contra el almacén, no contra
 el código. El resto de la separación por perfil vive en la app: filtra lo que
 muestra, pero los datos del club están en un almacén común, así que alguien con
@@ -142,8 +149,8 @@ servidor:
 - **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
 - **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
   cuadra (M8).
-- **Catálogo de ejemplo.** Los caballos son datos de prueba. Los maestros (Tania,
-  Edwin y Otro), las pistas, los días
+- **Catálogo de ejemplo.** Los caballos que vienen cargados son de prueba, pero ya
+  se editan desde la app. Los maestros, las pistas, los días
   y horas de clase, y el calendario de competencias, son los que dio dirección;
   categorías y horarios de cada competencia se publican desde la app.
 - **El reparto de pistas es provisional.** Por defecto las clases de la mañana
