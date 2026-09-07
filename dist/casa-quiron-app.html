@@ -840,6 +840,11 @@ const aceptado = d => Datos.todo("aceptaciones")
 /* Dirección no firma: entra a esa pantalla a editar los documentos, no a aceptarlos. */
 const pendientesDeFirma = () => esAdmin() ? []
   : docsDeCuenta().filter(d => d.obligatorio && !aceptado(d));
+/* Los documentos que le tocan a una persona, mire quien mire. */
+const docsDe = p => p.rol === "admin" ? [] : documentos().filter(d =>
+  d.audiencia === "todos" ? true :
+  d.audiencia === "menor" ? !!p.menor :
+  (SECCIONES[p.rol] || []).includes(d.audiencia));
 const faltanDocs = p => p.rol === "admin" ? [] : documentos().filter(d => {
   if (d.audiencia === "menor") return !!p.menor;
   if (d.audiencia === "todos") return true;
@@ -2023,9 +2028,8 @@ $("#btn-quien").addEventListener("click", () => {
         ${bloqueada ? "disabled style=opacity:.45" : ""}>
         <span class="ini" aria-hidden="true">${esc(p.nombre[0])}</span>
         <span><span class="n">${esc(p.nombre)}</span><span class="m">${esc(ROL_NOMBRE[p.rol] || p.rol)}${
-          menor ? " de " + esc(menor.nombre) : ""} · firma ${
-          esc(String(DOCUMENTOS.filter(d => d.audiencia === "todos" ||
-            (d.audiencia === "menor" ? !!(menor || p).menor : (SECCIONES[p.rol] || []).includes(d.audiencia))).length))} documentos</span></span>
+          menor ? " de " + esc(menor.nombre) : ""} · ${
+          p.rol === "admin" ? "no firma" : `firma ${docsDe(menor || p).length} documentos`}</span></span>
         ${bloqueada ? '<span class="carga">sin permiso<br>de edición</span>'
           : `<span class="carga">${saldo(menor || p)}<br>clases</span>`}</button>`;
     }).join("")}</div>
