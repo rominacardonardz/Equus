@@ -22,12 +22,35 @@ la clase y se muestra la hora exacta del límite de cancelación.
 se firman escribiendo el nombre completo, y sin esa firma no se puede reservar.
 Cada documento lleva versión: al publicar una nueva se vuelve a pedir la firma.
 
-**Competencias.** Calendario con sede, disciplina, categorías y fecha de cierre.
-El jinete se anota y el club ve cuántos van.
+**Competencias.** Calendario que carga y edita dirección: fechas, sede, categorías,
+horarios de cada prueba y cierre de inscripciones. El jinete se anota eligiendo
+categoría; solo dirección ve la lista de quién está anotado y en qué.
 
 **Recordatorios.** Los propios, con fecha; y los automáticos que salen de las
 reservas y del calendario — el límite de cancelación de cada clase, el cierre de
 inscripciones, la apertura de la agenda del lunes.
+
+## Perfiles y qué ve cada uno
+
+| Perfil | Ve | Notas |
+|---|---|---|
+| Dirección | Todo, y edita el calendario de competencias | Puede agendar fuera de la ventana del lunes (RN-20) |
+| Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
+| Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |
+| Tutor | Lo de jinete, sobre la cuenta del menor | Reserva, cancela y firma en nombre del menor (RN-18) |
+
+Nadie fuera de dirección ve las reservas, firmas, recordatorios ni inscripciones
+de otra persona. La lista de anotados a una competencia es información del club:
+un jinete solo sabe si él está anotado.
+
+**Qué se aplica de verdad y qué no.** Publicada como Artifact, el almacén aplica
+una regla que el navegador no puede saltarse: el calendario de competencias solo
+lo escribe quien tenga permiso de edición de la página. La cuenta de dirección de
+la app solo se abre para esa persona, y se comprueba contra el almacén, no contra
+el código. El resto de la separación por perfil vive en la app: filtra lo que
+muestra, pero los datos del club están en un almacén común, así que alguien con
+herramientas de desarrollador podría leerlos. La separación real por usuario
+necesita el servidor con cuentas de verdad.
 
 ## Reglas de negocio aplicadas
 
@@ -54,7 +77,9 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 Es una app funcional, no el sistema de producción. Falta lo que necesita un
 servidor:
 
-- **Sin autenticación.** Se elige un perfil de ejemplo desde el encabezado.
+- **Sin autenticación.** Se elige una cuenta de ejemplo desde el encabezado. Los
+  permisos por perfil sí están implementados, pero sin contraseñas cualquiera
+  puede elegir otra cuenta; la excepción es dirección, que el almacén verifica.
   El sistema real pide teléfono o correo con contraseña (§08).
 - **Las reglas se aplican en el navegador.** La especificación pide que se
   apliquen en el servidor. Al apartar un caballo se usa una reserva de lugar
@@ -63,8 +88,9 @@ servidor:
 - **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
 - **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
   cuadra (M8).
-- **Catálogo de ejemplo.** Caballos, entrenadores, horarios, miembros y
-  competencias son datos de prueba, no los del club.
+- **Catálogo de ejemplo.** Caballos, entrenadores, horarios y jinetes son datos
+  de prueba. Las competencias sí son las del calendario real que dio dirección;
+  sus categorías y horarios se publican desde la app.
 
 ## Cómo verlo
 
@@ -80,7 +106,7 @@ navegador.
 
 ## Identidad visual
 
-Paleta y tipografía provisionales —verde de cuadra, latón y hueso, con Cormorant
-Garamond e Inter—: el manual de marca se entrega al inicio del desarrollo (§08).
+Azules y dorados, con Cormorant Garamond e Inter. Sigue siendo provisional: el
+manual de marca se entrega al inicio del desarrollo (§08).
 Todos los colores son tokens en `:root`; ninguno está escrito dentro de los
 componentes.

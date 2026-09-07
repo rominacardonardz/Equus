@@ -5,55 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Casa Quirón · Reservas</title>
 <meta name="description" content="Reserva de clases, reglamento, calendario de competencias y recordatorios de Casa Quirón.">
-<meta name="theme-color" content="#2F4A3C">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%232F4A3C'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='58' fill='%23E8DCC2' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#1B3A5F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231B3A5F'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='58' fill='%23D6AE4A' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* ==========================================================================
-   Casa Quirón — app de reservas. Identidad provisional (§08 de la
-   especificación): al llegar el manual de marca se cambian los tokens.
+   Casa Quirón — app de reservas. Azules y dorados.
+   Todos los colores son tokens: al llegar el manual de marca (§08) se
+   cambian aquí y en ningún otro lado.
    ========================================================================== */
 :root {
-  --verde:#2F4A3C; --verde-cl:#4A6B58; --laton:#A9803F; --hueso:#F6F2EA;
+  --azul:#1B3A5F; --azul-medio:#2E5C8A; --azul-claro:#8FB4E0;
+  --oro:#C9A227; --oro-tinta:#8A6A15;
 
-  --bg:#F3EFE7; --surface:#FFFFFF; --surface-2:#FAF7F1; --raised:#FFFFFF;
-  --ink:#1B1A17; --ink-2:#5C5648; --ink-3:#8A8271;
-  --line:#E2DACA; --line-fuerte:#CFC4AE;
-  --accent:var(--verde); --accent-2:var(--laton); --on-accent:var(--hueso);
+  --bg:#F2F5FA; --surface:#FFFFFF; --surface-2:#E9EFF7;
+  --ink:#0F1A2B; --ink-2:#4A5670; --ink-3:#7B869C;
+  --line:#D9E2EE; --line-fuerte:#BFCCDF;
+  --accent:var(--azul); --accent-2:var(--oro-tinta); --on-accent:#FFFFFF;
+  --oro-fondo:#F6ECC9; --oro-borde:#E0C878;
 
-  --ok:#2E6B4F; --ok-bg:#E4F0E7;
-  --alerta:#9C4221; --alerta-bg:#FBEAE1;
-  --aviso:#8A6100; --aviso-bg:#FAF0D7;
+  --ok:#1F6B4F; --ok-bg:#DFF0E7;
+  --alerta:#A33227; --alerta-bg:#FBE6E2;
+  --aviso:#7A5A10; --aviso-bg:#FAF0D4;
 
   --serif:"Cormorant Garamond",Georgia,serif;
   --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 
   --r:14px; --r-sm:9px;
-  --sombra:0 1px 2px rgba(27,26,23,.05), 0 10px 28px -22px rgba(27,26,23,.5);
+  --sombra:0 1px 2px rgba(15,26,43,.05), 0 10px 28px -22px rgba(15,26,43,.5);
   --nav-h:4.6rem;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:#14150F; --surface:#1D1F17; --surface-2:#23261C; --raised:#262A1E;
-    --ink:#EFEADF; --ink-2:#ABA495; --ink-3:#7D7768;
-    --line:#333727; --line-fuerte:#454A36;
-    --accent:#93B79F; --accent-2:#CFA463; --on-accent:#14150F;
-    --ok:#8FC7A5; --ok-bg:#1E2E23;
-    --alerta:#E7A188; --alerta-bg:#33201A;
-    --aviso:#D9B463; --aviso-bg:#302819;
-    --sombra:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -24px rgba(0,0,0,.9);
+    --bg:#0A1120; --surface:#121C2C; --surface-2:#1A2536;
+    --ink:#E9EEF7; --ink-2:#A6B2C7; --ink-3:#76829A;
+    --line:#243043; --line-fuerte:#35435C;
+    --accent:#8FB4E0; --accent-2:#D6AE4A; --on-accent:#0A1120;
+    --oro-fondo:#2A2313; --oro-borde:#5C4B1C;
+    --ok:#7FC7A4; --ok-bg:#12281F;
+    --alerta:#E9A08D; --alerta-bg:#331B18;
+    --aviso:#D9B95C; --aviso-bg:#2C2513;
+    --sombra:0 1px 2px rgba(0,0,0,.45), 0 12px 32px -24px rgba(0,0,0,.9);
   }
 }
 :root[data-theme="dark"] {
-  --bg:#14150F; --surface:#1D1F17; --surface-2:#23261C; --raised:#262A1E;
-  --ink:#EFEADF; --ink-2:#ABA495; --ink-3:#7D7768;
-  --line:#333727; --line-fuerte:#454A36;
-  --accent:#93B79F; --accent-2:#CFA463; --on-accent:#14150F;
-  --ok:#8FC7A5; --ok-bg:#1E2E23;
-  --alerta:#E7A188; --alerta-bg:#33201A;
-  --aviso:#D9B463; --aviso-bg:#302819;
+  --bg:#0A1120; --surface:#121C2C; --surface-2:#1A2536;
+  --ink:#E9EEF7; --ink-2:#A6B2C7; --ink-3:#76829A;
+  --line:#243043; --line-fuerte:#35435C;
+  --accent:#8FB4E0; --accent-2:#D6AE4A; --on-accent:#0A1120;
+  --oro-fondo:#2A2313; --oro-borde:#5C4B1C;
+  --ok:#7FC7A4; --ok-bg:#12281F;
+  --alerta:#E9A08D; --alerta-bg:#331B18;
+  --aviso:#D9B95C; --aviso-bg:#2C2513;
 }
 
 *{box-sizing:border-box}
@@ -67,7 +72,7 @@ body{
 h1,h2,h3{font-family:var(--serif); font-weight:600; line-height:1.15; margin:0}
 p{margin:0}
 button{font:inherit; color:inherit; cursor:pointer; background:none; border:0}
-:where(button,a,input,select,textarea):focus-visible{outline:2px solid var(--accent-2); outline-offset:2px; border-radius:6px}
+:where(button,a,input,select,textarea):focus-visible{outline:2px solid var(--oro); outline-offset:2px; border-radius:6px}
 [hidden]{display:none!important}
 
 /* ---------- encabezado ---------- */
@@ -77,42 +82,48 @@ button{font:inherit; color:inherit; cursor:pointer; background:none; border:0}
   padding:.6rem 1rem; background:color-mix(in srgb,var(--bg) 90%,transparent);
   backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);
 }
-.marca{display:flex; align-items:center; gap:.55rem; margin-right:auto}
+.marca{display:flex; align-items:center; gap:.55rem; margin-right:auto; min-width:0}
 .mono-q{
-  display:grid; place-items:center; width:2rem; height:2rem; border-radius:7px;
-  background:var(--accent); color:var(--on-accent);
+  display:grid; place-items:center; width:2rem; height:2rem; border-radius:7px; flex:none;
+  background:var(--azul); color:var(--oro);
   font-family:var(--serif); font-size:1.2rem; line-height:1; padding-bottom:.1rem;
 }
 .marca b{font-family:var(--serif); font-size:1.05rem; letter-spacing:.03em; font-weight:600}
 .quien{
-  display:flex; align-items:center; gap:.45rem;
+  display:flex; align-items:center; gap:.45rem; flex:none;
   border:1px solid var(--line-fuerte); border-radius:999px;
   padding:.3rem .65rem .3rem .35rem; font-size:.82rem; background:var(--surface);
 }
 .avatar{
   display:grid; place-items:center; width:1.55rem; height:1.55rem; border-radius:50%;
-  background:var(--accent-2); color:var(--on-accent); font-size:.7rem; font-weight:600;
+  background:var(--azul-medio); color:#fff; font-size:.68rem; font-weight:600;
+}
+.avatar.admin{background:var(--oro); color:var(--azul)}
+.sello-admin{
+  font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+  color:var(--oro-tinta); background:var(--oro-fondo); border:1px solid var(--oro-borde);
+  padding:.1rem .35rem; border-radius:4px;
 }
 
 /* ---------- navegación ---------- */
 .tabs{
   position:fixed; left:0; right:0; bottom:0; z-index:30;
-  display:grid; grid-template-columns:repeat(5,1fr);
+  display:grid; grid-auto-flow:column; grid-auto-columns:1fr;
   background:color-mix(in srgb,var(--surface) 94%,transparent);
-  backdrop-filter:blur(10px);
-  border-top:1px solid var(--line);
+  backdrop-filter:blur(10px); border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);
 }
 .tab{
+  position:relative;
   display:flex; flex-direction:column; align-items:center; gap:.15rem;
-  padding:.6rem .2rem .55rem; font-size:.65rem; letter-spacing:.02em;
+  padding:.6rem .15rem .55rem; font-size:.63rem; letter-spacing:.01em;
   color:var(--ink-3); border-top:2px solid transparent; margin-top:-1px;
 }
 .tab svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
 .tab[aria-selected="true"]{color:var(--accent); border-top-color:var(--accent)}
 .tab .pip{
-  position:absolute; margin:-.35rem 0 0 1.1rem; width:7px; height:7px; border-radius:50%;
-  background:var(--alerta); border:1.5px solid var(--surface);
+  position:absolute; top:.45rem; left:calc(50% + .5rem);
+  width:7px; height:7px; border-radius:50%; background:var(--alerta); border:1.5px solid var(--surface);
 }
 
 /* ---------- estructura ---------- */
@@ -123,19 +134,17 @@ main{padding:1rem 1rem 2rem; max-width:44rem; margin:0 auto}
 .vista-titulo .sub{font-size:.8rem; color:var(--ink-3)}
 
 .tarjeta{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:1rem}
-.tarjeta.plana{background:var(--surface-2); box-shadow:none}
+.tarjeta.plana{background:var(--surface-2)}
 .tarjeta h3{font-size:1.15rem; margin-bottom:.15rem}
-
 .etiqueta{font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
 
 .pastilla{
   display:inline-flex; align-items:center; gap:.3rem;
-  font-size:.7rem; font-weight:600; letter-spacing:.02em;
-  padding:.2rem .5rem; border-radius:999px; white-space:nowrap;
+  font-size:.7rem; font-weight:600; padding:.2rem .5rem; border-radius:999px; white-space:nowrap;
 }
 .p-ok{background:var(--ok-bg); color:var(--ok)}
 .p-alerta{background:var(--alerta-bg); color:var(--alerta)}
-.p-aviso{background:var(--aviso-bg); color:var(--aviso)}
+.p-oro{background:var(--oro-fondo); color:var(--oro-tinta); border:1px solid var(--oro-borde)}
 .p-neutro{background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line)}
 
 .btn{
@@ -144,9 +153,10 @@ main{padding:1rem 1rem 2rem; max-width:44rem; margin:0 auto}
   border-radius:10px; padding:.6rem 1rem; font-size:.88rem; font-weight:600;
   transition:filter .15s ease;
 }
-.btn:hover{filter:brightness(1.08)}
+.btn:hover{filter:brightness(1.12)}
 .btn:disabled{opacity:.45; cursor:not-allowed}
 .btn-2{background:var(--surface); color:var(--ink); border:1px solid var(--line-fuerte); font-weight:500}
+.btn-oro{background:var(--oro); color:var(--azul)}
 .btn-peligro{background:none; color:var(--alerta); border:1px solid var(--alerta); font-weight:500}
 .btn-bloque{width:100%}
 .btn-mini{padding:.35rem .7rem; font-size:.78rem; border-radius:8px}
@@ -156,8 +166,10 @@ input[type="text"],input[type="date"],textarea,select{
   background:var(--surface); border:1px solid var(--line-fuerte);
   border-radius:9px; padding:.55rem .7rem;
 }
-textarea{resize:vertical; min-height:4.5rem}
+textarea{resize:vertical; min-height:4.5rem; font-size:.85rem}
 label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
+.dos-campos{display:grid; gap:.6rem}
+@media (min-width:30rem){.dos-campos{grid-template-columns:1fr 1fr}}
 
 .vacio{
   text-align:center; padding:2rem 1rem; color:var(--ink-3);
@@ -168,7 +180,7 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .resumen{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem}
 .dato{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.85rem}
 .dato .n{font-family:var(--serif); font-size:2rem; line-height:1; font-variant-numeric:tabular-nums}
-.dato .n.chico{font-size:1.3rem}
+.dato .n.chico{font-size:1.25rem}
 .dato .t{font-size:.72rem; color:var(--ink-3); margin-top:.25rem}
 
 .clase{
@@ -182,39 +194,39 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .clase-meta{font-size:.82rem; color:var(--ink-2)}
 .clase-pie{display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap;
   border-top:1px solid var(--line); padding-top:.55rem; font-size:.78rem; color:var(--ink-3)}
-.limite{color:var(--ink-2)}
 .limite b{color:var(--ink); font-weight:600}
 
+/* ---------- caballo del propietario ---------- */
+.ficha{display:grid; gap:.75rem; background:var(--surface); border:1px solid var(--line);
+  border-top:3px solid var(--oro); border-radius:var(--r); padding:1rem}
+.ficha-cab{display:flex; align-items:center; gap:.85rem}
+.ficha-ini{display:grid; place-items:center; width:3rem; height:3rem; border-radius:50%; flex:none;
+  background:var(--azul); color:var(--oro); font-family:var(--serif); font-size:1.4rem}
+.ficha-datos{display:grid; gap:.3rem; font-size:.82rem; border-top:1px solid var(--line); padding-top:.6rem}
+.ficha-datos div{display:grid; grid-template-columns:7.5rem 1fr; gap:.5rem}
+.ficha-datos dt{color:var(--ink-3)}
+
 /* ---------- reservar ---------- */
-.ventana{
-  display:grid; gap:.5rem; padding:.9rem 1rem; border-radius:var(--r);
-  background:var(--surface-2); border:1px solid var(--line);
-}
+.ventana{display:grid; gap:.5rem; padding:.9rem 1rem; border-radius:var(--r);
+  background:var(--surface-2); border:1px solid var(--line)}
 .ventana.abierta{background:var(--ok-bg); border-color:color-mix(in srgb,var(--ok) 30%,transparent)}
 .ventana.cerrada{background:var(--aviso-bg); border-color:color-mix(in srgb,var(--aviso) 32%,transparent)}
 .ventana .titulo{font-weight:600; font-size:.92rem}
 .ventana .detalle{font-size:.82rem; color:var(--ink-2)}
 
 .dias{display:grid; grid-template-columns:repeat(7,1fr); gap:.35rem}
-.dia{
-  display:grid; gap:.1rem; justify-items:center; padding:.5rem .1rem;
+.dia{display:grid; gap:.1rem; justify-items:center; padding:.5rem .1rem;
   border:1px solid var(--line); border-radius:10px; background:var(--surface);
-  font-size:.7rem; color:var(--ink-3);
-}
+  font-size:.7rem; color:var(--ink-3)}
 .dia .d{font-family:var(--serif); font-size:1.15rem; color:var(--ink); font-variant-numeric:tabular-nums}
-.dia[aria-pressed="true"]{background:var(--accent); border-color:var(--accent)}
-.dia[aria-pressed="true"] .d,.dia[aria-pressed="true"]{color:var(--on-accent)}
-.dia .punto{width:4px; height:4px; border-radius:50%; background:var(--accent-2)}
-.dia[aria-pressed="true"] .punto{background:var(--on-accent)}
+.dia[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.dia[aria-pressed="true"] .d{color:var(--on-accent)}
+.dia .punto{width:4px; height:4px; border-radius:50%; background:var(--oro)}
 
-.sesion{
-  display:grid; grid-template-columns:4.6rem 1fr; gap:.1rem .8rem; align-items:center;
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.85rem 1rem;
-}
-.sesion .hora{
-  grid-row:1 / span 2; align-self:start; padding-top:.1rem;
-  font-family:var(--serif); font-size:1.2rem; line-height:1.2; font-variant-numeric:tabular-nums;
-}
+.sesion{display:grid; grid-template-columns:4.6rem 1fr; gap:.1rem .8rem; align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.85rem 1rem}
+.sesion .hora{grid-row:1 / span 2; align-self:start; padding-top:.1rem;
+  font-family:var(--serif); font-size:1.2rem; line-height:1.2; font-variant-numeric:tabular-nums}
 .sesion .nom{font-weight:600; font-size:.95rem}
 .sesion .det{font-size:.78rem; color:var(--ink-2); grid-column:2}
 .sesion .accion{grid-column:1 / -1; display:flex; justify-content:flex-end; margin-top:.6rem}
@@ -225,33 +237,26 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 }
 
 /* ---------- hoja modal ---------- */
-.velo{position:fixed; inset:0; z-index:40; background:rgba(18,18,14,.5); display:grid; align-items:end}
+.velo{position:fixed; inset:0; z-index:40; background:rgba(8,14,26,.55); display:grid; align-items:end}
 @media (min-width:40rem){.velo{align-items:center; justify-items:center}}
-.hoja{
-  width:100%; max-height:88vh; overflow-y:auto;
+.hoja{width:100%; max-height:88vh; overflow-y:auto;
   background:var(--bg); border-radius:18px 18px 0 0; padding:1.1rem 1rem 1.5rem;
-  display:grid; gap:.85rem;
-}
+  display:grid; gap:.85rem}
 @media (min-width:40rem){.hoja{max-width:32rem; border-radius:18px}}
 .hoja-cab{display:flex; align-items:flex-start; justify-content:space-between; gap:1rem}
 .hoja-cab h3{font-size:1.3rem}
 .cerrar{font-size:1.4rem; line-height:1; color:var(--ink-3); padding:.1rem .4rem}
 
-.caballo{
-  display:flex; align-items:center; gap:.75rem; width:100%; text-align:left;
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.7rem .85rem;
-}
-.caballo[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
-.caballo .ini{
-  display:grid; place-items:center; width:2.4rem; height:2.4rem; border-radius:50%; flex:none;
-  background:var(--surface-2); border:1px solid var(--line);
-  font-family:var(--serif); font-size:1.1rem;
-}
-.caballo .n{font-weight:600; font-size:.92rem}
-.caballo .m{font-size:.74rem; color:var(--ink-3)}
-.caballo .carga{margin-left:auto; font-size:.7rem; color:var(--ink-3); text-align:right}
+.opcion{display:flex; align-items:center; gap:.75rem; width:100%; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.7rem .85rem}
+.opcion[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+.opcion .ini{display:grid; place-items:center; width:2.4rem; height:2.4rem; border-radius:50%; flex:none;
+  background:var(--surface-2); border:1px solid var(--line); font-family:var(--serif); font-size:1.1rem}
+.opcion .n{font-weight:600; font-size:.92rem; display:block}
+.opcion .m{font-size:.74rem; color:var(--ink-3); display:block}
+.opcion .carga{margin-left:auto; font-size:.7rem; color:var(--ink-3); text-align:right; flex:none}
 
-/* ---------- reglamento ---------- */
+/* ---------- documentos ---------- */
 .doc{display:grid; gap:.6rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:1rem}
 .doc-cab{display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem}
 .doc-ver{font-family:var(--mono); font-size:.7rem; color:var(--ink-3)}
@@ -262,72 +267,71 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .firmado{font-size:.78rem; color:var(--ok)}
 
 /* ---------- competencias ---------- */
-.comp{display:grid; gap:.55rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:1rem}
-.comp-fecha{
-  display:grid; justify-items:center; width:3.2rem; padding:.35rem 0; flex:none;
-  background:var(--accent); color:var(--on-accent); border-radius:10px;
-}
-.comp-fecha .d{font-family:var(--serif); font-size:1.35rem; line-height:1}
-.comp-fecha .m{font-size:.6rem; letter-spacing:.1em; text-transform:uppercase}
+.comp{display:grid; gap:.6rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:1rem}
+.comp-fecha{display:grid; justify-items:center; width:3.4rem; padding:.35rem 0; flex:none;
+  background:var(--azul); color:var(--oro); border-radius:10px; line-height:1.1}
+.comp-fecha .d{font-family:var(--serif); font-size:1.15rem}
+.comp-fecha .m{font-size:.58rem; letter-spacing:.09em; text-transform:uppercase}
 .comp-cab{display:flex; gap:.85rem; align-items:flex-start}
 .comp-cab h3{font-size:1.15rem}
-.comp-datos{display:grid; gap:.3rem; font-size:.8rem; color:var(--ink-2); border-top:1px solid var(--line); padding-top:.6rem}
-.comp-datos div{display:grid; grid-template-columns:6.5rem 1fr; gap:.5rem}
-.comp-datos dt{color:var(--ink-3)}
+.comp-bloque{border-top:1px solid var(--line); padding-top:.6rem; display:grid; gap:.35rem}
+.comp-bloque .etiqueta{margin-bottom:.1rem}
+.fichas{display:flex; flex-wrap:wrap; gap:.35rem}
+.ficha-cat{font-size:.75rem; padding:.2rem .55rem; border-radius:7px;
+  background:var(--oro-fondo); border:1px solid var(--oro-borde); color:var(--oro-tinta)}
+.horario{font-size:.8rem; color:var(--ink-2); display:grid; gap:.2rem}
+.horario div{display:grid; grid-template-columns:auto 1fr; gap:.5rem}
+.horario b{font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums}
+.por-definir{font-size:.8rem; color:var(--ink-3); font-style:italic}
+
+.admin-caja{border:1px solid var(--oro-borde); background:var(--oro-fondo); border-radius:var(--r); padding:.85rem; display:grid; gap:.6rem}
+.admin-caja .etiqueta{color:var(--oro-tinta)}
+.anotado{display:flex; align-items:center; gap:.6rem; font-size:.83rem; padding:.35rem 0; border-top:1px solid var(--oro-borde)}
+.anotado:first-of-type{border-top:0}
+.anotado .cat{margin-left:auto; font-size:.72rem; color:var(--oro-tinta)}
+.acciones-admin{display:flex; gap:.5rem; flex-wrap:wrap}
 
 /* ---------- recordatorios ---------- */
-.rec{
-  display:flex; align-items:flex-start; gap:.7rem;
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.8rem .9rem;
-}
+.rec{display:flex; align-items:flex-start; gap:.7rem;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.8rem .9rem}
 .rec.auto{background:var(--surface-2); border-style:dashed}
 .rec.vencido{border-left:3px solid var(--alerta)}
 .rec .txt{flex:1; min-width:0}
 .rec .txt .t{font-size:.9rem; font-weight:500}
 .rec .txt .f{font-size:.75rem; color:var(--ink-3); margin-top:.1rem}
 .rec.hecho .txt .t{text-decoration:line-through; color:var(--ink-3); font-weight:400}
-.marcar{
-  width:1.35rem; height:1.35rem; flex:none; margin-top:.15rem;
-  border:1.5px solid var(--line-fuerte); border-radius:6px; display:grid; place-items:center;
-}
+.marcar{width:1.35rem; height:1.35rem; flex:none; margin-top:.15rem;
+  border:1.5px solid var(--line-fuerte); border-radius:6px; display:grid; place-items:center}
 .marcar[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
 .marcar svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
 
 /* ---------- avisos ---------- */
-.nota{
-  display:grid; gap:.3rem; padding:.75rem .9rem; border-radius:var(--r-sm);
-  font-size:.82rem; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2);
-}
+.nota{display:grid; gap:.3rem; padding:.75rem .9rem; border-radius:var(--r-sm);
+  font-size:.82rem; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2)}
 .nota b{color:var(--ink)}
 .nota.alerta{background:var(--alerta-bg); border-color:color-mix(in srgb,var(--alerta) 30%,transparent); color:var(--alerta)}
 .nota.alerta b{color:var(--alerta)}
+.nota.oro{background:var(--oro-fondo); border-color:var(--oro-borde); color:var(--oro-tinta)}
+.nota.oro b{color:var(--oro-tinta)}
 
-.brindis{
-  position:fixed; left:50%; bottom:calc(var(--nav-h) + 1rem); transform:translateX(-50%);
-  z-index:50; max-width:min(24rem,92vw);
-  background:var(--accent); color:var(--on-accent);
-  padding:.7rem 1rem; border-radius:11px; font-size:.85rem; box-shadow:var(--sombra);
-}
+.brindis{position:fixed; left:50%; bottom:calc(var(--nav-h) + 1rem); transform:translateX(-50%);
+  z-index:50; max-width:min(24rem,92vw); background:var(--azul); color:#fff;
+  padding:.7rem 1rem; border-radius:11px; font-size:.85rem; box-shadow:var(--sombra)}
 
-.pie{
-  max-width:44rem; margin:1.5rem auto 0; padding:1.2rem 1rem 0;
+.pie{max-width:44rem; margin:1.5rem auto 0; padding:1.2rem 1rem 0;
   border-top:1px solid var(--line); font-size:.72rem; color:var(--ink-3); text-align:center;
-  display:grid; gap:.35rem;
-}
+  display:grid; gap:.35rem}
 .pie button{text-decoration:underline; font-size:.72rem; color:var(--ink-3)}
 
-/* ---------- escritorio ---------- */
 @media (min-width:56rem){
   body{padding-bottom:0}
-  .tabs{
-    position:sticky; top:3.3rem; bottom:auto; grid-template-columns:repeat(5,auto);
+  .tabs{position:sticky; top:3.3rem; bottom:auto; grid-auto-columns:auto;
     justify-content:center; gap:.25rem; border-top:0; border-bottom:1px solid var(--line);
-    background:color-mix(in srgb,var(--bg) 90%,transparent);
-  }
+    background:color-mix(in srgb,var(--bg) 90%,transparent)}
   .tab{flex-direction:row; gap:.45rem; font-size:.82rem; padding:.7rem .9rem;
     border-top:0; border-bottom:2px solid transparent; margin:0 0 -1px}
   .tab[aria-selected="true"]{border-top-color:transparent; border-bottom-color:var(--accent)}
-  .tab .pip{margin:-.6rem 0 0 .1rem; position:static}
+  .tab .pip{top:.5rem; left:auto; right:.35rem}
   .resumen{grid-template-columns:repeat(4,1fr)}
   .brindis{bottom:1.5rem}
 }
@@ -339,46 +343,26 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
   <div class="marca">
     <span class="mono-q" aria-hidden="true">Q</span>
     <b>Casa Quirón</b>
+    <span class="sello-admin" id="sello" hidden>Dirección</span>
   </div>
   <button class="quien" id="btn-quien">
     <span class="avatar" id="quien-ini" aria-hidden="true">—</span>
-    <span id="quien-nombre">Elegir perfil</span>
+    <span id="quien-nombre">Entrar</span>
   </button>
 </header>
 
-<nav class="tabs" role="tablist" aria-label="Secciones">
-  <button class="tab" role="tab" data-vista="inicio" aria-selected="true">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>
-    Inicio
-  </button>
-  <button class="tab" role="tab" data-vista="reservar" aria-selected="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>
-    Reservar
-  </button>
-  <button class="tab" role="tab" data-vista="reglamento" aria-selected="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
-    Reglamento
-  </button>
-  <button class="tab" role="tab" data-vista="competencias" aria-selected="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M10 17h4l1 3H9z"/></svg>
-    Competencias
-  </button>
-  <button class="tab" role="tab" data-vista="recordatorios" aria-selected="false">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-    Recordatorios
-  </button>
-</nav>
+<nav class="tabs" role="tablist" aria-label="Secciones" id="tabs"></nav>
 
 <main>
   <section class="vista" id="v-inicio"></section>
   <section class="vista" id="v-reservar" hidden></section>
-  <section class="vista" id="v-reglamento" hidden></section>
+  <section class="vista" id="v-documentos" hidden></section>
   <section class="vista" id="v-competencias" hidden></section>
   <section class="vista" id="v-recordatorios" hidden></section>
 
   <footer class="pie">
     <p id="pie-datos">Casa Quirón · Sistema de reservas</p>
-    <p>Catálogo, horarios, caballos y competencias son <b>datos de ejemplo</b> para probar el flujo, no el catálogo real del club.</p>
+    <p>Caballos, horarios y jinetes son <b>datos de ejemplo</b>; las competencias las carga dirección.</p>
     <p><button id="btn-reiniciar" type="button">Borrar mis datos de prueba</button></p>
   </footer>
 </main>
@@ -389,60 +373,47 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 <script>
 "use strict";
 /* ==========================================================================
-   Casa Quirón — reservas, reglamento, competencias y recordatorios.
-
-   Las reglas de negocio (RN-xx) vienen de la especificación funcional v2.0.
-   Aquí se aplican en el navegador: es un prototipo funcional, no el sistema
-   de producción, que debe aplicarlas en el servidor (§04 del documento).
+   Casa Quirón — catálogos, cuentas y permisos.
    ========================================================================== */
 
-/* ---------------------------------------------------------------- catálogos
-   Datos de ejemplo. El administrador los edita en el panel (M1). */
-
 const NIVELES = [
-  { id:"cuerdita",      nombre:"Cuerdita",      orden:1 },
-  { id:"principiantes", nombre:"Principiantes", orden:2 },
-  { id:"intermedio",    nombre:"Intermedio",    orden:3 },
-  { id:"avanzado",      nombre:"Avanzado",      orden:4 },
+  { id:"cuerdita", nombre:"Cuerdita", orden:1 }, { id:"principiantes", nombre:"Principiantes", orden:2 },
+  { id:"intermedio", nombre:"Intermedio", orden:3 }, { id:"avanzado", nombre:"Avanzado", orden:4 },
 ];
 const nivelOrden = id => (NIVELES.find(n => n.id === id) || {}).orden || 0;
 const nivelNombre = id => (NIVELES.find(n => n.id === id) || {}).nombre || "—";
 
 const CABALLOS = [
-  { id:"jazmin",  nombre:"Jazmín",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"activo" },
-  { id:"duende",  nombre:"Duende",  uso:"escuelita",   min:"cuerdita",      max:"principiantes", maxDia:3, estatus:"activo" },
-  { id:"nube",    nombre:"Nube",    uso:"escuelita",   min:"cuerdita",      max:"principiantes", maxDia:3, estatus:"activo" },
-  { id:"picaro",  nombre:"Pícaro",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"activo" },
-  { id:"alazan",  nombre:"Alazán",  uso:"escuelita",   min:"intermedio",    max:"avanzado",   maxDia:3, estatus:"activo" },
-  { id:"sereno",  nombre:"Sereno",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"descanso" },
-  { id:"camelot", nombre:"Camelot", uso:"propietario", min:"intermedio",    max:"avanzado",   maxDia:1, estatus:"activo" },
-  { id:"tornado", nombre:"Tornado", uso:"desarrollo",  min:"intermedio",    max:"avanzado",   maxDia:1, estatus:"activo" },
+  { id:"jazmin",  nombre:"Jazmín",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"activo", edad:11, origen:"KWPN", capa:"alazana" },
+  { id:"duende",  nombre:"Duende",  uso:"escuelita",   min:"cuerdita",      max:"principiantes", maxDia:3, estatus:"activo", edad:16, origen:"Azteca", capa:"tordillo" },
+  { id:"nube",    nombre:"Nube",    uso:"escuelita",   min:"cuerdita",      max:"principiantes", maxDia:3, estatus:"activo", edad:14, origen:"Cuarto de milla", capa:"palomino" },
+  { id:"picaro",  nombre:"Pícaro",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"activo", edad:9,  origen:"Azteca", capa:"castaño" },
+  { id:"alazan",  nombre:"Alazán",  uso:"escuelita",   min:"intermedio",    max:"avanzado",   maxDia:3, estatus:"activo", edad:12, origen:"Silla argentino", capa:"alazan" },
+  { id:"sereno",  nombre:"Sereno",  uso:"escuelita",   min:"principiantes", max:"intermedio", maxDia:3, estatus:"descanso", edad:18, origen:"Azteca", capa:"bayo" },
+  { id:"camelot", nombre:"Camelot", uso:"propietario", min:"intermedio",    max:"avanzado",   maxDia:1, estatus:"activo", edad:10, origen:"Holsteiner", capa:"castaño oscuro" },
+  { id:"tornado", nombre:"Tornado", uso:"desarrollo",  min:"intermedio",    max:"avanzado",   maxDia:1, estatus:"activo", edad:7,  origen:"KWPN", capa:"tordillo" },
 ];
 const caballo = id => CABALLOS.find(c => c.id === id);
 
 const ENTRENADORES = [
-  { id:"asr", nombre:"Ana Sofía Rivas" },
-  { id:"mle", nombre:"Mauricio Lerma" },
-  { id:"roc", nombre:"Renata Ochoa" },
+  { id:"asr", nombre:"Ana Sofía Rivas" }, { id:"mle", nombre:"Mauricio Lerma" }, { id:"roc", nombre:"Renata Ochoa" },
 ];
 const entrenador = id => (ENTRENADORES.find(e => e.id === id) || {}).nombre || "—";
 
 const ESPACIOS = [
-  { id:"techada",  nombre:"Pista Techada",  cap:8 },
-  { id:"norte",    nombre:"Picadero Norte", cap:6 },
-  { id:"redondel", nombre:"Redondel",       cap:1 },
+  { id:"techada", nombre:"Pista Techada", cap:8 }, { id:"norte", nombre:"Picadero Norte", cap:6 },
+  { id:"redondel", nombre:"Redondel", cap:1 },
 ];
 const espacio = id => (ESPACIOS.find(e => e.id === id) || {}).nombre || "—";
 
 const TIPOS = [
-  { id:"escuela",  nombre:"Clase de escuela", min:60, cupo:6, consume:1 },
-  { id:"cuerda",   nombre:"Clase a la cuerda", min:30, cupo:1, consume:1 },
-  { id:"salto",    nombre:"Salto",             min:60, cupo:5, consume:1 },
-  { id:"pista",    nombre:"Apartado de pista", min:60, cupo:4, consume:1 },
+  { id:"escuela", nombre:"Clase de escuela", min:60, cupo:6, consume:1 },
+  { id:"cuerda",  nombre:"Clase a la cuerda", min:30, cupo:1, consume:1 },
+  { id:"salto",   nombre:"Salto",             min:60, cupo:5, consume:1 },
+  { id:"pista",   nombre:"Apartado de pista", min:60, cupo:4, consume:1 },
 ];
 const tipo = id => TIPOS.find(t => t.id === id) || {};
 
-/* Plantilla semanal (M2). dia: 1 = lunes … 6 = sábado. */
 const PLANTILLA = [
   { id:"s01", dia:1, hora:"17:00", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["principiantes","intermedio"] },
   { id:"s02", dia:1, hora:"18:15", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
@@ -451,35 +422,51 @@ const PLANTILLA = [
   { id:"s05", dia:2, hora:"17:30", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["cuerdita","principiantes"] },
   { id:"s06", dia:3, hora:"08:00", tipo:"pista",   ent:"mle", esp:"norte",    cupo:4, niveles:["intermedio","avanzado"] },
   { id:"s07", dia:3, hora:"17:00", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["principiantes","intermedio"] },
-  { id:"s08", dia:4, hora:"16:00", tipo:"cuerda",  ent:"roc", esp:"redondel", cupo:1, niveles:["cuerdita"] },
-  { id:"s09", dia:4, hora:"17:00", tipo:"escuela", ent:"roc", esp:"norte",    cupo:6, niveles:["principiantes","intermedio"] },
-  { id:"s10", dia:4, hora:"18:15", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
+  { id:"s08", dia:3, hora:"18:15", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
+  { id:"s09", dia:4, hora:"16:00", tipo:"cuerda",  ent:"roc", esp:"redondel", cupo:1, niveles:["cuerdita"] },
+  { id:"s10", dia:4, hora:"17:00", tipo:"escuela", ent:"roc", esp:"norte",    cupo:6, niveles:["principiantes","intermedio"] },
   { id:"s11", dia:5, hora:"17:00", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["cuerdita","principiantes"] },
-  { id:"s12", dia:6, hora:"09:00", tipo:"escuela", ent:"roc", esp:"norte",    cupo:6, niveles:["cuerdita","principiantes"] },
-  { id:"s13", dia:6, hora:"10:15", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["principiantes","intermedio"] },
-  { id:"s14", dia:6, hora:"11:30", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
+  { id:"s12", dia:5, hora:"18:15", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
+  { id:"s13", dia:6, hora:"09:00", tipo:"escuela", ent:"roc", esp:"norte",    cupo:6, niveles:["cuerdita","principiantes"] },
+  { id:"s14", dia:6, hora:"10:15", tipo:"escuela", ent:"asr", esp:"techada",  cupo:6, niveles:["principiantes","intermedio"] },
+  { id:"s15", dia:6, hora:"11:30", tipo:"salto",   ent:"mle", esp:"techada",  cupo:5, niveles:["intermedio","avanzado"] },
 ];
-const plantilla = id => PLANTILLA.find(p => p.id === id);
 
-/* Miembros de ejemplo. `habilitados` es la tabla caballos_habilitados (RN-04),
-   que en el sistema real administra cada entrenador. */
-const MIEMBROS = [
-  { id:"romy",      nombre:"Romy Uresti",       nivel:"avanzado",      perfiles:["propietario","alumno"],
-    propios:["camelot"], habilitados:["camelot","alazan"], clasesCargadas:8,  paquete:"Propietaria · clases y pista" },
-  { id:"valentina", nombre:"Valentina Cordero", nivel:"intermedio",    perfiles:["alumno"],
-    propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8,  paquete:"8 clases · tardes" },
-  { id:"mateo",     nombre:"Mateo Sandoval",    nivel:"principiantes", perfiles:["alumno"], menor:true, tutor:"Claudia Sandoval",
-    propios:[], habilitados:["jazmin","duende"], clasesCargadas:4, paquete:"4 clases · sábados" },
-  { id:"ximena",    nombre:"Ximena Torres",     nivel:"cuerdita",      perfiles:["alumno"], menor:true, tutor:"Paulina Torres",
-    propios:[], habilitados:["duende","nube"], clasesCargadas:0, paquete:"4 clases · entre semana (por renovar)" },
-  { id:"diego",     nombre:"Diego Arellano",    nivel:"intermedio",    perfiles:["propietario","alumno"],
-    propios:["tornado"], habilitados:["tornado","picaro"], clasesCargadas:6, paquete:"Propietario · clases y pista" },
+/* --------------------------------------------------------- jinetes y cuentas
+   Un jinete es quien monta. Una cuenta es quien entra a la app. Un menor no
+   tiene cuenta propia: la maneja su tutor (RN-18). */
+const JINETES = [
+  { id:"romy",      nombre:"Romy Uresti",       nivel:"avanzado",      habilitados:["camelot","alazan"],           clasesCargadas:8, paquete:"Propietaria · clases y pista" },
+  { id:"diego",     nombre:"Diego Arellano",    nivel:"intermedio",    habilitados:["tornado","picaro"],           clasesCargadas:6, paquete:"Propietario · clases y pista" },
+  { id:"valentina", nombre:"Valentina Cordero", nivel:"intermedio",    habilitados:["jazmin","picaro","alazan"],   clasesCargadas:8, paquete:"8 clases · tardes" },
+  { id:"mateo",     nombre:"Mateo Sandoval",    nivel:"principiantes", habilitados:["jazmin","duende"],            clasesCargadas:4, paquete:"4 clases · sábados", menor:true },
+  { id:"ximena",    nombre:"Ximena Torres",     nivel:"cuerdita",      habilitados:["duende","nube"],              clasesCargadas:0, paquete:"4 clases · entre semana (por renovar)", menor:true },
 ];
-const miembro = id => MIEMBROS.find(m => m.id === id);
+const jinete = id => JINETES.find(j => j.id === id);
 
-/* -------------------------------------------------- tiempo en zona del club
-   RN-01: toda ventana de tiempo se calcula en la zona horaria del club,
-   nunca en la del dispositivo. */
+/* rol: qué secciones ve la cuenta.
+   admin       — todo, y edita competencias
+   propietario — lo de propietario y lo de jinete
+   jinete      — solo lo de jinete
+   tutor       — lo de jinete, sobre la cuenta del menor a su cargo */
+const CUENTAS = [
+  { id:"romy",      nombre:"Romy Uresti Cardona", rol:"admin",       jineteId:"romy",      propios:["camelot"] },
+  { id:"diego",     nombre:"Diego Arellano",      rol:"propietario", jineteId:"diego",     propios:["tornado"] },
+  { id:"valentina", nombre:"Valentina Cordero",   rol:"jinete",      jineteId:"valentina", propios:[] },
+  { id:"claudia",   nombre:"Claudia Sandoval",    rol:"tutor",       jineteId:"mateo",     propios:[] },
+  { id:"paulina",   nombre:"Paulina Torres",      rol:"tutor",       jineteId:"ximena",    propios:[] },
+];
+const cuentaPorId = id => CUENTAS.find(c => c.id === id);
+
+const SECCIONES = {
+  admin:       ["jinete","propietario","admin"],
+  propietario: ["jinete","propietario"],
+  jinete:      ["jinete"],
+  tutor:       ["jinete"],
+};
+const ROL_NOMBRE = { admin:"Dirección", propietario:"Propietario", jinete:"Jinete", tutor:"Tutor" };
+
+/* -------------------------------------------------- tiempo en zona del club */
 const TZ = "America/Mexico_City";
 const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -489,84 +476,52 @@ function partesClub(fecha) {
     year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" });
   const p = {};
   for (const parte of f.formatToParts(fecha)) if (parte.type !== "literal") p[parte.type] = parte.value;
-  const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(p.weekday);
-  return { anio:+p.year, mes:+p.month, dia:+p.day, hora:(+p.hour) % 24, min:+p.minute, seg:+p.second, diaSemana:wd };
-}
-/* Instante UTC que en el club se lee como la fecha y hora dadas. */
-function instanteClub(anio, mes, dia, hora, min) {
-  const meta = Date.UTC(anio, mes - 1, dia, hora, min);
-  let desfase = desfaseEn(new Date(meta));
-  let inst = meta - desfase;
-  desfase = desfaseEn(new Date(inst));
-  return new Date(meta - desfase);
+  return { anio:+p.year, mes:+p.month, dia:+p.day, hora:(+p.hour) % 24, min:+p.minute, seg:+p.second,
+    diaSemana:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(p.weekday) };
 }
 function desfaseEn(instante) {
   const p = partesClub(instante);
   return Date.UTC(p.anio, p.mes - 1, p.dia, p.hora, p.min, p.seg) - instante.getTime();
 }
-const ymd = fecha => { const p = partesClub(fecha); return `${p.anio}-${String(p.mes).padStart(2,"0")}-${String(p.dia).padStart(2,"0")}`; };
+function instanteClub(anio, mes, dia, hora, min) {
+  const meta = Date.UTC(anio, mes - 1, dia, hora, min);
+  let inst = meta - desfaseEn(new Date(meta));
+  return new Date(meta - desfaseEn(new Date(inst)));
+}
+const ymd = f => { const p = partesClub(f); return `${p.anio}-${String(p.mes).padStart(2,"0")}-${String(p.dia).padStart(2,"0")}`; };
 function deYmd(clave, hora = "00:00") {
-  const [a,m,d] = clave.split("-").map(Number);
-  const [h,mi]  = hora.split(":").map(Number);
+  const [a,m,d] = clave.split("-").map(Number); const [h,mi] = hora.split(":").map(Number);
   return instanteClub(a, m, d, h, mi);
 }
 const ahora = () => new Date();
-
 function fechaLarga(clave) {
   const [a,m,d] = clave.split("-").map(Number);
-  const inst = instanteClub(a, m, d, 12, 0);
-  return `${DIAS[partesClub(inst).diaSemana]} ${d} de ${MESES[m-1]}`;
+  return `${DIAS[partesClub(instanteClub(a,m,d,12,0)).diaSemana]} ${d} de ${MESES[m-1]}`;
 }
 function horaTexto(fecha) {
   const p = partesClub(fecha);
-  const h12 = p.hora % 12 === 0 ? 12 : p.hora % 12;
-  return `${h12}:${String(p.min).padStart(2,"0")} ${p.hora < 12 ? "a.m." : "p.m."}`;
+  return `${p.hora % 12 === 0 ? 12 : p.hora % 12}:${String(p.min).padStart(2,"0")} ${p.hora < 12 ? "a.m." : "p.m."}`;
 }
-/* "el jueves 7:00 a.m." — la leyenda exacta que pide M5. */
-function momentoTexto(fecha) {
-  const p = partesClub(fecha);
-  return `el ${DIAS[p.diaSemana]} ${horaTexto(fecha)}`;
-}
+function momentoTexto(fecha) { return `el ${DIAS[partesClub(fecha).diaSemana]} ${horaTexto(fecha)}`; }
 function lunesDeLaSemana(fecha) {
   const p = partesClub(fecha);
-  const retro = (p.diaSemana + 6) % 7;
-  const base = instanteClub(p.anio, p.mes, p.dia, 12, 0);
-  return new Date(base.getTime() - retro * 864e5);
+  return new Date(instanteClub(p.anio,p.mes,p.dia,12,0).getTime() - ((p.diaSemana + 6) % 7) * 864e5);
 }
-function sumarDias(fecha, n) { return new Date(fecha.getTime() + n * 864e5); }
+const sumarDias = (f, n) => new Date(f.getTime() + n * 864e5);
 
-/* Competencias, fechadas contra hoy para que el calendario siga vivo (M10). */
-const HOY = ahora();
-const COMPETENCIAS = [
-  { id:"copa-otono", nombre:"Copa Casa Quirón · Salto",
-    dias: 18, sede:"Casa Quirón", disciplina:"Salto",
-    categorias:"0.60 m · 0.80 m · 1.00 m", cierre: 11,
-    nota:"Concurso interno. Cada jinete monta el caballo con el que entrena." },
-  { id:"clinica-doma", nombre:"Clínica de doma clásica",
-    dias: 32, sede:"Casa Quirón · Pista Techada", disciplina:"Doma",
-    categorias:"Abierta a todos los niveles", cierre: 25,
-    nota:"Dos días. Cupo limitado a 12 binomios." },
-  { id:"regional", nombre:"Concurso regional de salto",
-    dias: 54, sede:"Sede externa", disciplina:"Salto",
-    categorias:"0.80 m · 1.00 m · 1.10 m", cierre: 40,
-    nota:"Traslado de caballos coordinado por el club. Inscripción externa aparte." },
-  { id:"festival", nombre:"Festival de fin de curso",
-    dias: -12, sede:"Casa Quirón", disciplina:"Exhibición",
-    categorias:"Todas las escuelitas", cierre: -20,
-    nota:"Ya se realizó. Queda en el calendario como referencia." },
-].map(c => ({
-  ...c,
-  fecha: ymd(sumarDias(HOY, c.dias)),
-  fechaCierre: ymd(sumarDias(HOY, c.cierre)),
-}));
+/* Rango "17 al 20 de septiembre", o "2 de noviembre" si es un solo día. */
+function rangoFechas(ini, fin) {
+  if (!fin || fin === ini) { const [,m,d] = ini.split("-").map(Number); return `${d} de ${MESES[m-1]}`; }
+  const [,m1,d1] = ini.split("-").map(Number);
+  const [,m2,d2] = fin.split("-").map(Number);
+  return m1 === m2 ? `${d1} al ${d2} de ${MESES[m1-1]}` : `${d1} de ${MESES[m1-1]} al ${d2} de ${MESES[m2-1]}`;
+}
 </script>
 
 <script>
 "use strict";
-/* ------------------------------------------------------- documentos (M7)
-   Texto de muestra: dirección sustituye el contenido por el documento
-   oficial. Cada documento lleva versión; al publicarse una nueva, el
-   sistema vuelve a pedir aceptación (RN-15). */
+/* -------------------------------------------------------- documentos (M7)
+   Texto de muestra: dirección lo sustituye por el documento oficial. */
 const DOCUMENTOS = [
   { id:"reglamento", titulo:"Reglamento del club", version:"2.1", vigente:"1 de julio de 2026",
     audiencia:"todos", obligatorio:true,
@@ -577,18 +532,17 @@ const DOCUMENTOS = [
       { h:"Uso de instalaciones", l:["El acceso a caballerizas es solo con autorización del equipo de cuadra.",
         "La pista se libera puntualmente al terminar cada clase.","Prohibido dar alimento a caballos que no sean propios."] },
       { h:"Horarios", l:["Cada nivel tiene sus horarios; los ves en la app al reservar.",
-        "La agenda de la semana se abre y se cierra el lunes.",
-        "Presentarse 15 minutos antes de la clase para ensillar."] },
+        "La agenda de la semana se abre y se cierra el lunes.","Presentarse 15 minutos antes de la clase para ensillar."] },
       { h:"Convivencia", l:["Trato respetuoso con personal, jinetes y caballos.",
         "El incumplimiento del reglamento puede derivar en suspensión temporal."] },
     ] },
   { id:"contrato-jinete", titulo:"Contrato de jinete", version:"1.4", vigente:"1 de julio de 2026",
-    audiencia:"alumno", obligatorio:true,
+    audiencia:"jinete", obligatorio:true,
     resumen:"Deslinde de responsabilidad y condiciones de las clases.",
     cuerpo:[
       { h:"Riesgo de la actividad", l:["La equitación es una actividad de riesgo. El jinete la practica por voluntad propia.",
         "El club no se hace responsable de incidentes derivados del incumplimiento del reglamento."] },
-      { h:"Clases y saldo", l:["Las clases se pagan en efectivo o transferencia en las oficinas del club.",
+      { h:"Clases y saldo", l:["Las clases se pagan en las oficinas del club; no hay cobro en línea.",
         "El saldo lo carga el administrador una vez recibido el pago.",
         "La vigencia del paquete la define el administrador al cargarlo."] },
       { h:"Cancelaciones", l:["Cancelación sin costo hasta 10 horas antes del inicio de la clase.",
@@ -622,21 +576,30 @@ const DOCUMENTOS = [
     ] },
 ];
 const documento = id => DOCUMENTOS.find(d => d.id === id);
-/* "A", "A y B", "A, B y C" */
-const listar = xs => xs.length < 2 ? (xs[0] || "")
-  : xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1];
-function docsDe(m) {
-  return DOCUMENTOS.filter(d => d.audiencia === "todos" || m.perfiles.includes(d.audiencia));
-}
+const listar = xs => xs.length < 2 ? (xs[0] || "") : xs.slice(0,-1).join(", ") + " y " + xs[xs.length-1];
+
+/* ------------------------------------------------------------- competencias
+   Calendario que carga dirección. Categorías, horarios y cierre quedan vacíos
+   hasta que dirección los publique. */
+const COMPETENCIAS_INICIALES = [
+  { id:"san-pedro",     nombre:"San Pedro",       inicio:"2026-09-17", fin:"2026-09-20",
+    sede:"San Pedro", disciplina:"Salto", categorias:[], horarios:[], cierre:"", nota:"" },
+  { id:"paloma-blanca", nombre:"Paloma Blanca",   inicio:"2026-10-01", fin:"2026-10-04",
+    sede:"Paloma Blanca", disciplina:"Salto", categorias:[], horarios:[], cierre:"", nota:"" },
+  { id:"hipico-mty",    nombre:"Hípico Monterrey", inicio:"2026-10-22", fin:"2026-10-25",
+    sede:"Club Hípico Monterrey", disciplina:"Salto", categorias:[], horarios:[], cierre:"", nota:"" },
+  { id:"la-silla",      nombre:"Hípico La Silla", inicio:"2026-11-02", fin:"2026-11-15",
+    sede:"Club Hípico La Silla", disciplina:"Salto", categorias:[], horarios:[], cierre:"", nota:"" },
+];
 
 /* ------------------------------------------------------------ almacenamiento
-   Con la capacidad `db` los datos son compartidos y persistentes: si otra
-   jinete aparta a Jazmín, desaparece de tu lista (RN-08). Sin ella la página
-   sigue funcionando contra el almacenamiento del navegador. */
-const COLECCIONES = ["reservas","historial","recordatorios","aceptaciones","inscripciones"];
+   Publicada como Artifact, el almacén compartido guarda las reservas y solo
+   quien tenga permiso de edición puede tocar el calendario de competencias:
+   esa restricción la aplica el servidor, no esta página. */
+const COLECCIONES = ["reservas","historial","recordatorios","aceptaciones","inscripciones","competencias"];
 
 const Datos = {
-  db: null,
+  db: null, esEditor: true, listo: false,
   cache: Object.fromEntries(COLECCIONES.map(c => [c, {}])),
   alCambiar: () => {},
 
@@ -644,302 +607,350 @@ const Datos = {
 
   async iniciar() {
     for (const c of COLECCIONES) this.cache[c] = this.leerLocal(c);
+    /* Sin almacén compartido el calendario arranca con el que trae la página;
+       con almacén, dirección lo carga desde la app. */
+    if (!Object.keys(this.cache.competencias).length) {
+      for (const c of COMPETENCIAS_INICIALES) { const { id, ...resto } = c; this.cache.competencias[id] = resto; }
+      this.guardarLocal("competencias");
+    }
     try {
       const db = window.claude && (await window.claude.use("db"));
       if (db) {
         this.db = db;
+        this.cache.competencias = {};      /* manda el almacén, no lo local */
+        this.esEditor = await this.probarEdicion();
         for (const c of COLECCIONES) {
-          db.collection(c).onSnapshot(
-            snap => {
-              const siguiente = {};
-              snap.docs.forEach(d => { siguiente[d.id] = d.data(); });
-              this.cache[c] = siguiente;
-              this.alCambiar();
-            },
-            () => {}
-          );
+          db.collection(c).onSnapshot(snap => {
+            const siguiente = {};
+            snap.docs.forEach(d => { if (!d.id.startsWith("_")) siguiente[d.id] = d.data(); });
+            this.cache[c] = siguiente;
+            this.alCambiar();
+          }, () => {});
         }
-        this.alCambiar();
       }
-    } catch (e) { /* sin db: se queda en local */ }
+    } catch (e) { /* sin almacén compartido: se queda en local */ }
+    this.listo = true;
+    this.alCambiar();
   },
 
-  leerLocal(c) {
-    try { return JSON.parse(localStorage.getItem("cq:" + c) || "{}"); } catch (e) { return {}; }
+  /* El único modo de saber si esta persona tiene permiso de edición es
+     intentar escribir donde solo dirección puede. */
+  async probarEdicion() {
+    try {
+      await this.db.collection("competencias").doc("_acceso").set({ probado:new Date().toISOString() });
+      await this.db.collection("competencias").doc("_acceso").delete();
+      return true;
+    } catch (e) { return false; }
   },
-  guardarLocal(c) {
-    try { localStorage.setItem("cq:" + c, JSON.stringify(this.cache[c])); } catch (e) {}
-  },
+
+  leerLocal(c) { try { return JSON.parse(localStorage.getItem("cq:" + c) || "{}"); } catch (e) { return {}; } },
+  guardarLocal(c) { try { localStorage.setItem("cq:" + c, JSON.stringify(this.cache[c])); } catch (e) {} },
 
   todo(c) { return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ id, ...d })); },
 
   async poner(c, id, datos) {
     this.cache[c][id] = datos;
-    if (this.db) { await this.db.collection(c).doc(id).set(datos); }
+    if (this.db) { try { await this.db.collection(c).doc(id).set(datos); }
+                   catch (e) { delete this.cache[c][id]; throw e; } }
     else { this.guardarLocal(c); this.alCambiar(); }
   },
 
   async quitar(c, id) {
+    const previo = this.cache[c][id];
     delete this.cache[c][id];
-    if (this.db) { await this.db.collection(c).doc(id).delete(); }
+    if (this.db) { try { await this.db.collection(c).doc(id).delete(); }
+                   catch (e) { this.cache[c][id] = previo; throw e; } }
     else { this.guardarLocal(c); this.alCambiar(); }
   },
 
-  /* Aparta el lugar primero, escribe después: sin esto dos jinetes pueden
-     creer que ganaron el mismo caballo (RN-08). */
+  /* Aparta el lugar antes de escribir: sin esto dos jinetes pueden creer que
+     ganaron el mismo caballo (RN-08). */
   async apartar(c, id, datos, quien) {
     if (!this.db) {
       if (this.cache[c][id]) return false;
-      await this.poner(c, id, datos);
-      return true;
+      await this.poner(c, id, datos); return true;
     }
     const ref = this.db.collection(c).doc(id);
-    const lease = await ref.acquire({ holder: quien, ttlMs: 6000 });
+    const lease = await ref.acquire({ holder:quien, ttlMs:6000 });
     if (!lease.acquired) return false;
     const actual = await ref.get();
-    if (actual.exists && actual.data() && actual.data().miembroId) return false;
+    if (actual.exists && actual.data() && actual.data().jineteId) return false;
     await ref.set(datos);
     return true;
   },
 
   async limpiarLocal() {
-    for (const c of COLECCIONES) { this.cache[c] = {}; try { localStorage.removeItem("cq:" + c); } catch (e) {} }
+    for (const c of COLECCIONES) {
+      if (c === "competencias" && this.db) continue;
+      this.cache[c] = {}; try { localStorage.removeItem("cq:" + c); } catch (e) {}
+    }
   },
 };
+
+/* El calendario vive en el almacén compartido; sin él se usa el inicial. */
+function competencias() {
+  return Datos.todo("competencias").slice()
+    .sort((a,b) => (a.inicio || "").localeCompare(b.inicio || ""));
+}
+const competencia = id => competencias().find(c => c.id === id);
 </script>
 
 <script>
 "use strict";
-/* ----------------------------------------------------- sesiones y reglas */
+/* -------------------------------------------------- sesión, permisos, reglas */
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
-/* Una sesión real generada desde la plantilla, para una fecha concreta. */
+let cuenta  = cuentaPorId(localStorage.getItem("cq:cuenta")) || cuentaPorId("valentina");
+let sujeto  = jinete(cuenta.jineteId);          /* el jinete cuyas clases maneja esta cuenta */
+let vista   = "inicio";
+let diaSel  = ymd(ahora());
+const idTab = "t" + Math.random().toString(36).slice(2, 10);
+
+/* El rol lo propone la cuenta, pero el permiso lo confirma el almacén: sin
+   permiso de edición, la cuenta de dirección se queda con lo de un jinete. */
+const rolEfectivo = () => (cuenta.rol === "admin" && !Datos.esEditor) ? "jinete" : cuenta.rol;
+const ve = seccion => SECCIONES[rolEfectivo()].includes(seccion);
+const esAdmin = () => rolEfectivo() === "admin";
+const misCaballos = () => (cuenta.propios || []).map(caballo).filter(Boolean);
+
+function refrescarSesion() {
+  cuenta = cuentaPorId(localStorage.getItem("cq:cuenta")) || cuentaPorId("valentina");
+  sujeto = jinete(cuenta.jineteId);
+}
+
+/* Solo dirección ve lo de todos; los demás, únicamente lo suyo. */
+const soloMio = (coleccion, campo = "jineteId") =>
+  Datos.todo(coleccion).filter(d => d[campo] === sujeto.id);
+const todosSiAdmin = (coleccion) => esAdmin() ? Datos.todo(coleccion) : soloMio(coleccion);
+
 function sesionesDe(claveFecha) {
   const diaSemana = partesClub(deYmd(claveFecha, "12:00")).diaSemana;
   return PLANTILLA.filter(p => p.dia === diaSemana).map(p => {
     const inicio = deYmd(claveFecha, p.hora);
-    return {
-      id: `${claveFecha}__${p.id}`,
-      plantillaId: p.id, fecha: claveFecha, inicio,
-      fin: new Date(inicio.getTime() + tipo(p.tipo).min * 60000),
-      tipoId: p.tipo, ent: p.ent, esp: p.esp, cupo: p.cupo, niveles: p.niveles,
-    };
+    return { id:`${claveFecha}__${p.id}`, plantillaId:p.id, fecha:claveFecha, inicio,
+      fin:new Date(inicio.getTime() + tipo(p.tipo).min * 60000),
+      tipoId:p.tipo, ent:p.ent, esp:p.esp, cupo:p.cupo, niveles:p.niveles };
   }).sort((a,b) => a.inicio - b.inicio);
 }
 
+/* La ocupación es dato del club: hace falta para no encimar caballos (RN-08).
+   Los nombres solo los ve dirección. */
 const reservasDe = clave => Datos.todo("reservas").filter(r => r.fecha === clave);
-const misReservas = id => Datos.todo("reservas").filter(r => r.miembroId === id)
+const misReservas = () => soloMio("reservas")
   .sort((a,b) => deYmd(a.fecha, a.hora) - deYmd(b.fecha, b.hora));
 
-/* RN-01: el límite exacto, diez horas antes del inicio. */
 const limiteCancelacion = inicio => new Date(inicio.getTime() - 10 * 3600 * 1000);
 const seCancelaSinCosto = inicio => ahora() < limiteCancelacion(inicio);
 
-/* RN-03 y M6: saldo = lo que cargó el administrador menos lo consumido. */
-function saldo(m) {
-  const usadasActivas = Datos.todo("reservas")
-    .filter(r => r.miembroId === m.id)
+function saldo(j = sujeto) {
+  const activas = Datos.todo("reservas").filter(r => r.jineteId === j.id)
     .reduce((s, r) => s + (r.consume || 1), 0);
-  const usadasCobradas = Datos.todo("historial")
-    .filter(h => h.miembroId === m.id && h.cobrada)
+  const cobradas = Datos.todo("historial").filter(h => h.jineteId === j.id && h.cobrada)
     .reduce((s, h) => s + (h.consume || 1), 0);
-  return m.clasesCargadas - usadasActivas - usadasCobradas;
+  return j.clasesCargadas - activas - cobradas;
 }
 
-/* RN-15: sin reglamento y contrato aceptados no hay primera reserva. */
-function aceptado(m, doc) {
-  return Datos.todo("aceptaciones")
-    .some(a => a.miembroId === m.id && a.documentoId === doc.id && a.version === doc.version);
+/* Cada cuenta ve solo los documentos de sus secciones (RN-16). */
+function docsDeCuenta() {
+  return DOCUMENTOS.filter(d => d.audiencia === "todos" || ve(d.audiencia));
 }
-const pendientesDeFirma = m => docsDe(m).filter(d => d.obligatorio && !aceptado(m, d));
+const aceptado = d => Datos.todo("aceptaciones")
+  .some(a => a.jineteId === sujeto.id && a.documentoId === d.id && a.version === d.version);
+const pendientesDeFirma = () => docsDeCuenta().filter(d => d.obligatorio && !aceptado(d));
 
-/* RN-11 y §10.1: la agenda abre y cierra el lunes. Horario supuesto. */
-const VENTANA = { abre: 8, cierra: 22 };
+const VENTANA = { abre:8, cierra:22 };
 function estadoVentana() {
   const p = partesClub(ahora());
   const abierta = p.diaSemana === 1 && p.hora >= VENTANA.abre && p.hora < VENTANA.cierra;
   const lunes = lunesDeLaSemana(ahora());
-  const proximo = p.diaSemana === 1 && p.hora < VENTANA.abre ? lunes : sumarDias(lunes, 7);
-  return { abierta, proximoLunes: ymd(proximo) };
+  return { abierta, proximoLunes: ymd(p.diaSemana === 1 && p.hora < VENTANA.abre ? lunes : sumarDias(lunes, 7)) };
 }
-/* RN-20: dirección puede saltarse la ventana; queda marcado en la reserva. */
-const modoDireccion = () => localStorage.getItem("cq:direccion") === "1";
-function puedeAgendar() { return estadoVentana().abierta || modoDireccion(); }
+/* RN-20: solo dirección puede saltarse la ventana. */
+const modoDireccion = () => esAdmin() && localStorage.getItem("cq:direccion") === "1";
+const puedeAgendar = () => estadoVentana().abierta || modoDireccion();
 
-function traslapa(aIni, aFin, bIni, bFin) { return aIni < bFin && bIni < aFin; }
-
+const traslapa = (a1,a2,b1,b2) => a1 < b2 && b1 < a2;
 function intervaloReserva(r) {
-  const ini = deYmd(r.fecha, r.hora);
-  return [ini, new Date(ini.getTime() + (tipo(r.tipoId).min || 60) * 60000)];
+  const i = deYmd(r.fecha, r.hora);
+  return [i, new Date(i.getTime() + (tipo(r.tipoId).min || 60) * 60000)];
 }
 
-/* Caballos que el jinete puede elegir para esta sesión. Lo no disponible se
-   oculta (M3), no se muestra en gris. */
-function caballosPara(m, sesion) {
+function caballosPara(sesion) {
   const delDia = reservasDe(sesion.fecha);
   return CABALLOS.filter(c => {
-    if (c.estatus !== "activo") return false;                                   // catálogo M1
-    if (!m.habilitados.includes(c.id)) return false;                            // RN-04
-    const n = nivelOrden(m.nivel);
+    if (c.estatus !== "activo") return false;
+    if (!sujeto.habilitados.includes(c.id)) return false;                       // RN-04
+    const n = nivelOrden(sujeto.nivel);
     if (n < nivelOrden(c.min) || n > nivelOrden(c.max)) return false;           // RN-05
     const suyas = delDia.filter(r => r.caballoId === c.id);
     if (suyas.length >= c.maxDia) return false;                                 // RN-06
-    const choca = suyas.some(r => {
-      const [i, f] = intervaloReserva(r);
-      return traslapa(sesion.inicio, sesion.fin, i, f);
-    });
-    if (choca) return false;                                                    // RN-08
+    if (suyas.some(r => { const [i,f] = intervaloReserva(r);
+      return traslapa(sesion.inicio, sesion.fin, i, f); })) return false;       // RN-08
     return true;
-  }).map(c => ({
-    ...c,
-    trabajadas: delDia.filter(r => r.caballoId === c.id).length,
-  }));
+  }).map(c => ({ ...c, trabajadas: delDia.filter(r => r.caballoId === c.id).length }));
 }
 
-/* Por qué una sesión no se puede reservar. `null` = se puede. */
-function motivoBloqueo(m, sesion) {
-  if (!sesion.niveles.includes(m.nivel)) return "oculta";                       // RN-12
+function motivoBloqueo(sesion) {
+  if (!sesion.niveles.includes(sujeto.nivel)) return "oculta";                  // RN-12
   if (sesion.inicio <= ahora()) return "Ya pasó";
   const ocupadas = reservasDe(sesion.fecha).filter(r => r.plantillaId === sesion.plantillaId);
-  if (ocupadas.some(r => r.miembroId === m.id)) return "Ya la reservaste";
+  if (ocupadas.some(r => r.jineteId === sujeto.id)) return "Ya reservada";
   const cap = (ESPACIOS.find(e => e.id === sesion.esp) || {}).cap || sesion.cupo;
   if (ocupadas.length >= Math.min(sesion.cupo, cap)) return "Sin lugares";      // RN-09
-  const propias = misReservas(m.id).filter(r => r.fecha === sesion.fecha);
-  const encimada = propias.some(r => {
-    const [i, f] = intervaloReserva(r);
-    return traslapa(sesion.inicio, sesion.fin, i, f);
-  });
-  if (encimada) return "Tienes otra clase a esa hora";                          // RN-10
-  if (saldo(m) < tipo(sesion.tipoId).consume) return "Sin clases disponibles";  // RN-03
-  if (pendientesDeFirma(m).length) return "Falta firmar documentos";            // RN-15
-  if (!caballosPara(m, sesion).length) return "Sin caballos disponibles";       // RN-04/06/08
-  if (!puedeAgendar()) return "Fuera de la ventana del lunes";                  // RN-11
+  if (misReservas().filter(r => r.fecha === sesion.fecha).some(r => {
+    const [i,f] = intervaloReserva(r); return traslapa(sesion.inicio, sesion.fin, i, f);
+  })) return "Otra clase a esa hora";                                          // RN-10
+  if (saldo() < tipo(sesion.tipoId).consume) return "Sin clases disponibles";   // RN-03
+  if (pendientesDeFirma().length) return "Falta firmar";                        // RN-15
+  if (!caballosPara(sesion).length) return "Sin caballos libres";               // RN-04/06/08
+  if (!puedeAgendar()) return "Fuera de la ventana";                            // RN-11
   return null;
 }
 
 const lugaresLibres = sesion => {
   const cap = (ESPACIOS.find(e => e.id === sesion.esp) || {}).cap || sesion.cupo;
-  const tope = Math.min(sesion.cupo, cap);
-  return tope - reservasDe(sesion.fecha).filter(r => r.plantillaId === sesion.plantillaId).length;
+  return Math.min(sesion.cupo, cap) -
+    reservasDe(sesion.fecha).filter(r => r.plantillaId === sesion.plantillaId).length;
 };
 
-/* ------------------------------------------------------------ recordatorios
-   Los propios los escribe el jinete; los automáticos salen de sus reservas y
-   del calendario, como pide M12. */
-function recordatoriosAuto(m) {
+const misInscripciones = () => soloMio("inscripciones");
+const inscritoEn = compId => misInscripciones().find(i => i.competenciaId === compId);
+/* La lista de anotados es información del club: solo dirección la ve. */
+const anotadosEn = compId => esAdmin()
+  ? Datos.todo("inscripciones").filter(i => i.competenciaId === compId) : [];
+
+function recordatoriosAuto() {
   const lista = [];
-  for (const r of misReservas(m.id)) {
-    const inicio = deYmd(r.fecha, r.hora);
-    const limite = limiteCancelacion(inicio);
-    if (limite > ahora()) {
-      lista.push({ id:"auto-lim-" + r.id, auto:true, vence:limite,
-        texto:`Último momento para cancelar sin costo tu ${tipo(r.tipoId).nombre.toLowerCase()} del ${fechaLarga(r.fecha)}` });
-    }
+  for (const r of misReservas()) {
+    const limite = limiteCancelacion(deYmd(r.fecha, r.hora));
+    if (limite > ahora()) lista.push({ id:"auto-lim-" + r.id, vence:limite,
+      texto:`Último momento para cancelar sin costo la clase del ${fechaLarga(r.fecha)}` });
   }
-  for (const c of COMPETENCIAS) {
-    const cierre = deYmd(c.fechaCierre, "20:00");
-    if (cierre > ahora()) {
-      lista.push({ id:"auto-comp-" + c.id, auto:true, vence:cierre,
-        texto:`Cierran las inscripciones de ${c.nombre}` });
-    }
+  for (const c of competencias()) {
+    if (!c.cierre) continue;
+    const cierre = deYmd(c.cierre, "20:00");
+    if (cierre > ahora()) lista.push({ id:"auto-comp-" + c.id, vence:cierre,
+      texto:`Cierran las inscripciones de ${c.nombre}` });
   }
   const v = estadoVentana();
-  if (!v.abierta) {
-    lista.push({ id:"auto-ventana", auto:true, vence:deYmd(v.proximoLunes, "08:00"),
-      texto:"Se abre la agenda de la semana: deja reservadas todas tus clases" });
-  }
+  if (!v.abierta) lista.push({ id:"auto-ventana", vence:deYmd(v.proximoLunes, "08:00"),
+    texto:"Se abre la agenda de la semana: deja reservadas todas tus clases" });
   return lista.sort((a,b) => a.vence - b.vence);
 }
-const misRecordatorios = id => Datos.todo("recordatorios").filter(r => r.miembroId === id);
+const misRecordatorios = () => soloMio("recordatorios");
 </script>
 
 <script>
 "use strict";
-/* ------------------------------------------------------------------ estado */
-const $ = s => document.querySelector(s);
-const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-const yoId = () => localStorage.getItem("cq:yo") || "romy";
-let yo = miembro(yoId()) || MIEMBROS[0];
-let vista = "inicio";
-let diaSel = ymd(ahora());
-const sesionTab = "t" + Math.random().toString(36).slice(2, 10);
-
-function avisar(texto) {
-  const b = $("#brindis");
-  b.textContent = texto; b.hidden = false;
-  clearTimeout(avisar.t);
-  avisar.t = setTimeout(() => { b.hidden = true; }, 3600);
-}
-
-/* -------------------------------------------------------------- hoja modal */
-function abrirHoja(titulo, contenido, alMontar) {
-  const capa = $("#capa");
-  capa.innerHTML = `<div class="velo"><div class="hoja" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
-    <div class="hoja-cab"><h3>${esc(titulo)}</h3><button class="cerrar" aria-label="Cerrar">&times;</button></div>
-    <div id="hoja-cuerpo">${contenido}</div></div></div>`;
-  const cerrar = () => { capa.innerHTML = ""; document.body.style.overflow = ""; };
-  document.body.style.overflow = "hidden";
-  capa.querySelector(".cerrar").onclick = cerrar;
-  capa.querySelector(".velo").onclick = e => { if (e.target === capa.querySelector(".velo")) cerrar(); };
-  document.addEventListener("keydown", function esc2(e) {
-    if (e.key === "Escape") { cerrar(); document.removeEventListener("keydown", esc2); }
-  });
-  if (alMontar) alMontar(cerrar);
-  return cerrar;
-}
-
-/* ------------------------------------------------------------------- INICIO */
+/* ------------------------------------------------------------------ INICIO */
 function verInicio() {
-  const s = saldo(yo);
-  const proximas = misReservas(yo.id).filter(r => deYmd(r.fecha, r.hora) > ahora());
-  const pasadas  = misReservas(yo.id).filter(r => deYmd(r.fecha, r.hora) <= ahora()).reverse();
-  const firmas = pendientesDeFirma(yo);
+  const s = saldo();
+  const proximas = misReservas().filter(r => deYmd(r.fecha, r.hora) > ahora());
+  const pasadas  = misReservas().filter(r => deYmd(r.fecha, r.hora) <= ahora()).reverse();
+  const firmas = pendientesDeFirma();
   const v = estadoVentana();
-  const sigComp = COMPETENCIAS.filter(c => deYmd(c.fecha, "23:59") > ahora())
-    .sort((a,b) => deYmd(a.fecha) - deYmd(b.fecha))[0];
-  const prox = proximas[0];
+  const sigComp = competencias().filter(c => deYmd(c.fin || c.inicio, "23:59") > ahora())[0];
+  const deQuien = cuenta.rol === "tutor" ? ` de ${sujeto.nombre.split(" ")[0]}` : "";
 
   return `
   <div class="vista-titulo">
-    <h2>Hola, ${esc(yo.nombre.split(" ")[0])}</h2>
-    <span class="sub">${esc(nivelNombre(yo.nivel))}${yo.perfiles.includes("propietario") ? " · Propietaria" : ""}</span>
+    <h2>Hola, ${esc(cuenta.nombre.split(" ")[0])}</h2>
+    <span class="sub">${esc(ROL_NOMBRE[rolEfectivo()])}${
+      cuenta.rol === "tutor" ? ` de ${esc(sujeto.nombre)}` : ` · ${esc(nivelNombre(sujeto.nivel))}`}</span>
   </div>
+
+  ${cuenta.rol === "tutor" ? `<div class="nota">
+    Manejas la cuenta de <b>${esc(sujeto.nombre)}</b>, menor de edad: reservas, cancelas y firmas
+    en su nombre, y los avisos te llegan a ti.</div>` : ""}
 
   ${firmas.length ? `<div class="nota alerta">
     <b>Falta firmar ${firmas.length === 1 ? "un documento" : firmas.length + " documentos"}.</b>
-    No puedes reservar hasta aceptar ${esc(listar(firmas.map(d => d.titulo)))}.
-    <span><button class="btn btn-mini" data-ir="reglamento" style="margin-top:.35rem">Ir a Reglamento</button></span>
+    No se puede reservar hasta aceptar ${esc(listar(firmas.map(d => d.titulo)))}.
+    <span><button class="btn btn-mini" data-ir="documentos" style="margin-top:.35rem">Ir a Documentos</button></span>
   </div>` : ""}
 
   <div class="resumen">
-    <div class="dato"><div class="n">${s}</div><div class="t">clases disponibles</div></div>
+    <div class="dato"><div class="n">${s}</div><div class="t">clases disponibles${esc(deQuien)}</div></div>
     <div class="dato"><div class="n">${proximas.length}</div><div class="t">clases reservadas</div></div>
     <div class="dato"><div class="n chico">${v.abierta ? "Abierta" : "Cerrada"}</div><div class="t">agenda de la semana</div></div>
-    <div class="dato"><div class="n chico">${sigComp ? esc(fechaLarga(sigComp.fecha).replace(/^\w+ /, "")) : "—"}</div><div class="t">próxima competencia</div></div>
+    <div class="dato"><div class="n chico">${sigComp
+      ? esc(rangoFechas(sigComp.inicio, sigComp.fin)) : "—"}</div><div class="t">próxima competencia</div></div>
   </div>
 
-  ${prox ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Tu próxima clase</p>
-    ${tarjetaClase(prox, false)}
-  </div>` : `<div class="vacio">No tienes clases reservadas.
+  ${proximas.length ? `<div>
+    <p class="etiqueta" style="margin-bottom:.4rem">Próxima clase</p>
+    ${tarjetaClase(proximas[0], false)}
+    ${proximas.length > 1 ? `<p class="etiqueta" style="margin:.9rem 0 .4rem">Después</p>
+      <div class="vista">${proximas.slice(1).map(r => tarjetaClase(r, false)).join("")}</div>` : ""}
+  </div>` : `<div class="vacio">No hay clases reservadas.
     <div style="margin-top:.7rem"><button class="btn btn-mini" data-ir="reservar">Reservar una clase</button></div></div>`}
 
-  ${proximas.length > 1 ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Después</p>
-    <div class="vista">${proximas.slice(1).map(r => tarjetaClase(r, false)).join("")}</div>
-  </div>` : ""}
+  ${ve("propietario") ? bloquesCaballos() : ""}
+  ${esAdmin() ? panelClub() : ""}
 
   ${pasadas.length ? `<details class="tarjeta plana">
     <summary style="cursor:pointer; font-weight:600; font-size:.9rem">Historial (${pasadas.length})</summary>
-    <div class="vista" style="margin-top:.75rem">${pasadas.slice(0, 8).map(r => tarjetaClase(r, true)).join("")}</div>
+    <div class="vista" style="margin-top:.75rem">${pasadas.slice(0,8).map(r => tarjetaClase(r, true)).join("")}</div>
   </details>` : ""}
 
   <div class="tarjeta plana">
-    <p class="etiqueta">Tu paquete</p>
-    <p style="font-size:.95rem; margin-top:.2rem">${esc(yo.paquete)}</p>
+    <p class="etiqueta">Paquete</p>
+    <p style="font-size:.95rem; margin-top:.2rem">${esc(sujeto.paquete)}</p>
     <p style="font-size:.78rem; color:var(--ink-3); margin-top:.3rem">
-      El saldo lo carga el administrador después del cobro presencial. No hay pago en línea.</p>
-    ${yo.menor ? `<p style="font-size:.78rem; color:var(--ink-3); margin-top:.3rem">
-      Cuenta de menor. Tutor responsable: ${esc(yo.tutor)}.</p>` : ""}
+      El saldo lo carga dirección después del cobro presencial. No hay pago en línea.</p>
+  </div>`;
+}
+
+/* Sección de propietario: no la ve un jinete ni un tutor. */
+function bloquesCaballos() {
+  const mios = misCaballos();
+  if (!mios.length) return "";
+  return `<div>
+    <p class="etiqueta" style="margin-bottom:.4rem">${mios.length === 1 ? "Mi caballo" : "Mis caballos"}</p>
+    <div class="vista">${mios.map(c => {
+      const trabajoHoy = reservasDe(ymd(ahora())).filter(r => r.caballoId === c.id).length;
+      const abierto = localStorage.getItem("cq:escuela:" + c.id) === "1";
+      return `<article class="ficha">
+        <div class="ficha-cab">
+          <span class="ficha-ini" aria-hidden="true">${esc(c.nombre[0])}</span>
+          <div><h3>${esc(c.nombre)}</h3>
+            <p style="font-size:.8rem; color:var(--ink-2)">${esc(c.origen)} · ${esc(c.capa)} · ${c.edad} años</p></div>
+          <span class="pastilla ${c.estatus === "activo" ? "p-ok" : "p-alerta"}"
+            style="margin-left:auto">${esc(c.estatus)}</span>
+        </div>
+        <dl class="ficha-datos">
+          <div><dt>Nivel</dt><dd>${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}</dd></div>
+          <div><dt>Trabajo hoy</dt><dd>${trabajoHoy} de ${c.maxDia} sesiones</dd></div>
+          <div><dt>Uso</dt><dd>${esc(c.uso)}</dd></div>
+        </dl>
+        <label style="display:flex; gap:.5rem; align-items:flex-start; font-size:.8rem">
+          <input type="checkbox" data-escuela="${c.id}" ${abierto ? "checked" : ""} style="width:auto; margin-top:.2rem">
+          <span>Autorizo que ${esc(c.nombre)} entre al pool de escuela (RN-14). Puedes quitarlo cuando quieras.</span>
+        </label>
+      </article>`;
+    }).join("")}</div>
+  </div>`;
+}
+
+/* Resumen del club: solo dirección. */
+function panelClub() {
+  const semana = ymd(lunesDeLaSemana(ahora()));
+  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(deYmd(semana, "12:00"), i)));
+  const reservasSemana = Datos.todo("reservas").filter(r => dias.includes(r.fecha));
+  const sinFirmar = JINETES.filter(j => DOCUMENTOS
+    .filter(d => d.obligatorio && (d.audiencia === "todos" || d.audiencia === "jinete"))
+    .some(d => !Datos.todo("aceptaciones").some(a => a.jineteId === j.id && a.documentoId === d.id && a.version === d.version)));
+  const anotados = Datos.todo("inscripciones").length;
+  return `<div class="admin-caja">
+    <p class="etiqueta">Panel de dirección</p>
+    <div class="resumen" style="gap:.5rem">
+      <div class="dato"><div class="n">${reservasSemana.length}</div><div class="t">clases reservadas esta semana</div></div>
+      <div class="dato"><div class="n">${sinFirmar.length}</div><div class="t">jinetes sin firmar</div></div>
+      <div class="dato"><div class="n">${anotados}</div><div class="t">anotados a competencias</div></div>
+      <div class="dato"><div class="n chico">${competencias().length}</div><div class="t">competencias en el calendario</div></div>
+    </div>
+    ${sinFirmar.length ? `<p style="font-size:.8rem">Sin firmar: ${esc(listar(sinFirmar.map(j => j.nombre)))}.</p>` : ""}
   </div>`;
 }
 
@@ -949,18 +960,14 @@ function tarjetaClase(r, pasada) {
   const aTiempo = seCancelaSinCosto(inicio);
   return `<article class="clase ${pasada ? "pasada" : ""}">
     <div class="clase-cab">
-      <div>
-        <div class="clase-hora">${esc(horaTexto(inicio))}</div>
-        <div class="clase-meta">${esc(fechaLarga(r.fecha))}</div>
-      </div>
+      <div><div class="clase-hora">${esc(horaTexto(inicio))}</div>
+        <div class="clase-meta">${esc(fechaLarga(r.fecha))}</div></div>
       <span class="pastilla ${pasada ? "p-neutro" : "p-ok"}">${esc(tipo(r.tipoId).nombre)}</span>
     </div>
-    <div class="clase-meta">
-      ${esc(caballo(r.caballoId) ? caballo(r.caballoId).nombre : "—")} ·
-      ${esc(entrenador(r.ent))} · ${esc(espacio(r.esp))}
-    </div>
-    ${r.override ? `<div class="nota" style="padding:.45rem .6rem; font-size:.75rem">
-      Agendada por dirección fuera de la ventana del lunes. Queda en la bitácora.</div>` : ""}
+    <div class="clase-meta">${esc(caballo(r.caballoId) ? caballo(r.caballoId).nombre : "—")} ·
+      ${esc(entrenador(r.ent))} · ${esc(espacio(r.esp))}</div>
+    ${r.override ? `<div class="nota oro" style="padding:.45rem .6rem; font-size:.75rem">
+      Agendada por dirección fuera de la ventana del lunes.</div>` : ""}
     ${pasada ? "" : `<div class="clase-pie">
       ${aTiempo
         ? `<span class="limite">Cancelación sin costo hasta <b>${esc(momentoTexto(limite))}</b></span>
@@ -971,16 +978,14 @@ function tarjetaClase(r, pasada) {
   </article>`;
 }
 
-/* ----------------------------------------------------------------- RESERVAR */
+/* ---------------------------------------------------------------- RESERVAR */
 function verReservar() {
   const v = estadoVentana();
   const lunes = lunesDeLaSemana(ahora());
-  const dias = Array.from({ length: 7 }, (_, i) => ymd(sumarDias(lunes, i)));
+  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
   if (!dias.includes(diaSel)) diaSel = dias.find(d => deYmd(d, "23:59") > ahora()) || dias[0];
-
-  const sesiones = sesionesDe(diaSel);
-  const visibles = sesiones.filter(s => motivoBloqueo(yo, s) !== "oculta");
-  const firmas = pendientesDeFirma(yo);
+  const visibles = sesionesDe(diaSel).filter(s => motivoBloqueo(s) !== "oculta");
+  const firmas = pendientesDeFirma();
 
   return `
   <div class="vista-titulo">
@@ -989,212 +994,99 @@ function verReservar() {
   </div>
 
   <div class="ventana ${v.abierta ? "abierta" : "cerrada"}">
-    <div class="titulo">${v.abierta
-      ? "La agenda está abierta"
-      : "La agenda está cerrada"}</div>
+    <div class="titulo">${v.abierta ? "La agenda está abierta" : "La agenda está cerrada"}</div>
     <div class="detalle">${v.abierta
-      ? `Hoy es lunes. Deja reservadas todas tus clases de la semana antes de las ${VENTANA.cierra}:00.`
-      : `Se abre el ${esc(fechaLarga(v.proximoLunes))} a las ${VENTANA.abre}:00. Fuera de esa ventana solo el administrador puede agendar.`}</div>
-    ${!v.abierta ? `<label style="display:flex; gap:.5rem; align-items:flex-start; font-size:.8rem; margin-top:.2rem">
+      ? `Hoy es lunes. Deja reservadas todas las clases de la semana antes de las ${VENTANA.cierra}:00.`
+      : `Se abre el ${esc(fechaLarga(v.proximoLunes))} a las ${VENTANA.abre}:00. Fuera de esa ventana solo dirección puede agendar.`}</div>
+    ${!v.abierta && esAdmin() ? `<label style="display:flex; gap:.5rem; align-items:flex-start; font-size:.8rem; margin-top:.2rem">
       <input type="checkbox" id="chk-direccion" ${modoDireccion() ? "checked" : ""} style="width:auto; margin-top:.2rem">
-      <span>Agendar como dirección (RN-20). Las reservas quedan marcadas en la bitácora.</span>
-    </label>` : ""}
+      <span>Agendar como dirección (RN-20). Queda marcado en la reserva.</span></label>` : ""}
   </div>
 
-  ${firmas.length ? `<div class="nota alerta">
-    <b>Primero firma tus documentos.</b> ${esc(listar(firmas.map(d => d.titulo)))} siguen pendientes.
-    <span><button class="btn btn-mini" data-ir="reglamento" style="margin-top:.35rem">Ir a Reglamento</button></span>
+  ${firmas.length ? `<div class="nota alerta"><b>Primero firma los documentos.</b>
+    ${esc(listar(firmas.map(d => d.titulo)))} ${firmas.length === 1 ? "sigue pendiente" : "siguen pendientes"}.
+    <span><button class="btn btn-mini" data-ir="documentos" style="margin-top:.35rem">Ir a Documentos</button></span>
   </div>` : ""}
 
-  ${saldo(yo) <= 0 ? `<div class="nota alerta">
-    <b>No te quedan clases.</b> El administrador carga tu saldo en el club una vez que pagas.</div>` : ""}
+  ${saldo() <= 0 ? `<div class="nota alerta"><b>No quedan clases.</b>
+    Dirección carga el saldo en el club una vez que se paga.</div>` : ""}
 
   <div class="dias">
     ${dias.map(d => {
       const p = partesClub(deYmd(d, "12:00"));
-      const hay = sesionesDe(d).some(s => s.niveles.includes(yo.nivel));
+      const hay = sesionesDe(d).some(s => s.niveles.includes(sujeto.nivel));
       const pasado = deYmd(d, "23:59") < ahora();
       return `<button class="dia" data-dia="${d}" aria-pressed="${d === diaSel}" ${pasado ? "disabled style=opacity:.4" : ""}>
-        <span>${DIAS[p.diaSemana].slice(0,2)}</span>
-        <span class="d">${p.dia}</span>
-        ${hay && !pasado ? '<span class="punto"></span>' : '<span style="height:4px"></span>'}
-      </button>`;
+        <span>${DIAS[p.diaSemana].slice(0,2)}</span><span class="d">${p.dia}</span>
+        ${hay && !pasado ? '<span class="punto"></span>' : '<span style="height:4px"></span>'}</button>`;
     }).join("")}
   </div>
 
-  <div class="vista">
-    ${visibles.length ? visibles.map(s => filaSesion(s)).join("")
-      : `<div class="vacio">No hay clases para tu nivel el ${esc(fechaLarga(diaSel))}.</div>`}
-  </div>
+  <div class="vista">${visibles.length ? visibles.map(filaSesion).join("")
+    : `<div class="vacio">No hay clases del nivel ${esc(nivelNombre(sujeto.nivel))} el ${esc(fechaLarga(diaSel))}.</div>`}</div>
 
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Solo se muestran las clases que tu nivel y tu paquete autorizan (RN-12).</p>`;
+    Solo aparecen las clases que el nivel y el paquete autorizan (RN-12).</p>`;
 }
 
 function filaSesion(s) {
-  const motivo = motivoBloqueo(yo, s);
+  const motivo = motivoBloqueo(s);
   const libres = lugaresLibres(s);
-  return `<article class="sesion ${motivo && motivo !== null ? "llena" : ""}">
+  return `<article class="sesion ${motivo ? "llena" : ""}">
     <div class="hora">${esc(horaTexto(s.inicio))}</div>
     <div class="nom">${esc(tipo(s.tipoId).nombre)}</div>
     <div class="det">${esc(entrenador(s.ent))} · ${esc(espacio(s.esp))} ·
-      ${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"} ·
-      consume ${tipo(s.tipoId).consume}</div>
-    <div class="accion">${motivo
-      ? `<span class="pastilla p-neutro">${esc(motivo)}</span>`
+      ${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"} · consume ${tipo(s.tipoId).consume}</div>
+    <div class="accion">${motivo ? `<span class="pastilla p-neutro">${esc(motivo)}</span>`
       : `<button class="btn btn-mini" data-reservar="${esc(s.id)}">Reservar</button>`}</div>
   </article>`;
-}
-
-/* Paso 3 de M3: elegir caballo entre los habilitados y libres. */
-function elegirCaballo(sesionId) {
-  const [fecha, plantillaId] = sesionId.split("__");
-  const s = sesionesDe(fecha).find(x => x.plantillaId === plantillaId);
-  if (!s) return;
-  const opciones = caballosPara(yo, s);
-  const limite = limiteCancelacion(s.inicio);
-
-  const cuerpo = `
-    <p style="font-size:.85rem; color:var(--ink-2)">
-      ${esc(fechaLarga(fecha))} · ${esc(horaTexto(s.inicio))} · ${esc(entrenador(s.ent))} · ${esc(espacio(s.esp))}</p>
-    <p class="etiqueta">Elige caballo</p>
-    <div class="vista" id="lista-caballos">
-      ${opciones.map(c => `<button class="caballo" data-caballo="${c.id}" aria-pressed="false">
-        <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
-        <span><span class="n">${esc(c.nombre)}</span>
-          <span class="m">${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}</span></span>
-        <span class="carga">${c.trabajadas}/${c.maxDia}<br>clases hoy</span>
-      </button>`).join("")}
-    </div>
-    <div class="nota">Se descuenta <b>${tipo(s.tipoId).consume}</b> de tu saldo.
-      Podrás cancelar sin costo hasta <b>${esc(momentoTexto(limite))}</b>.</div>
-    <button class="btn btn-bloque" id="confirmar" disabled>Confirmar reserva</button>`;
-
-  abrirHoja(tipo(s.tipoId).nombre, cuerpo, cerrar => {
-    let elegido = null;
-    const btn = $("#confirmar");
-    $("#lista-caballos").addEventListener("click", e => {
-      const b = e.target.closest("[data-caballo]");
-      if (!b) return;
-      elegido = b.dataset.caballo;
-      $("#lista-caballos").querySelectorAll(".caballo").forEach(x =>
-        x.setAttribute("aria-pressed", String(x === b)));
-      btn.disabled = false;
-    });
-    btn.onclick = async () => {
-      btn.disabled = true; btn.textContent = "Apartando…";
-      const ok = await confirmarReserva(s, elegido);
-      if (ok) cerrar();
-      else { btn.disabled = false; btn.textContent = "Confirmar reserva"; }
-    };
-  });
-}
-
-async function confirmarReserva(s, caballoId) {
-  const motivo = motivoBloqueo(yo, s);
-  if (motivo) { avisar(motivo); return false; }
-  const id = `${s.fecha}__${s.plantillaId}__${caballoId}`;
-  const datos = {
-    miembroId: yo.id, fecha: s.fecha, hora: PLANTILLA.find(p => p.id === s.plantillaId).hora,
-    plantillaId: s.plantillaId, caballoId, tipoId: s.tipoId, ent: s.ent, esp: s.esp,
-    consume: tipo(s.tipoId).consume, creada: new Date().toISOString(),
-    override: !estadoVentana().abierta,
-  };
-  const gano = await Datos.apartar("reservas", id, datos, sesionTab);
-  if (!gano) {
-    avisar(`${caballo(caballoId).nombre} lo acaba de apartar alguien más.`);
-    pintar();
-    return false;
-  }
-  avisar(`Listo. Cancelación sin costo hasta ${momentoTexto(limiteCancelacion(s.inicio))}.`);
-  pintar();
-  return true;
-}
-
-async function cancelar(reservaId) {
-  const r = Datos.todo("reservas").find(x => x.id === reservaId);
-  if (!r) return;
-  const inicio = deYmd(r.fecha, r.hora);
-  const aTiempo = seCancelaSinCosto(inicio);
-  const mensaje = aTiempo
-    ? "Se devuelve la clase a tu saldo."
-    : "Pasó el límite de 10 horas: la clase se cobra igual y no vuelve a tu saldo.";
-  abrirHoja("Cancelar clase", `
-    <p style="font-size:.9rem">${esc(fechaLarga(r.fecha))} · ${esc(horaTexto(inicio))} ·
-      ${esc(caballo(r.caballoId).nombre)}</p>
-    <div class="nota ${aTiempo ? "" : "alerta"}">${esc(mensaje)}</div>
-    <button class="btn btn-bloque ${aTiempo ? "" : "btn-peligro"}" id="ok-cancelar">
-      ${aTiempo ? "Cancelar y recuperar la clase" : "Cancelar de todos modos"}</button>
-    <button class="btn btn-2 btn-bloque" id="no-cancelar">Mejor no</button>`,
-    cerrar => {
-      $("#no-cancelar").onclick = cerrar;
-      $("#ok-cancelar").onclick = async () => {
-        await Datos.poner("historial", "h-" + r.id + "-" + Date.now(), {
-          miembroId: r.miembroId, fecha: r.fecha, hora: r.hora, caballoId: r.caballoId,
-          tipoId: r.tipoId, consume: r.consume || 1,
-          estado: aTiempo ? "cancelada_a_tiempo" : "cancelada_tarde",
-          cobrada: !aTiempo, cuando: new Date().toISOString(),
-        });
-        await Datos.quitar("reservas", r.id);
-        avisar(aTiempo ? "Clase cancelada y devuelta a tu saldo." : "Clase cancelada. Se cobra.");
-        cerrar(); pintar();
-      };
-    });
 }
 </script>
 
 <script>
 "use strict";
-/* -------------------------------------------------------------- REGLAMENTO */
-function verReglamento() {
-  const mios = docsDe(yo);
+/* -------------------------------------------------------------- DOCUMENTOS */
+function verDocumentos() {
+  const mios = docsDeCuenta();
   return `
-  <div class="vista-titulo">
-    <h2>Reglamento y contratos</h2>
-    <span class="sub">${mios.length} documentos para tu perfil</span>
-  </div>
+  <div class="vista-titulo"><h2>Documentos</h2>
+    <span class="sub">${mios.length} para tu perfil</span></div>
   <p style="font-size:.8rem; color:var(--ink-3)">
-    Solo ves los documentos que te corresponden (RN-16). Si dirección publica una versión
-    nueva, se te vuelve a pedir la firma.</p>
-  ${mios.map(d => bloqueDoc(d)).join("")}
+    Cada perfil ve solo lo suyo (RN-16). Un jinete no accede a documentos de propietario.
+    Si dirección publica una versión nueva, se vuelve a pedir la firma.</p>
+  ${mios.map(bloqueDoc).join("")}
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Texto de muestra para probar el flujo de aceptación. Dirección sustituye el contenido
-    por el documento oficial del club.</p>`;
+    Texto de muestra para probar el flujo de aceptación. Dirección lo sustituye por el
+    documento oficial del club.</p>`;
 }
 
 function bloqueDoc(d) {
   const firma = Datos.todo("aceptaciones")
-    .find(a => a.miembroId === yo.id && a.documentoId === d.id && a.version === d.version);
-  const versionVieja = Datos.todo("aceptaciones")
-    .some(a => a.miembroId === yo.id && a.documentoId === d.id && a.version !== d.version);
+    .find(a => a.jineteId === sujeto.id && a.documentoId === d.id && a.version === d.version);
+  const previa = Datos.todo("aceptaciones")
+    .some(a => a.jineteId === sujeto.id && a.documentoId === d.id && a.version !== d.version);
   return `<article class="doc">
     <div class="doc-cab">
-      <div>
-        <h3>${esc(d.titulo)}</h3>
-        <p class="doc-ver">Versión ${esc(d.version)} · vigente desde el ${esc(d.vigente)}</p>
-      </div>
+      <div><h3>${esc(d.titulo)}</h3>
+        <p class="doc-ver">Versión ${esc(d.version)} · vigente desde el ${esc(d.vigente)}</p></div>
       ${firma ? '<span class="pastilla p-ok">Aceptado</span>'
         : d.obligatorio ? '<span class="pastilla p-alerta">Por firmar</span>'
         : '<span class="pastilla p-neutro">Informativo</span>'}
     </div>
     <p style="font-size:.85rem; color:var(--ink-2)">${esc(d.resumen)}</p>
-    ${versionVieja && !firma ? `<div class="nota alerta">
-      Aceptaste una versión anterior. Esta es nueva y hay que volver a firmarla (RN-15).</div>` : ""}
-    <details>
-      <summary style="cursor:pointer; font-size:.82rem; color:var(--accent); font-weight:500">
-        Leer el documento</summary>
-      <div class="doc-cuerpo" style="margin-top:.6rem">
-        ${d.cuerpo.map(s => `<h4>${esc(s.h)}</h4><ul>${s.l.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")}
-      </div>
+    ${previa && !firma ? `<div class="nota alerta">
+      Se aceptó una versión anterior. Esta es nueva y hay que volver a firmarla (RN-15).</div>` : ""}
+    <details><summary style="cursor:pointer; font-size:.82rem; color:var(--accent); font-weight:500">
+      Leer el documento</summary>
+      <div class="doc-cuerpo" style="margin-top:.6rem">${d.cuerpo.map(s =>
+        `<h4>${esc(s.h)}</h4><ul>${s.l.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`).join("")}</div>
     </details>
-    ${firma
-      ? `<p class="firmado">Firmado por ${esc(firma.nombreFirma)} · ${esc(fechaLarga(firma.fecha))}, ${esc(firma.horaTexto)}</p>`
+    ${firma ? `<p class="firmado">Firmado por ${esc(firma.nombreFirma)} · ${esc(fechaLarga(firma.fecha))}, ${esc(firma.horaTexto)}</p>`
       : `<form class="firma" data-firmar="${esc(d.id)}">
-          <label class="campo">
-            ${yo.menor ? "Nombre completo del tutor que acepta" : "Escribe tu nombre completo como firma"}
-            <input type="text" name="nombre" required autocomplete="name"
-              placeholder="${esc(yo.menor ? yo.tutor : yo.nombre)}">
-          </label>
+          <label class="campo">${cuenta.rol === "tutor"
+            ? `Nombre completo del tutor que acepta por ${esc(sujeto.nombre)}`
+            : "Nombre completo como firma"}
+            <input type="text" name="nombre" required autocomplete="name" placeholder="${esc(cuenta.nombre)}"></label>
           <button class="btn" type="submit">Acepto ${esc(d.titulo.toLowerCase())}</button>
         </form>`}
   </article>`;
@@ -1202,103 +1094,208 @@ function bloqueDoc(d) {
 
 /* ------------------------------------------------------------ COMPETENCIAS */
 function verCompetencias() {
-  const futuras = COMPETENCIAS.filter(c => deYmd(c.fecha, "23:59") > ahora())
-    .sort((a,b) => deYmd(a.fecha) - deYmd(b.fecha));
-  const pasadas = COMPETENCIAS.filter(c => deYmd(c.fecha, "23:59") <= ahora());
+  const lista = competencias();
+  const futuras = lista.filter(c => deYmd(c.fin || c.inicio, "23:59") > ahora());
+  const pasadas = lista.filter(c => deYmd(c.fin || c.inicio, "23:59") <= ahora());
   return `
-  <div class="vista-titulo">
-    <h2>Competencias</h2>
-    <span class="sub">${futuras.length} por venir</span>
-  </div>
-  ${futuras.map(c => bloqueComp(c, false)).join("") || '<div class="vacio">No hay competencias programadas.</div>'}
+  <div class="vista-titulo"><h2>Competencias</h2>
+    <span class="sub">${futuras.length} por venir</span></div>
+
+  ${esAdmin() ? `<div class="admin-caja">
+    <p class="etiqueta">Dirección</p>
+    <p style="font-size:.82rem; color:var(--oro-tinta)">
+      Puedes crear competencias, cambiar fechas, publicar categorías y horarios, fijar el cierre
+      de inscripciones y ver quién está anotado.</p>
+    <div class="acciones-admin">
+      <button class="btn btn-oro btn-mini" data-nueva-comp>Nueva competencia</button>
+      ${!lista.length ? '<button class="btn btn-2 btn-mini" data-cargar-calendario>Cargar calendario inicial</button>' : ""}
+    </div>
+  </div>` : ""}
+
+  ${futuras.map(c => bloqueComp(c, false)).join("") ||
+    `<div class="vacio">${esAdmin() ? "El calendario está vacío. Crea la primera competencia."
+      : "Dirección todavía no publica competencias."}</div>`}
+
   ${pasadas.length ? `<p class="etiqueta" style="margin-top:.5rem">Ya realizadas</p>
     ${pasadas.map(c => bloqueComp(c, true)).join("")}` : ""}
+
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Apuntarte aquí avisa al club de tu interés. La inscripción formal y el pago se hacen
-    en las oficinas.</p>`;
+    Anotarse avisa a dirección del interés. La inscripción formal y el pago se hacen en oficinas.</p>`;
 }
 
 function bloqueComp(c, pasada) {
-  const [a,m,d] = c.fecha.split("-").map(Number);
-  const inscrito = Datos.todo("inscripciones")
-    .some(i => i.miembroId === yo.id && i.competenciaId === c.id);
-  const cierraEn = deYmd(c.fechaCierre, "20:00");
-  const abierta = !pasada && cierraEn > ahora();
-  const cuantos = Datos.todo("inscripciones").filter(i => i.competenciaId === c.id).length;
+  const [,m,d] = c.inicio.split("-").map(Number);
+  const mia = inscritoEn(c.id);
+  const anotados = anotadosEn(c.id);
+  const cierraEn = c.cierre ? deYmd(c.cierre, "20:00") : null;
+  const abierta = !pasada && (!cierraEn || cierraEn > ahora());
+  const cats = c.categorias || [];
+  const hors = c.horarios || [];
+
   return `<article class="comp" style="${pasada ? "opacity:.7" : ""}">
     <div class="comp-cab">
-      <div class="comp-fecha" ${pasada ? 'style="background:var(--line-fuerte)"' : ""}>
-        <span class="d">${d}</span><span class="m">${esc(MESES[m-1].slice(0,3))}</span>
-      </div>
-      <div style="flex:1">
+      <div class="comp-fecha" ${pasada ? 'style="background:var(--line-fuerte); color:var(--ink-2)"' : ""}>
+        <span class="d">${d}</span><span class="m">${esc(MESES[m-1].slice(0,3))}</span></div>
+      <div style="flex:1; min-width:0">
         <h3>${esc(c.nombre)}</h3>
-        <p style="font-size:.8rem; color:var(--ink-2)">${esc(c.sede)} · ${esc(c.disciplina)}</p>
+        <p style="font-size:.82rem; color:var(--ink-2)">${esc(rangoFechas(c.inicio, c.fin))}</p>
+        <p style="font-size:.78rem; color:var(--ink-3)">${esc(c.sede || "Sede por confirmar")}${
+          c.disciplina ? " · " + esc(c.disciplina) : ""}</p>
       </div>
-      ${inscrito ? '<span class="pastilla p-ok">Anotada</span>' : ""}
+      ${mia ? '<span class="pastilla p-ok">Anotado</span>' : ""}
     </div>
-    <dl class="comp-datos">
-      <div><dt>Categorías</dt><dd>${esc(c.categorias)}</dd></div>
-      <div><dt>Cierre</dt><dd>${abierta
-        ? esc(fechaLarga(c.fechaCierre)) : pasada ? "—" : "Cerrado"}</dd></div>
-      <div><dt>Anotados</dt><dd>${cuantos}</dd></div>
-    </dl>
-    <p style="font-size:.8rem; color:var(--ink-2)">${esc(c.nota)}</p>
+
+    <div class="comp-bloque">
+      <p class="etiqueta">Categorías</p>
+      ${cats.length ? `<div class="fichas">${cats.map(x =>
+        `<span class="ficha-cat">${esc(x)}</span>`).join("")}</div>`
+        : '<p class="por-definir">Dirección todavía no publica las categorías.</p>'}
+    </div>
+
+    <div class="comp-bloque">
+      <p class="etiqueta">Horarios</p>
+      ${hors.length ? `<div class="horario">${hors.map(h =>
+        `<div><b>${esc(h.split("—")[0].trim())}</b><span>${esc((h.split("—")[1] || "").trim())}</span></div>`).join("")}</div>`
+        : '<p class="por-definir">Dirección todavía no publica los horarios.</p>'}
+    </div>
+
+    ${c.nota ? `<p style="font-size:.8rem; color:var(--ink-2)">${esc(c.nota)}</p>` : ""}
+
+    <div class="comp-bloque">
+      <p style="font-size:.78rem; color:var(--ink-3)">Cierre de inscripciones:
+        ${c.cierre ? esc(fechaLarga(c.cierre)) : "por definir"}</p>
+    </div>
+
     ${pasada ? "" : abierta
-      ? `<button class="btn ${inscrito ? "btn-2" : ""} btn-bloque btn-mini"
-           data-comp="${esc(c.id)}">${inscrito ? "Quitar mi nombre" : "Me interesa competir"}</button>`
+      ? `<button class="btn ${mia ? "btn-2" : ""} btn-bloque btn-mini" data-comp="${esc(c.id)}">
+          ${mia ? "Quitar mi nombre" : "Me interesa competir"}</button>`
       : `<div class="nota">Las inscripciones ya cerraron. Habla con dirección si quieres entrar.</div>`}
+
+    ${esAdmin() ? `<div class="admin-caja">
+      <p class="etiqueta">Anotados (${anotados.length})</p>
+      ${anotados.length ? anotados.map(i => {
+        const j = jinete(i.jineteId);
+        return `<div class="anotado"><span>${esc(j ? j.nombre : i.jineteId)}</span>
+          <span class="cat">${esc(i.categoria || "sin categoría")}</span></div>`;
+      }).join("") : '<p style="font-size:.8rem; color:var(--oro-tinta)">Nadie se ha anotado todavía.</p>'}
+      <div class="acciones-admin">
+        <button class="btn btn-oro btn-mini" data-editar-comp="${esc(c.id)}">Editar</button>
+        <button class="btn btn-2 btn-mini" data-borrar-comp="${esc(c.id)}">Borrar</button>
+      </div>
+    </div>` : ""}
   </article>`;
+}
+
+/* Editor de dirección: crea o modifica una competencia. */
+function editarCompetencia(id) {
+  const c = id ? competencia(id) : { id:"", nombre:"", inicio:"", fin:"", sede:"", disciplina:"Salto",
+    categorias:[], horarios:[], cierre:"", nota:"" };
+  if (!c) return;
+  abrirHoja(id ? "Editar competencia" : "Nueva competencia", `
+    <form id="form-comp" style="display:grid; gap:.7rem">
+      <label class="campo">Nombre<input type="text" name="nombre" required value="${esc(c.nombre)}"></label>
+      <div class="dos-campos">
+        <label class="campo">Primer día<input type="date" name="inicio" required value="${esc(c.inicio)}"></label>
+        <label class="campo">Último día<input type="date" name="fin" value="${esc(c.fin || "")}"></label>
+      </div>
+      <div class="dos-campos">
+        <label class="campo">Sede<input type="text" name="sede" value="${esc(c.sede || "")}"></label>
+        <label class="campo">Disciplina<input type="text" name="disciplina" value="${esc(c.disciplina || "")}"></label>
+      </div>
+      <label class="campo">Cierre de inscripciones
+        <input type="date" name="cierre" value="${esc(c.cierre || "")}"></label>
+      <label class="campo">Categorías, una por línea
+        <textarea name="categorias" placeholder="0.60 m&#10;0.80 m&#10;1.00 m">${esc((c.categorias || []).join("\n"))}</textarea></label>
+      <label class="campo">Horarios, una línea por prueba — usa un guión largo para separar
+        <textarea name="horarios" placeholder="Jueves 17 — Reconocimiento de pista 8:00 a.m.&#10;Viernes 18 — 0.80 m a las 9:00 a.m.">${esc((c.horarios || []).join("\n"))}</textarea></label>
+      <label class="campo">Nota para los jinetes
+        <textarea name="nota" style="min-height:3rem">${esc(c.nota || "")}</textarea></label>
+      <button class="btn btn-oro btn-bloque" type="submit">${id ? "Guardar cambios" : "Crear competencia"}</button>
+    </form>`,
+    cerrar => {
+      $("#form-comp").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const f = new FormData(ev.target);
+        const nombre = String(f.get("nombre")).trim();
+        const nuevoId = id || nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "comp-" + Date.now();
+        const lineas = v => String(f.get(v) || "").split("\n").map(s => s.trim()).filter(Boolean);
+        try {
+          await Datos.poner("competencias", nuevoId, {
+            nombre, inicio:String(f.get("inicio")), fin:String(f.get("fin") || ""),
+            sede:String(f.get("sede") || ""), disciplina:String(f.get("disciplina") || ""),
+            cierre:String(f.get("cierre") || ""), categorias:lineas("categorias"),
+            horarios:lineas("horarios"), nota:String(f.get("nota") || ""),
+          });
+          avisar(id ? "Competencia actualizada." : "Competencia creada.");
+          cerrar(); pintar();
+        } catch (e) { avisar("El almacén rechazó el cambio: no tienes permiso de edición."); }
+      });
+    });
+}
+
+/* Anotarse: si dirección ya publicó categorías, se elige una. */
+function anotarse(compId) {
+  const c = competencia(compId);
+  const cats = c.categorias || [];
+  if (!cats.length) return guardarInscripcion(compId, "");
+  abrirHoja("Anotarse a " + c.nombre, `
+    <p style="font-size:.85rem; color:var(--ink-2)">Elige la categoría en la que quieres competir.</p>
+    <div class="vista" id="cats">${cats.map(x =>
+      `<button class="opcion" data-cat="${esc(x)}" aria-pressed="false"><span class="n">${esc(x)}</span></button>`).join("")}</div>
+    <button class="btn btn-bloque" id="ok-anotar" disabled>Anotarme</button>`,
+    cerrar => {
+      let elegida = null;
+      $("#cats").addEventListener("click", e => {
+        const b = e.target.closest("[data-cat]"); if (!b) return;
+        elegida = b.dataset.cat;
+        $("#cats").querySelectorAll(".opcion").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        $("#ok-anotar").disabled = false;
+      });
+      $("#ok-anotar").onclick = async () => { await guardarInscripcion(compId, elegida); cerrar(); };
+    });
+}
+async function guardarInscripcion(compId, categoria) {
+  await Datos.poner("inscripciones", `${compId}__${sujeto.id}`,
+    { jineteId:sujeto.id, competenciaId:compId, categoria, cuando:new Date().toISOString() });
+  avisar("Anotado. Dirección confirma la inscripción en oficinas.");
+  pintar();
 }
 
 /* ----------------------------------------------------------- RECORDATORIOS */
 function verRecordatorios() {
-  const autos = recordatoriosAuto(yo);
-  const mios = misRecordatorios(yo.id)
-    .sort((a,b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
+  const autos = recordatoriosAuto();
+  const mios = misRecordatorios().sort((a,b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
   const hoyClave = ymd(ahora());
   return `
-  <div class="vista-titulo">
-    <h2>Recordatorios</h2>
-    <span class="sub">${mios.filter(r => !r.hecho).length} pendientes</span>
-  </div>
+  <div class="vista-titulo"><h2>Recordatorios</h2>
+    <span class="sub">${mios.filter(r => !r.hecho).length} pendientes</span></div>
 
   <form class="tarjeta" id="nuevo-rec" style="display:grid; gap:.6rem">
-    <label class="campo">Qué no se te puede olvidar
-      <input type="text" name="texto" required maxlength="140" placeholder="Llevar los electrolitos de Camelot">
-    </label>
-    <label class="campo">Para cuándo
-      <input type="date" name="fecha" value="${hoyClave}">
-    </label>
+    <label class="campo">Qué no se puede olvidar
+      <input type="text" name="texto" required maxlength="140" placeholder="Llevar los electrolitos"></label>
+    <label class="campo">Para cuándo<input type="date" name="fecha" value="${hoyClave}"></label>
     <button class="btn" type="submit">Agregar recordatorio</button>
   </form>
 
   ${mios.length ? `<div class="vista">${mios.map(r => `
     <article class="rec ${r.hecho ? "hecho" : ""} ${!r.hecho && r.fecha && r.fecha < hoyClave ? "vencido" : ""}">
-      <button class="marcar" data-hecho="${esc(r.id)}" aria-pressed="${!!r.hecho}"
-        aria-label="Marcar como hecho">
-        ${r.hecho ? '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>' : ""}
-      </button>
-      <div class="txt">
-        <div class="t">${esc(r.texto)}</div>
+      <button class="marcar" data-hecho="${esc(r.id)}" aria-pressed="${!!r.hecho}" aria-label="Marcar como hecho">
+        ${r.hecho ? '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>' : ""}</button>
+      <div class="txt"><div class="t">${esc(r.texto)}</div>
         <div class="f">${r.fecha ? esc(fechaLarga(r.fecha)) : "sin fecha"}${
-          !r.hecho && r.fecha && r.fecha < hoyClave ? " · vencido" : ""}</div>
-      </div>
+          !r.hecho && r.fecha && r.fecha < hoyClave ? " · vencido" : ""}</div></div>
       <button class="btn btn-mini btn-2" data-borrar-rec="${esc(r.id)}">Borrar</button>
     </article>`).join("")}</div>`
-    : '<div class="vacio">Todavía no tienes recordatorios propios.</div>'}
+    : '<div class="vacio">Todavía no hay recordatorios propios.</div>'}
 
   ${autos.length ? `<div>
     <p class="etiqueta" style="margin-bottom:.4rem">Del club, automáticos</p>
-    <div class="vista">${autos.map(r => `
-      <article class="rec auto">
-        <div class="txt">
-          <div class="t">${esc(r.texto)}</div>
-          <div class="f">${esc(fechaLarga(ymd(r.vence)))} · ${esc(horaTexto(r.vence))}</div>
-        </div>
-      </article>`).join("")}</div>
+    <div class="vista">${autos.map(r => `<article class="rec auto">
+      <div class="txt"><div class="t">${esc(r.texto)}</div>
+        <div class="f">${esc(fechaLarga(ymd(r.vence)))} · ${esc(horaTexto(r.vence))}</div></div></article>`).join("")}</div>
     <p style="font-size:.75rem; color:var(--ink-3); margin-top:.5rem">
-      Estos salen solos de tus reservas y del calendario. En el sistema final llegan
-      además por WhatsApp (M12).</p>
+      Salen solos de las reservas y del calendario. En el sistema final llegan además por WhatsApp (M12).</p>
   </div>` : ""}`;
 }
 </script>
@@ -1306,99 +1303,143 @@ function verRecordatorios() {
 <script>
 "use strict";
 /* ------------------------------------------------------------------ pintado */
-const VISTAS = {
-  inicio: verInicio, reservar: verReservar, reglamento: verReglamento,
-  competencias: verCompetencias, recordatorios: verRecordatorios,
+const VISTAS = { inicio:verInicio, reservar:verReservar, documentos:verDocumentos,
+  competencias:verCompetencias, recordatorios:verRecordatorios };
+
+const ICONOS = {
+  inicio:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
+  reservar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
+  documentos:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  competencias:'<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M10 17h4l1 3H9z"/>',
+  recordatorios:'<path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
 };
+const ROTULOS = { inicio:"Inicio", reservar:"Reservar", documentos:"Documentos",
+  competencias:"Competencias", recordatorios:"Recordatorios" };
 
-function pintar() {
-  yo = miembro(yoId()) || MIEMBROS[0];
-  $("#quien-nombre").textContent = yo.nombre;
-  $("#quien-ini").textContent = yo.nombre.split(" ").map(p => p[0]).slice(0,2).join("");
-  $("#v-" + vista).innerHTML = VISTAS[vista]();
-  for (const nombre of Object.keys(VISTAS)) $("#v-" + nombre).hidden = nombre !== vista;
-  document.querySelectorAll(".tab").forEach(t =>
-    t.setAttribute("aria-selected", String(t.dataset.vista === vista)));
-
-  /* Aviso en la pestaña de reglamento cuando falta firmar (RN-15). */
-  const tabReg = document.querySelector('.tab[data-vista="reglamento"]');
-  tabReg.querySelector(".pip")?.remove();
-  if (pendientesDeFirma(yo).length) {
-    const pip = document.createElement("span");
-    pip.className = "pip"; tabReg.appendChild(pip);
-  }
-
-  $("#pie-datos").textContent = Datos.compartido
-    ? "Reservas compartidas: lo que aparta un jinete lo ven todos."
-    : "Reservas guardadas solo en este navegador.";
+function avisar(texto) {
+  const b = $("#brindis");
+  b.textContent = texto; b.hidden = false;
+  clearTimeout(avisar.t); avisar.t = setTimeout(() => { b.hidden = true; }, 3800);
 }
 
-function irA(nombre) { vista = nombre; pintar(); window.scrollTo({ top: 0, behavior: "instant" }); }
+function abrirHoja(titulo, contenido, alMontar) {
+  const capa = $("#capa");
+  capa.innerHTML = `<div class="velo"><div class="hoja" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
+    <div class="hoja-cab"><h3>${esc(titulo)}</h3><button class="cerrar" aria-label="Cerrar">&times;</button></div>
+    <div id="hoja-cuerpo">${contenido}</div></div></div>`;
+  const cerrar = () => { capa.innerHTML = ""; document.body.style.overflow = ""; };
+  document.body.style.overflow = "hidden";
+  capa.querySelector(".cerrar").onclick = cerrar;
+  capa.querySelector(".velo").onclick = e => { if (e.target === capa.querySelector(".velo")) cerrar(); };
+  document.addEventListener("keydown", function fuga(e) {
+    if (e.key === "Escape") { cerrar(); document.removeEventListener("keydown", fuga); } });
+  if (alMontar) alMontar(cerrar);
+  return cerrar;
+}
+
+function pintar() {
+  refrescarSesion();
+  $("#quien-nombre").textContent = cuenta.nombre.split(" ")[0];
+  $("#quien-ini").textContent = cuenta.nombre.split(" ").map(p => p[0]).slice(0,2).join("");
+  $("#quien-ini").classList.toggle("admin", esAdmin());
+  $("#sello").hidden = !esAdmin();
+
+  const tabs = $("#tabs");
+  tabs.innerHTML = Object.keys(VISTAS).map(n => `<button class="tab" role="tab" data-vista="${n}"
+    aria-selected="${n === vista}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONOS[n]}</svg>${ROTULOS[n]}
+    ${n === "documentos" && pendientesDeFirma().length ? '<span class="pip"></span>' : ""}</button>`).join("");
+
+  $("#v-" + vista).innerHTML = VISTAS[vista]();
+  for (const n of Object.keys(VISTAS)) $("#v-" + n).hidden = n !== vista;
+
+  $("#pie-datos").textContent = !Datos.listo ? "Conectando…"
+    : Datos.compartido
+      ? (esAdmin() ? "Almacén compartido · tienes permiso de edición"
+                   : "Almacén compartido · solo ves lo tuyo")
+      : "Guardado solo en este navegador";
+}
+
+function irA(n) { vista = n; pintar(); window.scrollTo({ top:0, behavior:"instant" }); }
 
 /* ------------------------------------------------------------------ eventos */
-document.querySelector(".tabs").addEventListener("click", e => {
-  const t = e.target.closest(".tab");
-  if (t) irA(t.dataset.vista);
+$("#tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab"); if (t) irA(t.dataset.vista);
 });
 
 document.addEventListener("click", async e => {
-  const ir = e.target.closest("[data-ir]");
-  if (ir) return irA(ir.dataset.ir);
+  const ir = e.target.closest("[data-ir]");             if (ir) return irA(ir.dataset.ir);
+  const dia = e.target.closest("[data-dia]");           if (dia) { diaSel = dia.dataset.dia; return pintar(); }
+  const res = e.target.closest("[data-reservar]");      if (res) return elegirCaballo(res.dataset.reservar);
+  const can = e.target.closest("[data-cancelar]");      if (can) return cancelar(can.dataset.cancelar);
+  const nueva = e.target.closest("[data-nueva-comp]");  if (nueva) return editarCompetencia(null);
+  const edi = e.target.closest("[data-editar-comp]");   if (edi) return editarCompetencia(edi.dataset.editarComp);
 
-  const dia = e.target.closest("[data-dia]");
-  if (dia) { diaSel = dia.dataset.dia; return pintar(); }
+  const cargar = e.target.closest("[data-cargar-calendario]");
+  if (cargar) {
+    try {
+      for (const c of COMPETENCIAS_INICIALES) { const { id, ...resto } = c; await Datos.poner("competencias", id, resto); }
+      avisar("Calendario cargado.");
+    } catch (err) { avisar("El almacén rechazó el cambio: no tienes permiso de edición."); }
+    return pintar();
+  }
 
-  const res = e.target.closest("[data-reservar]");
-  if (res) return elegirCaballo(res.dataset.reservar);
-
-  const can = e.target.closest("[data-cancelar]");
-  if (can) return cancelar(can.dataset.cancelar);
+  const borrarComp = e.target.closest("[data-borrar-comp]");
+  if (borrarComp) {
+    const c = competencia(borrarComp.dataset.borrarComp);
+    return abrirHoja("Borrar competencia", `
+      <p style="font-size:.9rem">Se quita <b>${esc(c.nombre)}</b> del calendario y con ella la lista de anotados.</p>
+      <button class="btn btn-peligro btn-bloque" id="ok-borrar-comp">Borrar</button>`,
+      cerrar => { $("#ok-borrar-comp").onclick = async () => {
+        try {
+          for (const i of Datos.todo("inscripciones").filter(x => x.competenciaId === c.id))
+            await Datos.quitar("inscripciones", i.id);
+          await Datos.quitar("competencias", c.id);
+          avisar("Competencia borrada.");
+        } catch (err) { avisar("El almacén rechazó el cambio: no tienes permiso de edición."); }
+        cerrar(); pintar();
+      }; });
+  }
 
   const comp = e.target.closest("[data-comp]");
   if (comp) {
-    const id = comp.dataset.comp;
-    const mia = Datos.todo("inscripciones").find(i => i.miembroId === yo.id && i.competenciaId === id);
-    if (mia) { await Datos.quitar("inscripciones", mia.id); avisar("Te quitamos de la lista."); }
-    else {
-      await Datos.poner("inscripciones", `${id}__${yo.id}`,
-        { miembroId: yo.id, competenciaId: id, cuando: new Date().toISOString() });
-      avisar("Anotada. Dirección confirma tu inscripción en oficinas.");
-    }
-    return pintar();
+    const mia = inscritoEn(comp.dataset.comp);
+    if (mia) { await Datos.quitar("inscripciones", mia.id); avisar("Te quitamos de la lista."); return pintar(); }
+    return anotarse(comp.dataset.comp);
   }
 
   const hecho = e.target.closest("[data-hecho]");
   if (hecho) {
-    const r = misRecordatorios(yo.id).find(x => x.id === hecho.dataset.hecho);
+    const r = misRecordatorios().find(x => x.id === hecho.dataset.hecho);
     if (r) { const { id, ...resto } = r; await Datos.poner("recordatorios", id, { ...resto, hecho: !r.hecho }); }
     return pintar();
   }
-
-  const borrar = e.target.closest("[data-borrar-rec]");
-  if (borrar) { await Datos.quitar("recordatorios", borrar.dataset.borrarRec); return pintar(); }
+  const brec = e.target.closest("[data-borrar-rec]");
+  if (brec) { await Datos.quitar("recordatorios", brec.dataset.borrarRec); return pintar(); }
 });
 
 document.addEventListener("change", e => {
   if (e.target.id === "chk-direccion") {
     localStorage.setItem("cq:direccion", e.target.checked ? "1" : "0");
-    avisar(e.target.checked
-      ? "Modo dirección activo: puedes agendar fuera de la ventana."
-      : "Modo dirección apagado.");
-    pintar();
+    avisar(e.target.checked ? "Modo dirección activo." : "Modo dirección apagado.");
+    return pintar();
+  }
+  const esc2 = e.target.closest("[data-escuela]");
+  if (esc2) {
+    localStorage.setItem("cq:escuela:" + esc2.dataset.escuela, esc2.checked ? "1" : "0");
+    avisar(esc2.checked ? "Autorizado para el pool de escuela." : "Retirado del pool de escuela.");
   }
 });
 
 document.addEventListener("submit", async e => {
+  if (e.target.id === "form-comp") return;          /* lo maneja su propio editor */
   e.preventDefault();
 
   if (e.target.id === "nuevo-rec") {
     const f = new FormData(e.target);
-    const texto = String(f.get("texto") || "").trim();
-    if (!texto) return;
-    await Datos.poner("recordatorios", "r-" + Date.now().toString(36) + "-" + yo.id,
-      { miembroId: yo.id, texto, fecha: f.get("fecha") || "", hecho: false });
-    avisar("Recordatorio agregado.");
-    return pintar();
+    const texto = String(f.get("texto") || "").trim(); if (!texto) return;
+    await Datos.poner("recordatorios", "r-" + Date.now().toString(36) + "-" + sujeto.id,
+      { jineteId:sujeto.id, texto, fecha:f.get("fecha") || "", hecho:false });
+    avisar("Recordatorio agregado."); return pintar();
   }
 
   const firmar = e.target.dataset.firmar;
@@ -1407,35 +1448,115 @@ document.addEventListener("submit", async e => {
     const nombre = String(new FormData(e.target).get("nombre") || "").trim();
     if (nombre.length < 4) return avisar("Escribe el nombre completo.");
     const cuando = ahora();
-    await Datos.poner("aceptaciones", `${yo.id}__${d.id}__${d.version}`, {
-      miembroId: yo.id, documentoId: d.id, version: d.version, nombreFirma: nombre,
-      fecha: ymd(cuando), horaTexto: horaTexto(cuando), sello: cuando.toISOString(),
-    });
-    avisar(`${d.titulo} aceptado.`);
-    return pintar();
+    await Datos.poner("aceptaciones", `${sujeto.id}__${d.id}__${d.version}`, {
+      jineteId:sujeto.id, firmadaPor:cuenta.id, documentoId:d.id, version:d.version,
+      nombreFirma:nombre, fecha:ymd(cuando), horaTexto:horaTexto(cuando), sello:cuando.toISOString() });
+    avisar(`${d.titulo} aceptado.`); return pintar();
   }
 });
 
-/* ------------------------------------------------------------------- perfil */
+/* ---------------------------------------------------------- reservar y cancelar */
+function elegirCaballo(sesionId) {
+  const [fecha, plantillaId] = sesionId.split("__");
+  const s = sesionesDe(fecha).find(x => x.plantillaId === plantillaId); if (!s) return;
+  const opciones = caballosPara(s);
+  abrirHoja(tipo(s.tipoId).nombre, `
+    <p style="font-size:.85rem; color:var(--ink-2)">${esc(fechaLarga(fecha))} · ${esc(horaTexto(s.inicio))} ·
+      ${esc(entrenador(s.ent))} · ${esc(espacio(s.esp))}</p>
+    <p class="etiqueta">Elige caballo</p>
+    <div class="vista" id="lista-caballos">${opciones.map(c => `
+      <button class="opcion" data-caballo="${c.id}" aria-pressed="false">
+        <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
+        <span><span class="n">${esc(c.nombre)}</span>
+          <span class="m">${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}</span></span>
+        <span class="carga">${c.trabajadas}/${c.maxDia}<br>hoy</span></button>`).join("")}</div>
+    <div class="nota">Se descuenta <b>${tipo(s.tipoId).consume}</b> del saldo.
+      Cancelación sin costo hasta <b>${esc(momentoTexto(limiteCancelacion(s.inicio)))}</b>.</div>
+    <button class="btn btn-bloque" id="confirmar" disabled>Confirmar reserva</button>`,
+    cerrar => {
+      let elegido = null;
+      const btn = $("#confirmar");
+      $("#lista-caballos").addEventListener("click", ev => {
+        const b = ev.target.closest("[data-caballo]"); if (!b) return;
+        elegido = b.dataset.caballo;
+        $("#lista-caballos").querySelectorAll(".opcion").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        btn.disabled = false;
+      });
+      btn.onclick = async () => {
+        btn.disabled = true; btn.textContent = "Apartando…";
+        if (await confirmarReserva(s, elegido)) cerrar();
+        else { btn.disabled = false; btn.textContent = "Confirmar reserva"; }
+      };
+    });
+}
+
+async function confirmarReserva(s, caballoId) {
+  const motivo = motivoBloqueo(s);
+  if (motivo) { avisar(motivo); return false; }
+  const id = `${s.fecha}__${s.plantillaId}__${caballoId}`;
+  const gano = await Datos.apartar("reservas", id, {
+    jineteId:sujeto.id, reservadaPor:cuenta.id, fecha:s.fecha,
+    hora:PLANTILLA.find(p => p.id === s.plantillaId).hora, plantillaId:s.plantillaId,
+    caballoId, tipoId:s.tipoId, ent:s.ent, esp:s.esp, consume:tipo(s.tipoId).consume,
+    creada:new Date().toISOString(), override:!estadoVentana().abierta,
+  }, idTab);
+  if (!gano) { avisar(`${caballo(caballoId).nombre} lo acaba de apartar alguien más.`); pintar(); return false; }
+  avisar(`Listo. Cancelación sin costo hasta ${momentoTexto(limiteCancelacion(s.inicio))}.`);
+  pintar(); return true;
+}
+
+async function cancelar(reservaId) {
+  const r = Datos.todo("reservas").find(x => x.id === reservaId); if (!r) return;
+  const inicio = deYmd(r.fecha, r.hora);
+  const aTiempo = seCancelaSinCosto(inicio);
+  abrirHoja("Cancelar clase", `
+    <p style="font-size:.9rem">${esc(fechaLarga(r.fecha))} · ${esc(horaTexto(inicio))} ·
+      ${esc(caballo(r.caballoId).nombre)}</p>
+    <div class="nota ${aTiempo ? "" : "alerta"}">${aTiempo
+      ? "Se devuelve la clase al saldo."
+      : "Pasó el límite de 10 horas: la clase se cobra igual y no vuelve al saldo."}</div>
+    <button class="btn btn-bloque ${aTiempo ? "" : "btn-peligro"}" id="ok-cancelar">
+      ${aTiempo ? "Cancelar y recuperar la clase" : "Cancelar de todos modos"}</button>
+    <button class="btn btn-2 btn-bloque" id="no-cancelar">Mejor no</button>`,
+    cerrar => {
+      $("#no-cancelar").onclick = cerrar;
+      $("#ok-cancelar").onclick = async () => {
+        await Datos.poner("historial", "h-" + r.id + "-" + Date.now(), {
+          jineteId:r.jineteId, fecha:r.fecha, hora:r.hora, caballoId:r.caballoId, tipoId:r.tipoId,
+          consume:r.consume || 1, estado:aTiempo ? "cancelada_a_tiempo" : "cancelada_tarde",
+          cobrada:!aTiempo, cuando:new Date().toISOString() });
+        await Datos.quitar("reservas", r.id);
+        avisar(aTiempo ? "Clase cancelada y devuelta al saldo." : "Clase cancelada. Se cobra.");
+        cerrar(); pintar();
+      };
+    });
+}
+
+/* -------------------------------------------------------------------- cuenta */
 $("#btn-quien").addEventListener("click", () => {
-  abrirHoja("¿Quién eres?", `
+  abrirHoja("Entrar como", `
     <p style="font-size:.82rem; color:var(--ink-2)">
-      Prototipo sin contraseñas: elige un perfil de ejemplo para probar el sistema con
-      sus permisos y su saldo. El sistema real pide teléfono o correo (§08).</p>
-    <div class="vista">
-      ${MIEMBROS.map(m => `<button class="caballo" data-perfil="${m.id}" aria-pressed="${m.id === yo.id}">
-        <span class="ini" aria-hidden="true">${esc(m.nombre[0])}</span>
-        <span><span class="n">${esc(m.nombre)}</span>
-          <span class="m">${esc(nivelNombre(m.nivel))}${m.menor ? " · menor, tutor " + esc(m.tutor) : ""}
-            · ${esc(m.perfiles.join(" y "))}</span></span>
-        <span class="carga">${saldo(m)}<br>clases</span>
-      </button>`).join("")}
-    </div>`,
+      Prototipo sin contraseñas: elige una cuenta de ejemplo para ver el sistema con sus
+      permisos. El sistema real pide teléfono o correo (§08).</p>
+    <div class="vista">${CUENTAS.map(c => {
+      const j = jinete(c.jineteId);
+      const bloqueada = c.rol === "admin" && !Datos.esEditor;
+      return `<button class="opcion" data-cuenta="${c.id}" aria-pressed="${c.id === cuenta.id}"
+        ${bloqueada ? "disabled style=opacity:.45" : ""}>
+        <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
+        <span><span class="n">${esc(c.nombre)}</span>
+          <span class="m">${esc(ROL_NOMBRE[c.rol])}${c.rol === "tutor" ? " de " + esc(j.nombre) : ""}
+            · ve ${esc(listar(SECCIONES[c.rol].filter(x => x !== "admin")))}</span></span>
+        ${bloqueada ? '<span class="carga">sin permiso<br>de edición</span>'
+          : `<span class="carga">${saldo(j)}<br>clases</span>`}</button>`;
+    }).join("")}</div>
+    ${!Datos.esEditor ? `<div class="nota oro">La cuenta de dirección solo se abre para quien tenga
+      permiso de edición de esta página. Ese permiso lo da el almacén, no la app.</div>` : ""}`,
     cerrar => {
       $("#hoja-cuerpo").addEventListener("click", e => {
-        const b = e.target.closest("[data-perfil]");
-        if (!b) return;
-        localStorage.setItem("cq:yo", b.dataset.perfil);
+        const b = e.target.closest("[data-cuenta]"); if (!b || b.disabled) return;
+        localStorage.setItem("cq:cuenta", b.dataset.cuenta);
+        localStorage.removeItem("cq:direccion");
         cerrar(); irA("inicio");
       });
     });
@@ -1443,24 +1564,21 @@ $("#btn-quien").addEventListener("click", () => {
 
 $("#btn-reiniciar").addEventListener("click", () => {
   abrirHoja("Borrar datos de prueba", `
-    <p style="font-size:.88rem">Se borran las reservas, firmas, recordatorios e inscripciones
-      ${Datos.compartido ? "guardadas en este navegador. Lo compartido con el club no se toca."
-        : "de este navegador."}</p>
+    <p style="font-size:.88rem">Se borran reservas, firmas, recordatorios e inscripciones
+      guardadas en este navegador.${Datos.compartido
+        ? " Lo que está en el almacén compartido no se toca." : ""}</p>
     <button class="btn btn-peligro btn-bloque" id="ok-borrar">Borrar</button>`,
-    cerrar => {
-      $("#ok-borrar").onclick = async () => {
-        await Datos.limpiarLocal();
-        localStorage.removeItem("cq:direccion");
-        cerrar(); avisar("Datos locales borrados."); pintar();
-      };
-    });
+    cerrar => { $("#ok-borrar").onclick = async () => {
+      await Datos.limpiarLocal(); localStorage.removeItem("cq:direccion");
+      cerrar(); avisar("Datos locales borrados."); pintar();
+    }; });
 });
 
-/* -------------------------------------------------------------------- inicio */
+/* --------------------------------------------------------------------- arranque */
 Datos.alCambiar = () => pintar();
 pintar();
 Datos.iniciar();
-setInterval(pintar, 60000);   /* los límites de 10 h se mueven solos */
+setInterval(pintar, 60000);
 </script>
 </body>
 </html>
