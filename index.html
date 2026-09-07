@@ -161,7 +161,7 @@ main{padding:1rem 1rem 2rem; max-width:44rem; margin:0 auto}
 .btn-bloque{width:100%}
 .btn-mini{padding:.35rem .7rem; font-size:.78rem; border-radius:8px}
 
-input[type="text"],input[type="date"],textarea,select{
+input[type="text"],input[type="date"],input[type="password"],textarea,select{
   width:100%; font:inherit; font-size:.9rem; color:var(--ink);
   background:var(--surface); border:1px solid var(--line-fuerte);
   border-radius:9px; padding:.55rem .7rem;
@@ -373,6 +373,21 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
   </footer>
 </main>
 
+<div class="portada" id="portada" hidden>
+  <form class="acceso" id="form-entrar">
+    <span class="mono-q grande" aria-hidden="true">Q</span>
+    <h1>Casa Quirón</h1>
+    <p class="acceso-sub">Reservas y portal de socios</p>
+    <label class="campo">Usuario
+      <input type="text" name="usuario" autocomplete="username" autocapitalize="none"
+        spellcheck="false" required></label>
+    <label class="campo">Contraseña
+      <input type="password" name="clave" autocomplete="current-password" required></label>
+    <p class="acceso-error" id="acceso-error" hidden>Usuario o contraseña incorrectos.</p>
+    <button class="btn btn-bloque" type="submit">Entrar</button>
+    <p class="acceso-pie">Las cuentas las crea dirección. Si no tienes uno, pídeselo.</p>
+  </form>
+</div>
 <div id="capa"></div>
 <div class="brindis" id="brindis" hidden></div>
 <style>
@@ -421,6 +436,17 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip{font-size:.74rem; padding:.15rem .45rem; border-radius:6px;
   background:var(--surface-2); border:1px solid var(--line)}
 .jinete-chip b{font-weight:600; color:var(--accent-2)}
+.portada{position:fixed; inset:0; z-index:60; display:grid; place-items:center;
+  padding:1.5rem; background:var(--bg); overflow-y:auto}
+.acceso{display:grid; gap:.75rem; width:min(22rem,100%); justify-items:stretch; text-align:center}
+.acceso .mono-q.grande{width:3.4rem; height:3.4rem; font-size:2rem; border-radius:12px; margin:0 auto}
+.acceso h1{font-size:1.9rem; letter-spacing:.02em}
+.acceso-sub{font-size:.82rem; color:var(--ink-3); margin-bottom:.6rem}
+.acceso .campo{text-align:left}
+.acceso-error{font-size:.8rem; color:var(--alerta); background:var(--alerta-bg);
+  border:1px solid color-mix(in srgb,var(--alerta) 30%,transparent);
+  border-radius:var(--r-sm); padding:.5rem .7rem}
+.acceso-pie{font-size:.74rem; color:var(--ink-3); margin-top:.3rem}
 .anuncio{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
   border-radius:var(--r); padding:.85rem 1rem; display:grid; gap:.4rem}
 .anuncio.fijado{border-left-color:var(--oro); background:color-mix(in srgb,var(--oro-fondo) 45%,var(--surface))}
@@ -496,6 +522,11 @@ const PLANTILLA = (() => {
   return lista;
 })();
 
+/* Contraseñas guardadas como huella SHA-256, no en claro. Aun así el cotejo
+   ocurre en el navegador: es una puerta con llave, no una caja fuerte. */
+const CLAVE_ADMIN = "689e1ac37810ee4364a057ba0c3fe168a8e48c460ccd82c549267b7a03257e21";   /* casaquiron */
+const CLAVE_DEMO  = "65e53453d1269bf6aa97df098a80bad73f529c57bc5d572253336ed24d766c6b";   /* quiron */
+
 /* --------------------------------------------------------------- personas
    Una persona es un registro que crea dirección: nombre, perfil, nivel,
    caballos y clases cargadas. Nadie se da de alta solo.
@@ -503,20 +534,32 @@ const PLANTILLA = (() => {
    rol:  admin | propietario | jinete | tutor
    Un menor no entra a la app: su cuenta la maneja el tutor (RN-18). */
 const PERSONAS_INICIALES = [
-  { id:"romy",      nombre:"Romy Uresti Cardona", rol:"admin",       nivel:"avanzado",
-    propios:["camelot"], habilitados:[], clasesCargadas:8, paquete:"Dirección · clases y pista" },
-  { id:"diego",     nombre:"Diego Arellano",      rol:"propietario", nivel:"intermedio",
-    propios:["tornado"], habilitados:[], clasesCargadas:6, paquete:"Propietario · pupilaje y clases" },
-  { id:"valentina", nombre:"Valentina Cordero",   rol:"jinete",      nivel:"intermedio",
-    propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8, paquete:"8 clases · tardes" },
-  { id:"mateo",     nombre:"Mateo Sandoval",      rol:"jinete",      nivel:"principiantes", menor:true, sinCuenta:true,
+  { id:"romina",    nombre:"Romina Cardona",    rol:"admin", usuario:"romina", clave:CLAVE_ADMIN,
+    nivel:"avanzado", propios:["camelot"], habilitados:[], clasesCargadas:8, paquete:"Dirección" },
+  { id:"tania",     nombre:"Tania",             rol:"admin", usuario:"tania",  clave:CLAVE_ADMIN,
+    nivel:"avanzado", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+  { id:"edwin",     nombre:"Edwin",             rol:"admin", usuario:"edwin",  clave:CLAVE_ADMIN,
+    nivel:"avanzado", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+  { id:"nicolas",   nombre:"Nicolás",           rol:"admin", usuario:"nicolas", clave:CLAVE_ADMIN,
+    nivel:"avanzado", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+  { id:"felipe",    nombre:"Felipe",            rol:"admin", usuario:"felipe", clave:CLAVE_ADMIN,
+    nivel:"avanzado", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+
+  { id:"diego",     nombre:"Diego Arellano",    rol:"propietario", usuario:"diego", clave:CLAVE_DEMO,
+    nivel:"intermedio", propios:["tornado"], habilitados:[], clasesCargadas:6,
+    paquete:"Propietario · pupilaje y clases" },
+  { id:"valentina", nombre:"Valentina Cordero", rol:"jinete", usuario:"valentina", clave:CLAVE_DEMO,
+    nivel:"intermedio", propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8,
+    paquete:"8 clases · tardes" },
+  { id:"mateo",     nombre:"Mateo Sandoval",    rol:"jinete", nivel:"principiantes", menor:true, sinCuenta:true,
     propios:[], habilitados:["jazmin","duende"], clasesCargadas:4, paquete:"4 clases · sábados" },
-  { id:"claudia",   nombre:"Claudia Sandoval",    rol:"tutor",       tutorDe:"mateo",
-    propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
-  { id:"ximena",    nombre:"Ximena Torres",       rol:"jinete",      nivel:"cuerdita", menor:true, sinCuenta:true,
-    propios:[], habilitados:["duende","nube"], clasesCargadas:0, paquete:"4 clases · entre semana (por renovar)" },
-  { id:"paulina",   nombre:"Paulina Torres",      rol:"tutor",       tutorDe:"ximena",
-    propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+  { id:"claudia",   nombre:"Claudia Sandoval",  rol:"tutor", usuario:"claudia", clave:CLAVE_DEMO,
+    tutorDe:"mateo", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+  { id:"ximena",    nombre:"Ximena Torres",     rol:"jinete", nivel:"cuerdita", menor:true, sinCuenta:true,
+    propios:[], habilitados:["duende","nube"], clasesCargadas:0,
+    paquete:"4 clases · entre semana (por renovar)" },
+  { id:"paulina",   nombre:"Paulina Torres",    rol:"tutor", usuario:"paulina", clave:CLAVE_DEMO,
+    tutorDe:"ximena", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
 ];
 
 const SECCIONES = {
@@ -788,17 +831,41 @@ let diaSel = ymd(ahora());
 const idTab = "t" + Math.random().toString(36).slice(2, 10);
 
 function refrescarSesion() {
-  const guardada = localStorage.getItem("cq:cuenta");
-  cuenta = persona(guardada) || conCuenta().find(p => p.rol === "jinete") || conCuenta()[0] || null;
+  cuenta = persona(localStorage.getItem("cq:sesion")) || null;
   sujeto = cuenta ? (cuenta.tutorDe ? (persona(cuenta.tutorDe) || cuenta) : cuenta) : null;
+}
+const haySesion = () => cuenta !== null;
+
+/* Huella SHA-256 de la contraseña. El cotejo pasa en el navegador. */
+async function huella(texto) {
+  const datos = new TextEncoder().encode(String(texto));
+  const buf = await crypto.subtle.digest("SHA-256", datos);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+async function entrar(usuario, clave) {
+  const u = String(usuario).trim().toLowerCase();
+  const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !x.sinCuenta);
+  if (!p || !p.clave) return false;
+  if (await huella(clave) !== p.clave) return false;
+  localStorage.setItem("cq:sesion", p.id);
+  localStorage.removeItem("cq:direccion");
+  return true;
+}
+function salir() {
+  localStorage.removeItem("cq:sesion");
+  localStorage.removeItem("cq:direccion");
+  vista = "inicio";
+  pintar();
 }
 
 /* El rol lo propone el registro, pero el permiso lo confirma el almacén: sin
    permiso de edición, la cuenta de dirección se queda con lo de un jinete. */
-const rolEfectivo = () => !cuenta ? "jinete"
-  : (cuenta.rol === "admin" && !Datos.esEditor) ? "jinete" : cuenta.rol;
+const rolEfectivo = () => cuenta ? cuenta.rol : "jinete";
 const ve = seccion => SECCIONES[rolEfectivo()].includes(seccion);
 const esAdmin = () => rolEfectivo() === "admin";
+/* Ser dirección en la app y poder escribir el catálogo son cosas distintas: lo
+   segundo lo concede el almacén, y sin eso los cambios se rechazan. */
+const puedeEditarCatalogo = () => esAdmin() && Datos.esEditor;
 const misCaballos = () => (cuenta.propios || []).map(caballo).filter(Boolean);
 /* Un propietario monta lo suyo; un jinete de escuela, lo que le desbloquearon. */
 const montaPropios = () => ve("propietario") && misCaballos().length > 0;
@@ -1031,7 +1098,10 @@ function bloquesCaballos() {
 /* Alta de personas: solo dirección, y el almacén lo verifica. */
 function panelPersonas() {
   const lista = personas().slice().sort((a,b) => a.nombre.localeCompare(b.nombre));
-  return `<div class="admin-caja">
+  return `${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
+    <b>Solo lectura.</b> Esta página no te ha dado permiso de edición, así que los cambios
+    al catálogo se van a rechazar. Pide que te la compartan con permiso de edición.</div>` : ""}
+  <div class="admin-caja">
     <p class="etiqueta">Personas del club</p>
     <p style="font-size:.8rem; color:var(--oro-tinta)">
       Nadie se da de alta solo: tú creas la persona, le pones perfil y nivel, le cargas las
@@ -1205,6 +1275,9 @@ function verDocumentosAdmin() {
   return `
   <div class="vista-titulo"><h2>Documentos</h2>
     <span class="sub">${lista.length} en el club</span></div>
+  ${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
+    <b>Solo lectura.</b> Esta página no te ha dado permiso de edición, así que los cambios
+    al catálogo se van a rechazar. Pide que te la compartan con permiso de edición.</div>` : ""}
   <div class="admin-caja">
     <p class="etiqueta">Dirección</p>
     <p style="font-size:.82rem; color:var(--oro-tinta)">
@@ -1439,7 +1512,10 @@ function bloqueComp(c, pasada) {
 function bloqueAnuncios() {
   const lista = anunciosParaMi();
   return `
-  ${esAdmin() ? `<div class="admin-caja">
+  ${esAdmin() ? `${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
+    <b>Solo lectura.</b> Esta página no te ha dado permiso de edición, así que los cambios
+    al catálogo se van a rechazar. Pide que te la compartan con permiso de edición.</div>` : ""}
+  <div class="admin-caja">
     <p class="etiqueta">Anuncios del club</p>
     <p style="font-size:.82rem; color:var(--oro-tinta)">
       Escribes un aviso y eliges a qué perfiles les sale, o a todos. Les aparece aquí,
@@ -1678,7 +1754,13 @@ function abrirHoja(titulo, contenido, alMontar) {
 
 function pintar() {
   refrescarSesion();
-  if (!cuenta) { $("#v-inicio").innerHTML = '<div class="vacio">Dirección todavía no da de alta a nadie.</div>'; return; }
+  const dentro = haySesion();
+  $("#portada").hidden = dentro;
+  document.querySelector(".app-head").hidden = !dentro;
+  $("#tabs").hidden = !dentro;
+  document.querySelector("main").hidden = !dentro;
+  document.body.style.paddingBottom = dentro ? "" : "0";
+  if (!dentro) return;
   $("#quien-nombre").textContent = cuenta.nombre.split(" ")[0];
   $("#quien-ini").textContent = cuenta.nombre.split(" ").map(p => p[0]).slice(0,2).join("");
   $("#quien-ini").classList.toggle("admin", esAdmin());
@@ -1732,6 +1814,16 @@ function editarPersona(id) {
           <input type="text" inputmode="numeric" name="clasesCargadas" value="${p.clasesCargadas || 0}"></label>
         <label class="campo">Paquete<input type="text" name="paquete" value="${esc(p.paquete || "")}"></label>
       </div>
+      <div class="dos-campos">
+        <label class="campo">Usuario para entrar
+          <input type="text" name="usuario" autocapitalize="none" spellcheck="false"
+            value="${esc(p.usuario || "")}" placeholder="sin usuario, no entra"></label>
+        <label class="campo">${id ? "Contraseña nueva (en blanco = no cambia)" : "Contraseña"}
+          <input type="text" name="clave" autocomplete="off" placeholder="${id && p.clave ? "sin cambios" : ""}"></label>
+      </div>
+      <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
+        Un menor no lleva usuario: entra su tutor. La contraseña se guarda como huella,
+        no en claro, pero se comprueba en el navegador: no la uses para nada delicado.</p>
       <div class="campo">Caballos propios (lo vuelven propietario)
         <div class="casillas">${casillas("propios", CABALLOS.filter(c => c.uso === "propietario"))}</div></div>
       <div class="campo">Caballos desbloqueados (solo para jinetes de escuela)
@@ -1752,11 +1844,14 @@ function editarPersona(id) {
         const nuevoId = id || nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
           .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "p-" + Date.now();
         const menor = f.get("menor") === "on";
+        const claveNueva = String(f.get("clave") || "").trim();
         const datos = {
           nombre, rol:String(f.get("rol")), nivel:String(f.get("nivel")),
           menor, sinCuenta:menor, tutorDe:String(f.get("tutorDe") || ""),
           clasesCargadas:Math.max(0, parseInt(f.get("clasesCargadas"), 10) || 0),
           paquete:String(f.get("paquete") || ""),
+          usuario:menor ? "" : String(f.get("usuario") || "").trim().toLowerCase(),
+          clave:claveNueva ? await huella(claveNueva) : (p.clave || ""),
           propios:f.getAll("propios"), habilitados:f.getAll("habilitados"),
         };
         try {
@@ -1921,7 +2016,7 @@ document.addEventListener("change", e => {
 });
 
 document.addEventListener("submit", async e => {
-  if (["form-comp","form-persona","form-ranura","form-doc","form-anuncio"].includes(e.target.id)) return;
+  if (["form-comp","form-persona","form-ranura","form-doc","form-anuncio","form-entrar"].includes(e.target.id)) return;
   e.preventDefault();
   if (e.target.id === "nuevo-rec") {
     const f = new FormData(e.target);
@@ -2026,33 +2121,26 @@ async function cancelar(reservaId) {
 
 /* -------------------------------------------------------------------- cuenta */
 $("#btn-quien").addEventListener("click", () => {
-  const lista = conCuenta();
-  abrirHoja("Entrar como", `
-    <p style="font-size:.82rem; color:var(--ink-2)">
-      Las cuentas las crea dirección; nadie se da de alta solo. Prototipo sin contraseñas:
-      elige una para ver el sistema con sus permisos. El sistema real pide teléfono o correo (§08).</p>
-    <div class="vista">${lista.map(p => {
-      const menor = p.tutorDe ? persona(p.tutorDe) : null;
-      const bloqueada = p.rol === "admin" && !Datos.esEditor;
-      return `<button class="opcion" data-cuenta="${p.id}" aria-pressed="${cuenta && p.id === cuenta.id}"
-        ${bloqueada ? "disabled style=opacity:.45" : ""}>
-        <span class="ini" aria-hidden="true">${esc(p.nombre[0])}</span>
-        <span><span class="n">${esc(p.nombre)}</span><span class="m">${esc(ROL_NOMBRE[p.rol] || p.rol)}${
-          menor ? " de " + esc(menor.nombre) : ""} · ${
-          p.rol === "admin" ? "no firma" : `firma ${docsDe(menor || p).length} documentos`}</span></span>
-        ${bloqueada ? '<span class="carga">sin permiso<br>de edición</span>'
-          : `<span class="carga">${saldo(menor || p)}<br>clases</span>`}</button>`;
-    }).join("")}</div>
-    ${!Datos.esEditor ? `<div class="nota oro">La cuenta de dirección solo se abre para quien tenga
-      permiso de edición de esta página. Ese permiso lo da el almacén, no la app.</div>` : ""}`,
-    cerrar => {
-      $("#hoja-cuerpo").addEventListener("click", e => {
-        const b = e.target.closest("[data-cuenta]"); if (!b || b.disabled) return;
-        localStorage.setItem("cq:cuenta", b.dataset.cuenta);
-        localStorage.removeItem("cq:direccion");
-        cerrar(); irA("inicio");
-      });
-    });
+  const menor = cuenta.tutorDe ? persona(cuenta.tutorDe) : null;
+  const mios = docsDe(menor || cuenta);
+  abrirHoja("Tu cuenta", `
+    <div class="tarjeta plana" style="display:grid; gap:.35rem">
+      <p style="font-family:var(--serif); font-size:1.35rem">${esc(cuenta.nombre)}</p>
+      <p style="font-size:.82rem; color:var(--ink-2)">${esc(ROL_NOMBRE[cuenta.rol])}${
+        menor ? ` · manejas la cuenta de ${esc(menor.nombre)}` : ""}</p>
+      <p style="font-size:.78rem; color:var(--ink-3)">Usuario: ${esc(cuenta.usuario || "—")}</p>
+      ${esAdmin() ? '<p style="font-size:.78rem; color:var(--ink-3)">Acceso total. No firmas documentos.</p>'
+        : `<p style="font-size:.78rem; color:var(--ink-3)">
+            ${saldo()} clases disponibles · ${mios.length} documentos que firmar</p>`}
+    </div>
+    ${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
+      Entraste como dirección, pero esta página no te ha dado permiso de edición: puedes
+      ver todo y los cambios al catálogo se van a rechazar. Pide que te compartan la
+      página con permiso de edición.</div>` : ""}
+    <div class="nota">Solo ves tu información${esAdmin() ? "" : " y la de nadie más"}.
+      Para cambiar tu contraseña, pídeselo a dirección.</div>
+    <button class="btn btn-2 btn-bloque" id="btn-salir">Cerrar sesión</button>`,
+    cerrar => { $("#btn-salir").onclick = () => { cerrar(); salir(); }; });
 });
 
 $("#btn-reiniciar").addEventListener("click", () => {
@@ -2063,6 +2151,17 @@ $("#btn-reiniciar").addEventListener("click", () => {
     cerrar => { $("#ok-borrar").onclick = async () => {
       await Datos.limpiarLocal(); localStorage.removeItem("cq:direccion");
       cerrar(); avisar("Datos locales borrados."); pintar(); }; });
+});
+
+$("#form-entrar").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = e.target.querySelector("button[type=submit]");
+  btn.disabled = true; btn.textContent = "Entrando…";
+  const ok = await entrar(f.get("usuario"), f.get("clave"));
+  btn.disabled = false; btn.textContent = "Entrar";
+  $("#acceso-error").hidden = ok;
+  if (ok) { e.target.reset(); vista = "inicio"; pintar(); }
 });
 
 /* ------------------------------------------------------------------ arranque */

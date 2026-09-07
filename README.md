@@ -62,11 +62,26 @@ y los automáticos que salen de las reservas y del calendario — el límite de
 cancelación de cada clase, el cierre de inscripciones, la apertura de la agenda
 del lunes.
 
+## Entrar
+
+La app abre en una pantalla de acceso: usuario y contraseña. Sin sesión no se ve
+nada. Las cuentas las crea dirección desde *Personas del club*, con su usuario y
+su contraseña; un menor no lleva usuario porque entra su tutor. La sesión aguanta
+recargas y se cierra desde el chip del encabezado.
+
+Las contraseñas se guardan como huella SHA-256, no en claro.
+
+> **Esto no es autenticación de verdad.** El cotejo ocurre en el navegador y la
+> página se puede leer. Sirve para que cada socio entre a lo suyo y no se meta en
+> lo de otro por descuido; no resiste a alguien que quiera saltárselo a propósito.
+> La autenticación real necesita servidor, y es la primera pieza de la lista de
+> pendientes de más abajo.
+
 ## Perfiles y qué ve cada uno
 
 | Perfil | Ve | Notas |
 |---|---|---|
-| Dirección | Todo. Da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
+| Dirección | Todo, con su propio usuario. Da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
 | Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
 | Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |
 | Tutor | Lo de jinete, sobre la cuenta del menor | Reserva, cancela y firma en nombre del menor (RN-18) |
@@ -78,7 +93,8 @@ un jinete solo sabe si él está anotado.
 Nadie se da de alta solo: las personas las crea dirección, y de su perfil sale
 qué documentos firma, qué días puede reservar y qué caballos monta.
 
-**Qué se aplica de verdad y qué no.** Publicada como Artifact, el almacén aplica
+**Qué se aplica de verdad y qué no.** El inicio de sesión decide qué ve cada
+quien dentro de la app. Publicada como Artifact, el almacén aplica
 cinco reglas que el navegador no puede saltarse: el padrón de personas, el horario
 semanal, los documentos, los anuncios y el calendario de competencias solo los
 escribe quien tenga permiso de edición de la página. La cuenta de dirección de
@@ -113,10 +129,12 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 Es una app funcional, no el sistema de producción. Falta lo que necesita un
 servidor:
 
-- **Sin autenticación.** Se elige una cuenta de ejemplo desde el encabezado. Los
-  permisos por perfil sí están implementados, pero sin contraseñas cualquiera
-  puede elegir otra cuenta; la excepción es dirección, que el almacén verifica.
-  El sistema real pide teléfono o correo con contraseña (§08).
+- **El acceso es una puerta con llave, no una caja fuerte.** Hay usuario y
+  contraseña, y cada quien entra a lo suyo, pero la comprobación pasa en el
+  navegador. El sistema real la hace en el servidor, con teléfono o correo (§08).
+- **Contraseña compartida entre los cinco administradores.** Es lo que pidió
+  dirección; en producción conviene una por persona, para saber quién hizo cada
+  cambio.
 - **Las reglas se aplican en el navegador.** La especificación pide que se
   apliquen en el servidor. Al apartar un caballo se usa una reserva de lugar
   antes de escribir, así que dos jinetes no se lo ganan a la vez, pero el resto
