@@ -1,0 +1,42 @@
+# Publica el sitio en GitHub Pages en cada push.
+# Para que funcione, una sola vez: Settings → Pages → Source: GitHub Actions.
+name: Publicar el sitio
+
+on:
+  push:
+    branches: [main, claude/website-style-pdf-krwh2s]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar lo que se publica
+        run: |
+          mkdir -p _sitio
+          cp index.html manifest.json sw.js _sitio/
+          cp -r assets _sitio/
+          cp -r especificacion _sitio/
+          # El backend y las herramientas no se publican.
+          ls -la _sitio
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _sitio
+      - id: deploy
+        uses: actions/deploy-pages@v4

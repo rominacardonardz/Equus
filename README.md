@@ -6,6 +6,8 @@ dependencias ni compilación.
 
 ```
 index.html            La app
+manifest.json  sw.js  Para instalarla en el teléfono
+.github/workflows/    Publica el sitio en GitHub Pages en cada push
 backend/              Esquema, reglas de acceso y datos iniciales para el servidor
 especificacion/       El documento fuente (especificación funcional v2.0) como sitio
 tools/                Genera las versiones de archivo único de dist/
@@ -148,6 +150,19 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 | RN-15 | Sin documentos firmados no hay primera reserva |
 | RN-16 | Cada perfil ve solo sus documentos |
 | RN-20 | Dirección puede saltarse la ventana; la reserva queda marcada |
+
+## Publicar el sitio
+
+El repositorio ya trae el flujo que publica en GitHub Pages en cada push. Falta un
+solo clic, una sola vez: **Settings → Pages → Source: GitHub Actions**. A partir de
+ahí cada cambio se publica solo.
+
+La app es instalable: al abrir el sitio en el celular, «Agregar a pantalla de
+inicio» la deja con su icono, a pantalla completa, y abre aunque no haya señal.
+Probado por https con el service worker activo.
+
+**Ojo:** publicada así, y hasta conectar el backend, cada teléfono guarda lo suyo
+por separado. La versión con datos compartidos sigue siendo el Artifact.
 
 ## Pasar a producción
 

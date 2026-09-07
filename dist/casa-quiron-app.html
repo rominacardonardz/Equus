@@ -2746,6 +2746,14 @@ $("#form-entrar").addEventListener("submit", async e => {
   if (ok) { e.target.reset(); vista = "inicio"; pintar(); }
 });
 
+/* Se instala en el teléfono: el icono abre la app a pantalla completa.
+   Solo cuando el sitio se sirve por https —en un archivo local no aplica. */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
 /* ------------------------------------------------------------------ arranque */
 Datos.alCambiar = () => pintar();
 Datos.sembrarLocal();
