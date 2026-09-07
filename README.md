@@ -20,6 +20,11 @@ viernes; 7, 8, 9 y 10 de la mañana sábado y domingo.
 
 Se monta en las dos pistas del club: **Hípico Mty** y **Equus**.
 
+**Todos los horarios están abiertos para cualquier nivel**, por decisión de
+dirección: una jinete de cuerdita ve las mismas horas que una de avanzado. El
+nivel no reparte horarios, solo decide qué caballos puede montar cada quien
+(RN-05). La única restricción por perfil es el domingo, reservado a propietarios.
+
 Al reservar, un jinete de escuela elige entre los caballos que le desbloquearon y
 estén libres; un propietario monta el suyo, sin elegir de una lista ajena. Al
 confirmar se descuenta la clase y se muestra la hora exacta del límite de
@@ -92,7 +97,7 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 | RN-09 | No se excede el cupo de la sesión ni la capacidad de la pista |
 | RN-10 | Sin traslapes de jinete ni de caballo |
 | RN-11 | La agenda se abre y se cierra el lunes, día en que no hay clases |
-| RN-12 | Solo se ven las sesiones que el paquete autoriza |
+| RN-12 | Los horarios están abiertos para cualquier nivel, por decisión de dirección; el domingo es la única restricción, solo para propietarios |
 | RN-15 | Sin documentos firmados no hay primera reserva |
 | RN-16 | Cada perfil ve solo sus documentos |
 | RN-20 | Dirección puede saltarse la ventana; la reserva queda marcada |
@@ -116,8 +121,6 @@ servidor:
 - **Catálogo de ejemplo.** Caballos y entrenadores son datos de prueba. Los días
   y horas de clase, y el calendario de competencias, son los que dio dirección;
   categorías y horarios de cada competencia se publican desde la app.
-- **Los niveles no dividen los horarios todavía.** Cada hora está abierta a todos
-  los niveles hasta que dirección diga qué nivel va en cada una.
 - **El reparto de pistas es provisional.** Por defecto las clases de la mañana
   son en Hípico Mty y las de la tarde en Equus; dirección lo cambia hora por hora
   desde *La semana*.

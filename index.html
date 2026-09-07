@@ -568,6 +568,7 @@ const DOCUMENTOS = [
         "La pista se libera puntualmente al terminar cada clase.","Prohibido dar alimento a caballos que no sean propios."] },
       { h:"Horarios", l:["El lunes no hay clases: es el día en que se abre la agenda de la semana.",
         "Jinetes de escuela: de martes a sábado.","Propietarios: de martes a domingo.",
+        "Todos los horarios están abiertos para cualquier nivel.",
         "Presentarse 15 minutos antes de la clase para ensillar."] },
       { h:"Convivencia", l:["Trato respetuoso con personal, jinetes y caballos.",
         "El incumplimiento del reglamento puede derivar en suspensión temporal."] },
@@ -1076,7 +1077,9 @@ function verReservar() {
         : `No hay clases el ${esc(fechaLarga(diaSel))}.`}</div>`}</div>
 
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Clases de martes a sábado; el domingo, solo propietarios. El lunes no se monta.</p>`;
+    Clases de martes a sábado; el domingo, solo propietarios. El lunes no se monta.
+    Todos los horarios están abiertos para cualquier nivel: el nivel solo decide
+    qué caballo puedes montar.</p>`;
 }
 
 function filaSesion(s) {
@@ -1439,6 +1442,9 @@ function editarPersona(id) {
         <label class="campo">Nivel<select name="nivel">${
           NIVELES.map(n => `<option value="${n.id}" ${p.nivel === n.id ? "selected" : ""}>${n.nombre}</option>`).join("")}</select></label>
       </div>
+      <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
+        El nivel no limita horarios —todos están abiertos para cualquier nivel—:
+        decide qué caballos puede montar.</p>
       <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
         <input type="checkbox" name="menor" ${p.menor ? "checked" : ""} style="width:auto">
         <span>Es menor de edad — firma su tutor y suma la carta responsiva</span></label>
