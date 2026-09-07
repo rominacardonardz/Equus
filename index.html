@@ -356,6 +356,7 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 <main>
   <section class="vista" id="v-inicio"></section>
   <section class="vista" id="v-reservar" hidden></section>
+  <section class="vista" id="v-semana" hidden></section>
   <section class="vista" id="v-documentos" hidden></section>
   <section class="vista" id="v-competencias" hidden></section>
   <section class="vista" id="v-recordatorios" hidden></section>
@@ -382,6 +383,26 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .casillas label{display:flex; gap:.4rem; align-items:center; font-size:.8rem; background:var(--surface);
   border:1px solid var(--line); border-radius:8px; padding:.35rem .5rem}
 .casillas input{width:auto}
+
+.semana-nav{display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  font-size:.82rem; color:var(--ink-2)}
+.dia-bloque{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.dia-cab{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem;
+  padding:.6rem .9rem; background:var(--surface-2); border-bottom:1px solid var(--line)}
+.dia-cab h3{font-size:1.05rem; text-transform:capitalize}
+.dia-cab span{font-size:.74rem; color:var(--ink-3)}
+.ranura{display:grid; grid-template-columns:4.3rem 1fr auto; gap:.2rem .6rem; align-items:start;
+  padding:.6rem .9rem; border-top:1px solid var(--line)}
+.ranura:first-of-type{border-top:0}
+.ranura.libre{opacity:.62}
+.ranura-hora{font-family:var(--serif); font-size:1.05rem; font-variant-numeric:tabular-nums; padding-top:.1rem}
+.ranura-meta{font-size:.74rem; color:var(--ink-3)}
+.jinetes{display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.3rem}
+.jinetes.vacia{font-size:.76rem; color:var(--ink-3); font-style:italic}
+.jinete-chip{font-size:.74rem; padding:.15rem .45rem; border-radius:6px;
+  background:var(--surface-2); border:1px solid var(--line)}
+.jinete-chip b{font-weight:600; color:var(--accent-2)}
+
 </style>
 
 <script>
@@ -414,8 +435,9 @@ const ENTRENADORES = [
 ];
 const entrenador = id => (ENTRENADORES.find(e => e.id === id) || {}).nombre || "—";
 
+/* Las dos pistas donde monta el club ahora mismo. */
 const ESPACIOS = [
-  { id:"norte", nombre:"Picadero Norte", cap:6 }, { id:"techada", nombre:"Pista Techada", cap:6 },
+  { id:"mty", nombre:"Hípico Mty", cap:6 }, { id:"equus", nombre:"Equus", cap:6 },
 ];
 const espacio = id => (ESPACIOS.find(e => e.id === id) || {}).nombre || "—";
 
@@ -436,7 +458,7 @@ const PLANTILLA = (() => {
       id: `d${dia}-${hora.replace(":", "")}`,
       dia, hora, tipo:"escuela",
       ent: ENTRENADORES[n++ % ENTRENADORES.length].id,
-      esp: Number(hora.slice(0, 2)) < 12 ? "norte" : "techada",
+      esp: Number(hora.slice(0, 2)) < 12 ? "mty" : "equus",
       cupo: 6, soloPropietarios: !!soloPropietarios,
     });
   };
@@ -604,8 +626,8 @@ const COMPETENCIAS_INICIALES = [
 /* ------------------------------------------------------------ almacenamiento
    Publicada como Artifact, el almacén aplica dos reglas que el navegador no
    puede saltarse: personas y competencias solo las escribe dirección. */
-const COLECCIONES = ["personas","competencias","reservas","historial","recordatorios","aceptaciones","inscripciones"];
-const SOLO_DIRECCION = ["personas","competencias"];
+const COLECCIONES = ["personas","competencias","horarios","reservas","historial","recordatorios","aceptaciones","inscripciones"];
+const SOLO_DIRECCION = ["personas","competencias","horarios"];
 
 const Datos = {
   db:null, esEditor:true, listo:false,
@@ -743,9 +765,17 @@ const montaPropios = () => ve("propietario") && misCaballos().length > 0;
 
 const soloMio = (col, campo = "personaId") => Datos.todo(col).filter(d => d[campo] === sujeto.id);
 
+/* La plantilla que trae la página, con los cambios que hizo dirección encima:
+   pista, entrenador y si esa hora se da o no. */
+function plantillaEfectiva() {
+  const ajustes = Datos.cache.horarios || {};
+  return PLANTILLA.map(p => ({ ...p, ...(ajustes[p.id] || {}) })).filter(p => p.activo !== false);
+}
+const ranura = id => plantillaEfectiva().find(p => p.id === id) || PLANTILLA.find(p => p.id === id);
+
 function sesionesDe(claveFecha) {
   const diaSemana = partesClub(deYmd(claveFecha, "12:00")).diaSemana;
-  return PLANTILLA.filter(p => p.dia === diaSemana).map(p => {
+  return plantillaEfectiva().filter(p => p.dia === diaSemana).map(p => {
     const inicio = deYmd(claveFecha, p.hora);
     return { id:`${claveFecha}__${p.id}`, plantillaId:p.id, fecha:claveFecha, inicio,
       fin:new Date(inicio.getTime() + tipo(p.tipo).min * 60000),
@@ -1222,17 +1252,130 @@ function verRecordatorios() {
 
 <script>
 "use strict";
+/* --------------------------------------------------------- SEMANA (dirección)
+   El calendario maestro del club (M11): todas las reservas de la semana, hora
+   por hora, con quién monta y en qué caballo. */
+let semanaOffset = 0;   /* 0 = esta semana, 1 = la siguiente */
+
+function verSemana() {
+  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
+  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
+  const dela = Datos.todo("reservas").filter(r => dias.includes(r.fecha));
+  const porCaballo = {};
+  for (const r of dela) porCaballo[r.caballoId] = (porCaballo[r.caballoId] || 0) + 1;
+  const masTrabajado = Object.entries(porCaballo).sort((a,b) => b[1] - a[1])[0];
+
+  return `
+  <div class="vista-titulo"><h2>La semana</h2>
+    <span class="sub">${esc(fechaLarga(dias[0]))} al ${esc(fechaLarga(dias[6]))}</span></div>
+
+  <div class="semana-nav">
+    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹ Anterior</button>
+    <span>${semanaOffset === 0 ? "Esta semana" : semanaOffset === 1 ? "La siguiente"
+      : semanaOffset === -1 ? "La pasada" : `${semanaOffset > 0 ? "+" : ""}${semanaOffset} semanas`}</span>
+    <button class="btn btn-2 btn-mini" data-semana="1" ${semanaOffset >= 8 ? "disabled" : ""}>Siguiente ›</button>
+  </div>
+
+  <div class="resumen">
+    <div class="dato"><div class="n">${dela.length}</div><div class="t">clases reservadas</div></div>
+    <div class="dato"><div class="n">${new Set(dela.map(r => r.personaId)).size}</div><div class="t">jinetes distintos</div></div>
+    <div class="dato"><div class="n">${new Set(dela.map(r => r.caballoId)).size}</div><div class="t">caballos en uso</div></div>
+    <div class="dato"><div class="n chico">${masTrabajado
+      ? esc((caballo(masTrabajado[0]) || {}).nombre || masTrabajado[0]) + " · " + masTrabajado[1]
+      : "—"}</div><div class="t">el que más trabaja</div></div>
+  </div>
+
+  ${dias.map(f => {
+    const sesiones = sesionesDe(f);
+    const p = partesClub(deYmd(f, "12:00"));
+    if (!sesiones.length) return `<div class="dia-bloque">
+      <div class="dia-cab"><h3>${DIAS[p.diaSemana]} ${p.dia}</h3><span>sin clases</span></div></div>`;
+    const total = sesiones.reduce((n, x) => n + reservasDeSesion(x).length, 0);
+    return `<div class="dia-bloque">
+      <div class="dia-cab"><h3>${DIAS[p.diaSemana]} ${p.dia}</h3>
+        <span>${total} ${total === 1 ? "reserva" : "reservas"}</span></div>
+      ${sesiones.map(x => {
+        const rs = reservasDeSesion(x);
+        return `<div class="ranura ${rs.length ? "" : "libre"}">
+          <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
+          <div class="ranura-cuerpo">
+            <div class="ranura-meta">${esc(espacio(x.esp))} · ${esc(entrenador(x.ent))}${
+              x.soloPropietarios ? " · solo propietarios" : ""} · ${rs.length}/${x.cupo}</div>
+            ${rs.length ? `<div class="jinetes">${rs.map(r => {
+              const per = persona(r.personaId), cab = caballo(r.caballoId);
+              return `<span class="jinete-chip">${esc(per ? per.nombre : r.personaId)}
+                <b>${esc(cab ? cab.nombre : "—")}</b></span>`;
+            }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
+          </div>
+          <button class="btn btn-2 btn-mini" data-ranura="${esc(x.plantillaId)}">Ajustar</button>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("")}
+
+  <p style="font-size:.75rem; color:var(--ink-3)">
+    Solo dirección ve esta pantalla. «Ajustar» cambia la pista, el entrenador o
+    quita esa hora del horario.</p>`;
+}
+
+/* Dirección ajusta una hora del horario semanal. */
+function editarRanura(id) {
+  const r = ranura(id); if (!r) return;
+  const ajuste = (Datos.cache.horarios || {})[id] || {};
+  abrirHoja(`${DIAS[r.dia]} a las ${horaTexto(deYmd(ymd(ahora()), r.hora))}`, `
+    <form id="form-ranura" style="display:grid; gap:.7rem">
+      <label class="campo">Pista<select name="esp">${ESPACIOS.map(e =>
+        `<option value="${e.id}" ${r.esp === e.id ? "selected" : ""}>${esc(e.nombre)}</option>`).join("")}</select></label>
+      <label class="campo">Entrenador<select name="ent">${ENTRENADORES.map(x =>
+        `<option value="${x.id}" ${r.ent === x.id ? "selected" : ""}>${esc(x.nombre)}</option>`).join("")}</select></label>
+      <label class="campo">Cupo<input type="text" inputmode="numeric" name="cupo" value="${r.cupo}"></label>
+      <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
+        <input type="checkbox" name="activo" ${r.activo !== false ? "checked" : ""} style="width:auto">
+        <span>Esta hora se da</span></label>
+      <p style="font-size:.76rem; color:var(--ink-3)">
+        El cambio aplica a esta hora de todas las semanas. Las reservas ya hechas no se tocan.</p>
+      <button class="btn btn-oro btn-bloque" type="submit">Guardar</button>
+      ${Object.keys(ajuste).length ? '<button class="btn btn-2 btn-bloque" type="button" id="quitar-ajuste">Volver al horario original</button>' : ""}
+    </form>`,
+    cerrar => {
+      const q = document.getElementById("quitar-ajuste");
+      if (q) q.onclick = async () => {
+        try { await Datos.quitar("horarios", id); avisar("Hora restaurada."); }
+        catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+        cerrar(); pintar();
+      };
+      $("#form-ranura").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const f = new FormData(ev.target);
+        try {
+          await Datos.poner("horarios", id, {
+            esp:String(f.get("esp")), ent:String(f.get("ent")),
+            cupo:Math.max(1, parseInt(f.get("cupo"), 10) || 6),
+            activo:f.get("activo") === "on",
+          });
+          avisar("Horario actualizado."); cerrar(); pintar();
+        } catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+      });
+    });
+}
+</script>
+
+<script>
+"use strict";
 /* ------------------------------------------------------------------ pintado */
-const VISTAS = { inicio:verInicio, reservar:verReservar, documentos:verDocumentos,
+const VISTAS = { inicio:verInicio, reservar:verReservar, semana:verSemana, documentos:verDocumentos,
   competencias:verCompetencias, recordatorios:verRecordatorios };
+/* La agenda completa del club es solo de dirección. */
+const vistasVisibles = () => Object.keys(VISTAS).filter(n => n !== "semana" || esAdmin());
 const ICONOS = {
   inicio:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
   reservar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
   documentos:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
   competencias:'<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M10 17h4l1 3H9z"/>',
   recordatorios:'<path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+  semana:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h3M7 17h3M14 13h3M14 17h3"/>',
 };
-const ROTULOS = { inicio:"Inicio", reservar:"Reservar", documentos:"Documentos",
+const ROTULOS = { inicio:"Inicio", reservar:"Reservar", semana:"La semana", documentos:"Documentos",
   competencias:"Competencias", recordatorios:"Recordatorios" };
 
 function avisar(t) {
@@ -1262,7 +1405,9 @@ function pintar() {
   $("#quien-ini").classList.toggle("admin", esAdmin());
   $("#sello").hidden = !esAdmin();
 
-  $("#tabs").innerHTML = Object.keys(VISTAS).map(n => `<button class="tab" role="tab" data-vista="${n}"
+  const visibles = vistasVisibles();
+  if (!visibles.includes(vista)) vista = "inicio";
+  $("#tabs").innerHTML = visibles.map(n => `<button class="tab" role="tab" data-vista="${n}"
     aria-selected="${n === vista}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONOS[n]}</svg>${ROTULOS[n]}
     ${n === "documentos" && pendientesDeFirma().length ? '<span class="pip"></span>' : ""}</button>`).join("");
   $("#v-" + vista).innerHTML = VISTAS[vista]();
@@ -1427,6 +1572,9 @@ document.addEventListener("click", async e => {
   const nuevaC = e.target.closest("[data-nueva-comp]");  if (nuevaC) return editarCompetencia(null);
   const ediC = e.target.closest("[data-editar-comp]");   if (ediC) return editarCompetencia(ediC.dataset.editarComp);
   const nuevaP = e.target.closest("[data-nueva-persona]"); if (nuevaP) return editarPersona(null);
+  const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
+  const sem = e.target.closest("[data-semana]");
+  if (sem) { semanaOffset += Number(sem.dataset.semana); return pintar(); }
   const ediP = e.target.closest("[data-editar-persona]"); if (ediP) return editarPersona(ediP.dataset.editarPersona);
 
   const bc = e.target.closest("[data-borrar-comp]");
@@ -1474,7 +1622,7 @@ document.addEventListener("change", e => {
 });
 
 document.addEventListener("submit", async e => {
-  if (e.target.id === "form-comp" || e.target.id === "form-persona") return;
+  if (["form-comp","form-persona","form-ranura"].includes(e.target.id)) return;
   e.preventDefault();
   if (e.target.id === "nuevo-rec") {
     const f = new FormData(e.target);
@@ -1541,7 +1689,7 @@ async function confirmarReserva(s, caballoId) {
   const id = `${s.fecha}__${s.plantillaId}__${caballoId}`;
   const gano = await Datos.apartar("reservas", id, {
     personaId:sujeto.id, reservadaPor:cuenta.id, fecha:s.fecha,
-    hora:PLANTILLA.find(p => p.id === s.plantillaId).hora, plantillaId:s.plantillaId,
+    hora:ranura(s.plantillaId).hora, plantillaId:s.plantillaId,
     caballoId, tipoId:s.tipoId, ent:s.ent, esp:s.esp, consume:tipo(s.tipoId).consume,
     creada:new Date().toISOString(), override:!estadoVentana().abierta,
   }, idTab);
