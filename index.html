@@ -495,7 +495,33 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip b{font-weight:600; color:var(--accent-2)}
 .jinete-chip.accionable{cursor:pointer; border-style:dashed; border-color:var(--line-fuerte)}
 .jinete-chip.accionable:hover{background:var(--oro-fondo); border-color:var(--oro-borde)}
-.ayuda{font-size:.75rem; color:var(--ink-3); margin:-.5rem 0 .2rem; padding:0 .2rem}
+.ficha-ajuste{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.9rem 1rem}
+.fa-nombre{font-family:var(--serif); font-size:1.35rem; margin-bottom:.5rem}
+.fa-datos{display:grid; gap:.3rem; margin:0; font-size:.82rem}
+.fa-datos div{display:grid; grid-template-columns:4.6rem 1fr; gap:.6rem}
+.fa-datos dt{color:var(--ink-3)}
+.fa-datos dd{margin:0; color:var(--ink)}
+.opcion-accion{display:grid; gap:.25rem; text-align:left; width:100%;
+  background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--line-fuerte);
+  border-radius:var(--r); padding:.85rem 1rem; transition:background .15s ease}
+.opcion-accion:hover{background:var(--surface-2)}
+.oa-t{font-weight:600; font-size:.95rem}
+.oa-d{font-size:.8rem; color:var(--ink-2); line-height:1.45}
+.oa-e{justify-self:start; margin-top:.25rem; font-size:.72rem; font-weight:600;
+  padding:.15rem .5rem; border-radius:999px}
+.oa-ok{border-left-color:var(--ok)}      .oa-ok .oa-e{background:var(--ok-bg); color:var(--ok)}
+.oa-aviso{border-left-color:var(--aviso)} .oa-aviso .oa-e{background:var(--aviso-bg); color:var(--aviso)}
+.oa-mover{border-left-color:var(--pista1)} .oa-mover .oa-e{background:var(--pista1-bg); color:var(--pista1)}
+.hueco-dia{display:grid; gap:.35rem}
+.hd-titulo{font-size:.8rem; font-weight:600; text-transform:capitalize}
+.hd-horas{display:grid; gap:.35rem}
+.hueco{display:grid; grid-template-columns:5rem 1fr auto; gap:.6rem; align-items:center; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:.55rem .8rem}
+.hueco:hover{background:var(--surface-2); border-color:var(--accent)}
+.h-hora{font-family:var(--serif); font-size:1.05rem; font-variant-numeric:tabular-nums}
+.h-meta{font-size:.78rem; color:var(--ink-2)}
+.h-libres{font-size:.72rem; color:var(--ink-3); flex:none}
+.oa-alerta{border-left-color:var(--alerta)} .oa-alerta .oa-e{background:var(--alerta-bg); color:var(--alerta)}
 .portada{position:fixed; inset:0; z-index:60; display:grid; place-items:center;
   padding:1.5rem; background:var(--bg); overflow-y:auto}
 .acceso{display:grid; gap:.75rem; width:min(22rem,100%); justify-items:stretch; text-align:center}
@@ -1182,7 +1208,7 @@ function verInicio() {
     <div style="margin-top:.7rem"><button class="btn btn-mini" data-ir="reservar">Reservar una clase</button></div></div>`}
 
   ${ve("propietario") ? bloquesCaballos() : ""}
-  ${esAdmin() ? panelPersonas() + panelCaballos() + panelPaquetes() : ""}
+  ${esAdmin() ? panelPersonas() + panelFaltas() + panelCaballos() + panelPaquetes() : ""}
 
   ${pasadas.length ? `<details class="tarjeta plana">
     <summary style="cursor:pointer; font-weight:600; font-size:.9rem">Historial (${pasadas.length})</summary>
@@ -1279,6 +1305,10 @@ function bloquePaquete(p) {
     <p style="font-size:.8rem; color:var(--ink-2); margin-top:.5rem">
       ${saldo(p) > 0 ? `Te quedan <b>${saldo(p)}</b>.`
         : saldo(p) === 0 ? "Ya no te quedan clases." : `Vas <b>${-saldo(p)}</b> por encima del paquete.`}</p>
+    ${(() => { const c = conteoFaltas(p.id);
+      return (c.faltas || c.tardias) ? `<p style="font-size:.8rem; margin-top:.5rem">
+        De esas, ${[c.faltas && `<b>${c.faltas}</b> por no presentarte`,
+          c.tardias && `<b>${c.tardias}</b> por cancelar tarde`].filter(Boolean).join(" y ")}.</p>` : ""; })()}
     <p style="font-size:.76rem; color:var(--ink-3); margin-top:.3rem">
       Dirección carga el paquete cuando pagas en el club. No hay cobro en línea.</p>
   </div>`;
@@ -2043,22 +2073,43 @@ function ajustarReserva(reservaId) {
   };
 
   abrirHoja("Ajustar la clase", `
-    <div class="tarjeta plana" style="display:grid; gap:.2rem">
-      <p style="font-family:var(--serif); font-size:1.25rem">${esc(per ? per.nombre : r.personaId)}</p>
-      <p style="font-size:.85rem; color:var(--ink-2)">${esc(fechaLarga(r.fecha))} ·
-        ${esc(horaTexto(inicio))} · ${esc(espacio(r.esp))} · ${esc(cab ? cab.nombre : "—")}</p>
-      <p style="font-size:.78rem; color:var(--ink-3)">
-        ${saldo(per || {}) >= 0 ? `Le quedan ${saldo(per || {})} clases.` : ""}
-        ${inicio < ahora() ? "La clase ya pasó." : seCancelaSinCosto(inicio)
-          ? "Todavía está dentro de las 10 horas." : "Ya pasó el límite de 10 horas."}</p>
+    <div class="ficha-ajuste">
+      <p class="fa-nombre">${esc(per ? per.nombre : r.personaId)}</p>
+      <dl class="fa-datos">
+        <div><dt>Clase</dt><dd>${esc(fechaLarga(r.fecha))}, ${esc(horaTexto(inicio))}</dd></div>
+        <div><dt>Dónde</dt><dd>${esc(espacio(r.esp))} · ${esc(entrenador(r.ent))}</dd></div>
+        <div><dt>Caballo</dt><dd>${esc(cab ? cab.nombre : "—")}</dd></div>
+        <div><dt>Saldo</dt><dd>${per ? saldo(per) : "—"} clases</dd></div>
+        <div><dt>Ventana</dt><dd>${inicio < ahora() ? "La clase ya pasó"
+          : seCancelaSinCosto(inicio) ? `Dentro de las 10 horas, hasta ${esc(momentoTexto(limiteCancelacion(inicio)))}`
+          : "Fuera de las 10 horas"}</dd></div>
+      </dl>
     </div>
-    <button class="btn btn-bloque" id="a-devolver">Cancelar y devolverle la clase</button>
-    <p class="ayuda">Cuando el club cancela —lluvia, caballo lesionado, cambio de horario—
-      la clase vuelve a su saldo aunque hayan pasado las 10 horas.</p>
-    <button class="btn btn-2 btn-bloque" id="a-cobrar">Cancelar y cobrarle la clase</button>
-    <p class="ayuda">Canceló tarde: sale de la clase, pero la clase se le cobra.</p>
-    <button class="btn btn-peligro btn-bloque" id="a-falta">Marcar que no se presentó</button>
-    <p class="ayuda">No-show: la clase se le cobra igual. Queda en su historial.</p>`,
+    <p class="etiqueta">¿Qué pasó?</p>
+    <button class="opcion-accion oa-ok" id="a-devolver">
+      <span class="oa-t">Canceló el club</span>
+      <span class="oa-d">Lluvia, caballo lesionado, cambio de horario. La clase vuelve a su
+        saldo aunque hayan pasado las 10 horas.</span>
+      <span class="oa-e">Le devuelve la clase</span>
+    </button>
+    <button class="opcion-accion oa-aviso" id="a-cobrar">
+      <span class="oa-t">Canceló tarde</span>
+      <span class="oa-d">Avisó pasado el límite de 10 horas. Sale de la clase y el lugar
+        queda libre, pero la clase se le cobra.</span>
+      <span class="oa-e">Se le cobra la clase</span>
+    </button>
+    <button class="opcion-accion oa-mover" id="a-mover">
+      <span class="oa-t">Cambiarla de horario</span>
+      <span class="oa-d">Pasa al jinete a otra hora de la misma semana, con el mismo caballo.
+        No se le cobra ni se le devuelve nada.</span>
+      <span class="oa-e">Mueve la reserva</span>
+    </button>
+    <button class="opcion-accion oa-alerta" id="a-falta">
+      <span class="oa-t">No se presentó</span>
+      <span class="oa-d">No llegó y no avisó. Queda registrado en su historial y en el
+        conteo de faltas.</span>
+      <span class="oa-e">Se le cobra la clase</span>
+    </button>`,
     cerrar => {
       $("#a-devolver").onclick = async () => { cerrar();
         await cerrarCon("cancelada_por_club", false,
@@ -2066,10 +2117,123 @@ function ajustarReserva(reservaId) {
       $("#a-cobrar").onclick = async () => { cerrar();
         await cerrarCon("cancelada_tarde", true,
           `${per ? per.nombre.split(" ")[0] : "El jinete"} sale de la clase. Se le cobra.`); };
+      $("#a-mover").onclick = () => { cerrar(); moverReserva(r.id); };
       $("#a-falta").onclick = async () => { cerrar();
         await cerrarCon("no_show", true,
           `Falta registrada. La clase se le cobra.`); };
     });
+}
+
+/* Huecos a los que se puede pasar esa reserva, en su misma semana: con lugar,
+   con el caballo libre y sin encimarle otra clase al jinete. */
+function huecosPara(r) {
+  const per = persona(r.personaId) || {};
+  const esPropietario = (SECCIONES[per.rol] || []).includes("propietario");
+  const lunes = lunesDeLaSemana(deYmd(r.fecha, "12:00"));
+  const cab = caballo(r.caballoId);
+  const otras = Datos.todo("reservas").filter(x => x.id !== r.id);
+  const huecos = [];
+
+  for (let i = 0; i < 7; i++) {
+    const f = ymd(sumarDias(lunes, i));
+    for (const s of sesionesDe(f)) {
+      if (s.inicio <= ahora()) continue;
+      if (s.fecha === r.fecha && s.plantillaId === r.plantillaId) continue;
+      if (s.soloPropietarios && !esPropietario) continue;
+      const enEsa = otras.filter(x => x.fecha === f && x.plantillaId === s.plantillaId);
+      const cap = (ESPACIOS.find(e => e.id === s.esp) || {}).cap || s.cupo;
+      if (enEsa.length >= Math.min(s.cupo, cap)) continue;                       // RN-09
+      const delCaballo = otras.filter(x => x.fecha === f && x.caballoId === r.caballoId);
+      if (cab && delCaballo.length >= cab.maxDia) continue;                       // RN-06
+      if (delCaballo.some(x => { const [i2,f2] = intervaloReserva(x);
+        return traslapa(s.inicio, s.fin, i2, f2); })) continue;                   // RN-08
+      if (otras.some(x => x.personaId === r.personaId && x.fecha === f &&
+        traslapa(s.inicio, s.fin, ...intervaloReserva(x)))) continue;             // RN-10
+      huecos.push(s);
+    }
+  }
+  return huecos;
+}
+
+function moverReserva(reservaId) {
+  const r = Datos.todo("reservas").find(x => x.id === reservaId);
+  if (!r) return;
+  const per = persona(r.personaId), cab = caballo(r.caballoId);
+  const huecos = huecosPara(r);
+  const porDia = {};
+  for (const h of huecos) (porDia[h.fecha] ||= []).push(h);
+
+  abrirHoja("Cambiar de horario", `
+    <div class="ficha-ajuste">
+      <p class="fa-nombre">${esc(per ? per.nombre : r.personaId)}</p>
+      <dl class="fa-datos">
+        <div><dt>Ahora</dt><dd>${esc(fechaLarga(r.fecha))}, ${esc(horaTexto(deYmd(r.fecha, r.hora)))}</dd></div>
+        <div><dt>Caballo</dt><dd>${esc(cab ? cab.nombre : "—")}, se mantiene</dd></div>
+      </dl>
+    </div>
+    ${huecos.length ? `<p class="etiqueta">Pásala a</p>
+      ${Object.entries(porDia).map(([f, ss]) => `<div class="hueco-dia">
+        <p class="hd-titulo">${esc(fechaLarga(f))}</p>
+        <div class="hd-horas">${ss.map(sx => `
+          <button class="hueco" data-mover-a="${esc(sx.fecha)}|${esc(sx.plantillaId)}">
+            <span class="h-hora">${esc(horaTexto(sx.inicio))}</span>
+            <span class="h-meta">${esc(entrenador(sx.ent))} · ${esc(espacio(sx.esp))}</span>
+            <span class="h-libres">${lugaresLibres(sx)} libres</span>
+          </button>`).join("")}</div>
+      </div>`).join("")}`
+      : `<div class="vacio">No hay ningún hueco esta semana donde quepa
+          ${esc(cab ? cab.nombre : "el caballo")} sin encimarle otra clase.</div>`}`,
+    cerrar => {
+      $("#hoja-cuerpo").addEventListener("click", async e => {
+        const b = e.target.closest("[data-mover-a]"); if (!b) return;
+        const [fecha, plantillaId] = b.dataset.moverA.split("|");
+        const destino = sesionesDe(fecha).find(x => x.plantillaId === plantillaId);
+        if (!destino) return;
+        b.disabled = true;
+        const nuevoId = `${fecha}__${plantillaId}__${r.caballoId}`;
+        const gano = await Datos.apartar("reservas", nuevoId, {
+          ...r, id:undefined, fecha, hora:destino.hora, plantillaId,
+          ent:destino.ent, esp:destino.esp, movidaPor:cuenta.id,
+        }, idTab);
+        if (!gano) { b.disabled = false; return avisar("Ese lugar lo acaban de tomar."); }
+        await Datos.quitar("reservas", r.id);
+        avisar(`${per ? per.nombre.split(" ")[0] : "La clase"} pasa al ${fechaLarga(fecha)}, ${horaTexto(destino.inicio)}.`);
+        cerrar(); pintar();
+      });
+    });
+}
+
+/* Registro de faltas y cancelaciones tardías, por persona (M11). */
+function conteoFaltas(id) {
+  const h = Datos.todo("historial").filter(x => x.personaId === id);
+  return {
+    faltas: h.filter(x => x.estado === "no_show").length,
+    tardias: h.filter(x => x.estado === "cancelada_tarde").length,
+    aTiempo: h.filter(x => x.estado === "cancelada_a_tiempo" || x.estado === "cancelada_por_club").length,
+  };
+}
+
+function panelFaltas() {
+  const filas = personas()
+    .filter(p => p.rol === "jinete" || p.rol === "propietario")
+    .map(p => ({ p, ...conteoFaltas(p.id) }))
+    .filter(x => x.faltas || x.tardias)
+    .sort((a,b) => (b.faltas + b.tardias) - (a.faltas + a.tardias));
+  return `<div class="admin-caja">
+    <p class="etiqueta">Faltas y cancelaciones tardías</p>
+    <p style="font-size:.82rem; color:var(--oro-tinta)">
+      Clases que se cobraron sin haberse dado: no se presentó, o canceló pasado el
+      límite de 10 horas.</p>
+    ${filas.length ? `<div>${filas.map(x => `<div class="persona">
+      <span>${esc(x.p.nombre)}</span>
+      <span class="rolp">${x.faltas ? `<span class="pastilla p-alerta">${x.faltas} ${
+        x.faltas === 1 ? "falta" : "faltas"}</span>` : ""}
+        ${x.tardias ? `<span class="pastilla p-aviso">${x.tardias} tarde</span>` : ""}</span>
+      <span style="font-size:.75rem; color:var(--oro-tinta); flex:none">${
+        x.faltas + x.tardias} ${x.faltas + x.tardias === 1 ? "cobrada" : "cobradas"}</span>
+    </div>`).join("")}</div>`
+      : '<p style="font-size:.82rem; color:var(--oro-tinta)">Nadie tiene faltas ni cancelaciones tardías.</p>'}
+  </div>`;
 }
 
 /* Dirección ajusta una hora del horario semanal. */

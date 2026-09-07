@@ -60,8 +60,14 @@ ve en su inicio cuántas lleva usadas de su paquete.
 **La semana.** El calendario maestro. Dirección —y el maestro en sus propias
 clases— toca el nombre de un jinete para sacarlo de la hora, con las tres salidas
 que distingue el reglamento: el club cancela y le devuelve la clase (RN-13), el
-jinete canceló tarde y se le cobra (RN-01), o no se presentó (RN-02). Lo que se
-cierre así queda en el historial del jinete, con su motivo. Un maestro entra y ve **solo sus clases**;
+jinete canceló tarde y se le cobra (RN-01), o no se presentó (RN-02). También puede **cambiarla de horario**: la app ofrece los huecos de esa
+semana donde el caballo está libre, hay lugar y no se le encima otra clase, y la
+mueve sin cobrar ni devolver nada. Lo que se cierre así queda en el historial del
+jinete, con su motivo.
+
+**Faltas y cancelaciones tardías.** Dirección lleva el conteo por persona de las
+clases que se cobraron sin darse —no se presentó, o canceló pasado el límite—, y
+cada jinete lo ve en su propia tarjeta de paquete. Un maestro entra y ve **solo sus clases**;
 dirección ve las del club entero, y quien es las dos cosas —como Tania y Edwin—
 abre en las suyas y alterna con un botón. Arriba, el pulso de la
 semana: clases reservadas, jinetes distintos, caballos en uso y cuál es el que más
