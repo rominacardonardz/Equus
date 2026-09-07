@@ -57,7 +57,11 @@ y estatus — uno en descanso, lesionado o retirado desaparece del selector aunq
 esté desbloqueado); y los **paquetes** de 4, 8, 10 y 15 clases, editables. El jinete
 ve en su inicio cuántas lleva usadas de su paquete.
 
-**La semana.** El calendario maestro. Un maestro entra y ve **solo sus clases**;
+**La semana.** El calendario maestro. Dirección —y el maestro en sus propias
+clases— toca el nombre de un jinete para sacarlo de la hora, con las tres salidas
+que distingue el reglamento: el club cancela y le devuelve la clase (RN-13), el
+jinete canceló tarde y se le cobra (RN-01), o no se presentó (RN-02). Lo que se
+cierre así queda en el historial del jinete, con su motivo. Un maestro entra y ve **solo sus clases**;
 dirección ve las del club entero, y quien es las dos cosas —como Tania y Edwin—
 abre en las suyas y alterna con un botón. Arriba, el pulso de la
 semana: clases reservadas, jinetes distintos, caballos en uso y cuál es el que más

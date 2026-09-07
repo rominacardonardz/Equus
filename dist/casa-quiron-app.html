@@ -483,6 +483,9 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip{font-size:.74rem; padding:.15rem .45rem; border-radius:6px;
   background:var(--surface-2); border:1px solid var(--line)}
 .jinete-chip b{font-weight:600; color:var(--accent-2)}
+.jinete-chip.accionable{cursor:pointer; border-style:dashed; border-color:var(--line-fuerte)}
+.jinete-chip.accionable:hover{background:var(--oro-fondo); border-color:var(--oro-borde)}
+.ayuda{font-size:.75rem; color:var(--ink-3); margin:-.5rem 0 .2rem; padding:0 .2rem}
 .portada{position:fixed; inset:0; z-index:60; display:grid; place-items:center;
   padding:1.5rem; background:var(--bg); overflow-y:auto}
 .acceso{display:grid; gap:.75rem; width:min(22rem,100%); justify-items:stretch; text-align:center}
@@ -625,18 +628,23 @@ const PERSONAS_INICIALES = [
   { id:"diego",     nombre:"Diego Arellano",    rol:"propietario", usuario:"diego", clave:CLAVE_DEMO,
     nivel:"intermedio", propios:["tornado"], habilitados:[], clasesCargadas:6,
     paquete:"Propietario · pupilaje y clases" },
-  { id:"valentina", nombre:"Valentina Cordero", rol:"jinete", usuario:"valentina", clave:CLAVE_DEMO,
-    nivel:"intermedio", propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8,
-    paquete:"8 clases · tardes" },
-  { id:"mateo",     nombre:"Mateo Sandoval",    rol:"jinete", nivel:"principiantes", menor:true, sinCuenta:true,
-    propios:[], habilitados:["jazmin","duende"], clasesCargadas:4, paquete:"4 clases · sábados" },
-  { id:"claudia",   nombre:"Claudia Sandoval",  rol:"tutor", usuario:"claudia", clave:CLAVE_DEMO,
+  { id:"paola",  nombre:"Paola",  rol:"jinete", usuario:"paola",  clave:CLAVE_DEMO, maestroId:"tania",
+    nivel:"intermedio",    propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8,
+    paqueteId:"p8",  paquete:"8 clases" },
+  { id:"melisa", nombre:"Melisa", rol:"jinete", usuario:"melisa", clave:CLAVE_DEMO, maestroId:"edwin",
+    nivel:"principiantes", propios:[], habilitados:["jazmin","duende","picaro"], clasesCargadas:10,
+    paqueteId:"p10", paquete:"10 clases" },
+  { id:"katia",  nombre:"Katia",  rol:"jinete", usuario:"katia",  clave:CLAVE_DEMO, maestroId:"tania",
+    nivel:"avanzado",      propios:[], habilitados:["alazan"], clasesCargadas:15,
+    paqueteId:"p15", paquete:"15 clases" },
+  { id:"vale",   nombre:"Vale",   rol:"jinete", usuario:"vale",   clave:CLAVE_DEMO, maestroId:"edwin",
+    nivel:"cuerdita",      propios:[], habilitados:["duende","nube"], clasesCargadas:4,
+    paqueteId:"p4",  paquete:"4 clases" },
+  { id:"mateo",  nombre:"Mateo Sandoval", rol:"jinete", nivel:"principiantes", menor:true, sinCuenta:true,
+    maestroId:"edwin", propios:[], habilitados:["jazmin","duende"], clasesCargadas:4,
+    paqueteId:"p4", paquete:"4 clases" },
+  { id:"claudia", nombre:"Claudia Sandoval", rol:"tutor", usuario:"claudia", clave:CLAVE_DEMO,
     tutorDe:"mateo", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
-  { id:"ximena",    nombre:"Ximena Torres",     rol:"jinete", nivel:"cuerdita", menor:true, sinCuenta:true,
-    propios:[], habilitados:["duende","nube"], clasesCargadas:0,
-    paquete:"4 clases · entre semana (por renovar)" },
-  { id:"paulina",   nombre:"Paulina Torres",    rol:"tutor", usuario:"paulina", clave:CLAVE_DEMO,
-    tutorDe:"ximena", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
 ];
 
 const SECCIONES = {
@@ -1125,7 +1133,7 @@ const misRecordatorios = () => soloMio("recordatorios");
 /* ------------------------------------------------------------------ INICIO */
 function verInicio() {
   const proximas = misReservas().filter(r => deYmd(r.fecha, r.hora) > ahora());
-  const pasadas  = misReservas().filter(r => deYmd(r.fecha, r.hora) <= ahora()).reverse();
+  const pasadas  = historialDe();
   const firmas = pendientesDeFirma();
   const v = estadoVentana();
   const sigComp = competencias().filter(c => deYmd(c.fin || c.inicio, "23:59") > ahora())[0];
@@ -1229,6 +1237,20 @@ function panelPersonas() {
     <div class="acciones-admin"><button class="btn btn-oro btn-mini" data-nueva-persona>Nueva persona</button></div>
   </div>`;
 }
+
+/* Todo lo que ya ocurrió: las clases que se dieron y las que dirección cerró
+   —canceladas o con falta—, que es donde queda constancia (RN-02). */
+function historialDe() {
+  const dadas = misReservas().filter(r => deYmd(r.fecha, r.hora) <= ahora())
+    .map(r => ({ ...r, estado:"asistio" }));
+  const cerradas = soloMio("historial");
+  return dadas.concat(cerradas)
+    .sort((a,b) => deYmd(b.fecha, b.hora || "12:00") - deYmd(a.fecha, a.hora || "12:00"));
+}
+const ESTADO_TEXTO = {
+  asistio:"Se dio", cancelada_a_tiempo:"Cancelada a tiempo", cancelada_tarde:"Cancelada tarde · se cobró",
+  cancelada_por_club:"Cancelada por el club · devuelta", no_show:"No se presentó · se cobró",
+};
 
 /* Cuánto llevas del paquete: usadas, restantes y de cuántas. */
 function bloquePaquete(p) {
@@ -1418,7 +1440,11 @@ function tarjetaClase(r, pasada) {
         <div class="clase-meta">${esc(fechaLarga(r.fecha))}</div></div>
       <span class="pastilla ${pasada ? "p-neutro" : "p-ok"}">${esc(caballo(r.caballoId) ? caballo(r.caballoId).nombre : "—")}</span>
     </div>
-    <div class="clase-meta">${esc(entrenador(r.ent))} · ${esc(espacio(r.esp))}</div>
+    <div class="clase-meta">${r.ent || r.esp
+      ? `${esc(entrenador(r.ent))} · ${esc(espacio(r.esp))}` : ""}${
+      pasada && r.estado && r.estado !== "asistio"
+        ? `<span class="pastilla ${r.cobrada ? "p-alerta" : "p-ok"}" style="margin-left:.3rem">${
+            esc(ESTADO_TEXTO[r.estado] || r.estado)}</span>` : ""}</div>
     ${r.override ? `<div class="nota oro" style="padding:.45rem .6rem; font-size:.75rem">
       Agendada por dirección fuera de la ventana del lunes.</div>` : ""}
     ${pasada ? "" : `<div class="clase-pie">
@@ -1959,8 +1985,13 @@ function verSemana() {
             x.soloPropietarios ? " · solo propietarios" : ""}</div>
           ${rs.length ? `<div class="jinetes">${rs.map(r => {
             const per = persona(r.personaId), cab = caballo(r.caballoId);
-            return `<span class="jinete-chip">${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
-              <b>${esc(cab ? cab.nombre : "—")}</b></span>`;
+            const texto = `${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
+              <b>${esc(cab ? cab.nombre : "—")}</b>`;
+            /* Dirección y el maestro de esa clase pueden quitar a alguien. */
+            return (esAdmin() || x.ent === cuenta.id)
+              ? `<button class="jinete-chip accionable" data-ajustar="${esc(r.id)}"
+                  title="Ajustar esta reserva">${texto}</button>`
+              : `<span class="jinete-chip">${texto}</span>`;
           }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
         </div>
         <div class="ranura-lado">
@@ -1976,8 +2007,59 @@ function verSemana() {
   </div>
 
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Solo dirección ve esta pantalla. «Ajustar» cambia la pista, el maestro o el cupo de
-    esa hora, o la quita del horario.</p>`;
+    ${esAdmin() || daClases()
+      ? "Toca el nombre de un jinete para quitarlo de la clase o marcarle falta. "
+      : ""}«Ajustar» cambia la pista, el maestro o el cupo de esa hora, o la quita del horario.</p>`;
+}
+
+/* Dirección o el maestro sacan a alguien de una clase. Las tres salidas que
+   distingue el reglamento: el club cancela y devuelve (RN-13), el jinete canceló
+   tarde y se le cobra (RN-01), o no se presentó (RN-02). */
+function ajustarReserva(reservaId) {
+  const r = Datos.todo("reservas").find(x => x.id === reservaId);
+  if (!r) return;
+  const per = persona(r.personaId), cab = caballo(r.caballoId);
+  const inicio = deYmd(r.fecha, r.hora);
+
+  const cerrarCon = async (estado, cobrada, mensaje) => {
+    await Datos.poner("historial", "h-" + r.id + "-" + Date.now(), {
+      personaId:r.personaId, fecha:r.fecha, hora:r.hora, caballoId:r.caballoId,
+      tipoId:r.tipoId, consume:r.consume || 1, estado, cobrada,
+      ajustadaPor:cuenta.id, cuando:new Date().toISOString(),
+    });
+    await Datos.quitar("reservas", r.id);
+    avisar(mensaje);
+    pintar();
+  };
+
+  abrirHoja("Ajustar la clase", `
+    <div class="tarjeta plana" style="display:grid; gap:.2rem">
+      <p style="font-family:var(--serif); font-size:1.25rem">${esc(per ? per.nombre : r.personaId)}</p>
+      <p style="font-size:.85rem; color:var(--ink-2)">${esc(fechaLarga(r.fecha))} ·
+        ${esc(horaTexto(inicio))} · ${esc(espacio(r.esp))} · ${esc(cab ? cab.nombre : "—")}</p>
+      <p style="font-size:.78rem; color:var(--ink-3)">
+        ${saldo(per || {}) >= 0 ? `Le quedan ${saldo(per || {})} clases.` : ""}
+        ${inicio < ahora() ? "La clase ya pasó." : seCancelaSinCosto(inicio)
+          ? "Todavía está dentro de las 10 horas." : "Ya pasó el límite de 10 horas."}</p>
+    </div>
+    <button class="btn btn-bloque" id="a-devolver">Cancelar y devolverle la clase</button>
+    <p class="ayuda">Cuando el club cancela —lluvia, caballo lesionado, cambio de horario—
+      la clase vuelve a su saldo aunque hayan pasado las 10 horas.</p>
+    <button class="btn btn-2 btn-bloque" id="a-cobrar">Cancelar y cobrarle la clase</button>
+    <p class="ayuda">Canceló tarde: sale de la clase, pero la clase se le cobra.</p>
+    <button class="btn btn-peligro btn-bloque" id="a-falta">Marcar que no se presentó</button>
+    <p class="ayuda">No-show: la clase se le cobra igual. Queda en su historial.</p>`,
+    cerrar => {
+      $("#a-devolver").onclick = async () => { cerrar();
+        await cerrarCon("cancelada_por_club", false,
+          `${per ? per.nombre.split(" ")[0] : "El jinete"} sale de la clase y recupera la suya.`); };
+      $("#a-cobrar").onclick = async () => { cerrar();
+        await cerrarCon("cancelada_tarde", true,
+          `${per ? per.nombre.split(" ")[0] : "El jinete"} sale de la clase. Se le cobra.`); };
+      $("#a-falta").onclick = async () => { cerrar();
+        await cerrarCon("no_show", true,
+          `Falta registrada. La clase se le cobra.`); };
+    });
 }
 
 /* Dirección ajusta una hora del horario semanal. */
@@ -2277,6 +2359,7 @@ document.addEventListener("click", async e => {
   const nuevaC = e.target.closest("[data-nueva-comp]");  if (nuevaC) return editarCompetencia(null);
   const ediC = e.target.closest("[data-editar-comp]");   if (ediC) return editarCompetencia(ediC.dataset.editarComp);
   const nuevaP = e.target.closest("[data-nueva-persona]"); if (nuevaP) return editarPersona(null);
+  const aj = e.target.closest("[data-ajustar]");          if (aj) return ajustarReserva(aj.dataset.ajustar);
   const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
   const nuevoQ = e.target.closest("[data-nuevo-paquete]"); if (nuevoQ) return editarPaquete(null);
   const ediQ = e.target.closest("[data-editar-paquete]"); if (ediQ) return editarPaquete(ediQ.dataset.editarPaquete);
