@@ -178,6 +178,11 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 /* ---------- inicio ---------- */
 .resumen{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem}
+.resumen.compacta{grid-template-columns:repeat(4,1fr); gap:.35rem}
+.resumen.compacta .dato{padding:.5rem .4rem; text-align:center}
+.resumen.compacta .n{font-size:1.3rem}
+.resumen.compacta .n.chico{font-size:.8rem; line-height:1.25}
+.resumen.compacta .t{font-size:.6rem; margin-top:.15rem; line-height:1.25}
 .dato{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.85rem}
 .dato .n{font-family:var(--serif); font-size:2rem; line-height:1; font-variant-numeric:tabular-nums}
 .dato .n.chico{font-size:1.25rem}
@@ -391,6 +396,20 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
   padding:.6rem .9rem; background:var(--surface-2); border-bottom:1px solid var(--line)}
 .dia-cab h3{font-size:1.05rem; text-transform:capitalize}
 .dia-cab span{font-size:.74rem; color:var(--ink-3)}
+.tira{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem}
+.tira-dia{display:grid; justify-items:center; gap:.15rem; padding:.45rem .1rem .35rem;
+  background:var(--surface); border:1px solid var(--line); border-radius:10px}
+.tira-dia[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.td-dia{font-size:.62rem; color:var(--ink-3); text-transform:uppercase; letter-spacing:.04em}
+.tira-dia[aria-pressed="true"] .td-dia,.tira-dia[aria-pressed="true"] .td-n{color:var(--on-accent)}
+.td-num{font-family:var(--serif); font-size:1rem; line-height:1; font-variant-numeric:tabular-nums}
+.td-barra{display:flex; align-items:flex-end; width:60%; height:18px;
+  background:var(--surface-2); border-radius:3px; overflow:hidden}
+.tira-dia[aria-pressed="true"] .td-barra{background:color-mix(in srgb,var(--on-accent) 25%,transparent)}
+.td-barra span{width:100%; background:var(--oro); border-radius:3px}
+.td-n{font-size:.62rem; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.ranura-lado{display:grid; justify-items:end; gap:.25rem}
+.ranura-cupo{font-size:.72rem; color:var(--ink-3); font-variant-numeric:tabular-nums}
 .ranura{display:grid; grid-template-columns:4.3rem 1fr auto; gap:.2rem .6rem; align-items:start;
   padding:.6rem .9rem; border-top:1px solid var(--line)}
 .ranura:first-of-type{border-top:0}
@@ -402,6 +421,15 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip{font-size:.74rem; padding:.15rem .45rem; border-radius:6px;
   background:var(--surface-2); border:1px solid var(--line)}
 .jinete-chip b{font-weight:600; color:var(--accent-2)}
+.anuncio{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+  border-radius:var(--r); padding:.85rem 1rem; display:grid; gap:.4rem}
+.anuncio.fijado{border-left-color:var(--oro); background:color-mix(in srgb,var(--oro-fondo) 45%,var(--surface))}
+.anuncio-cab{display:flex; align-items:baseline; justify-content:space-between; gap:.6rem}
+.anuncio-cab h3{font-size:1.1rem}
+.anuncio-cuerpo{font-size:.86rem; color:var(--ink-2); white-space:pre-wrap}
+.anuncio-pie{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;
+  font-size:.72rem; color:var(--ink-3); border-top:1px solid var(--line); padding-top:.45rem}
+.anuncio-aud{color:var(--oro-tinta); font-weight:600}
 
 </style>
 
@@ -431,7 +459,7 @@ const CABALLOS = [
 const caballo = id => CABALLOS.find(c => c.id === id);
 
 const ENTRENADORES = [
-  { id:"asr", nombre:"Ana Sofía Rivas" }, { id:"mle", nombre:"Mauricio Lerma" }, { id:"roc", nombre:"Renata Ochoa" },
+  { id:"tania", nombre:"Tania" }, { id:"edwin", nombre:"Edwin" }, { id:"otro", nombre:"Otro" },
 ];
 const entrenador = id => (ENTRENADORES.find(e => e.id === id) || {}).nombre || "—";
 
@@ -557,7 +585,7 @@ const listar = xs => xs.length < 2 ? (xs[0] || "") : xs.slice(0,-1).join(", ") +
      propietario y jinete  → esos dos + contrato de pupilaje
      menor de edad         → además, la carta responsiva que firma el tutor
    Texto de muestra: dirección lo sustituye por el documento oficial. */
-const DOCUMENTOS = [
+const DOCUMENTOS_INICIALES = [
   { id:"reglamento", titulo:"Reglamento del club", version:"2.1", vigente:"1 de julio de 2026",
     audiencia:"todos", obligatorio:true,
     resumen:"Normas de convivencia, uso de instalaciones, equipo obligatorio y horarios.",
@@ -610,7 +638,13 @@ const DOCUMENTOS = [
         "Chaleco protector obligatorio en salto."] },
     ] },
 ];
-const documento = id => DOCUMENTOS.find(d => d.id === id);
+/* Los documentos los edita dirección; la página solo trae los de arranque. */
+const documentos = () => {
+  const guardados = Datos.todo("documentos");
+  return (guardados.length ? guardados : DOCUMENTOS_INICIALES).slice()
+    .sort((a,b) => (a.orden || 0) - (b.orden || 0));
+};
+const documento = id => documentos().find(d => d.id === id);
 
 /* ------------------------------------------------------------- competencias */
 const COMPETENCIAS_INICIALES = [
@@ -627,8 +661,9 @@ const COMPETENCIAS_INICIALES = [
 /* ------------------------------------------------------------ almacenamiento
    Publicada como Artifact, el almacén aplica dos reglas que el navegador no
    puede saltarse: personas y competencias solo las escribe dirección. */
-const COLECCIONES = ["personas","competencias","horarios","reservas","historial","recordatorios","aceptaciones","inscripciones"];
-const SOLO_DIRECCION = ["personas","competencias","horarios"];
+const COLECCIONES = ["personas","competencias","horarios","documentos","anuncios",
+  "reservas","historial","recordatorios","aceptaciones","inscripciones"];
+const SOLO_DIRECCION = ["personas","competencias","horarios","documentos","anuncios"];
 
 const Datos = {
   db:null, esEditor:true, listo:false,
@@ -669,6 +704,10 @@ const Datos = {
     if (!Object.keys(this.cache.competencias).length) {
       for (const c of COMPETENCIAS_INICIALES) { const { id, ...r } = c; this.cache.competencias[id] = r; }
       this.guardarLocal("competencias");
+    }
+    if (!Object.keys(this.cache.documentos).length) {
+      DOCUMENTOS_INICIALES.forEach((d, i) => { const { id, ...r } = d; this.cache.documentos[id] = { ...r, orden:i }; });
+      this.guardarLocal("documentos");
     }
   },
 
@@ -801,15 +840,17 @@ function saldo(p = sujeto) {
 
 /* Cada perfil ve solo sus documentos (RN-16), y el menor suma su responsiva. */
 function docsDeCuenta() {
-  return DOCUMENTOS.filter(d =>
+  return documentos().filter(d =>
     d.audiencia === "todos" ? true :
     d.audiencia === "menor" ? !!sujeto.menor :
     ve(d.audiencia));
 }
 const aceptado = d => Datos.todo("aceptaciones")
   .some(a => a.personaId === sujeto.id && a.documentoId === d.id && a.version === d.version);
-const pendientesDeFirma = () => docsDeCuenta().filter(d => d.obligatorio && !aceptado(d));
-const faltanDocs = p => DOCUMENTOS.filter(d => {
+/* Dirección no firma: entra a esa pantalla a editar los documentos, no a aceptarlos. */
+const pendientesDeFirma = () => esAdmin() ? []
+  : docsDeCuenta().filter(d => d.obligatorio && !aceptado(d));
+const faltanDocs = p => p.rol === "admin" ? [] : documentos().filter(d => {
   if (d.audiencia === "menor") return !!p.menor;
   if (d.audiencia === "todos") return true;
   return SECCIONES[p.rol] && SECCIONES[p.rol].includes(d.audiencia);
@@ -1108,6 +1149,7 @@ function filaSesion(s) {
 "use strict";
 /* -------------------------------------------------------------- DOCUMENTOS */
 function verDocumentos() {
+  if (esAdmin()) return verDocumentosAdmin();
   const mios = docsDeCuenta();
   const razon = cuenta.tutorDe
     ? `Firmas por ${esc(sujeto.nombre)}, menor de edad.`
@@ -1149,6 +1191,173 @@ function bloqueDoc(d) {
             <input type="text" name="nombre" required autocomplete="name" placeholder="${esc(cuenta.nombre)}"></label>
           <button class="btn" type="submit">Acepto ${esc(d.titulo.toLowerCase())}</button></form>`}
   </article>`;
+}
+
+/* Dirección no firma nada: redacta y versiona los documentos del club. */
+function verDocumentosAdmin() {
+  const lista = documentos();
+  const AUD = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", menor:"Menores de edad" };
+  return `
+  <div class="vista-titulo"><h2>Documentos</h2>
+    <span class="sub">${lista.length} en el club</span></div>
+  <div class="admin-caja">
+    <p class="etiqueta">Dirección</p>
+    <p style="font-size:.82rem; color:var(--oro-tinta)">
+      Aquí redactas el reglamento y los contratos, y eliges a qué perfil le toca cada uno.
+      Al subir la versión de un documento, a todos los que ya lo habían aceptado se les
+      vuelve a pedir la firma. Tú no firmas nada.</p>
+    <div class="acciones-admin"><button class="btn btn-oro btn-mini" data-nuevo-doc>Nuevo documento</button></div>
+  </div>
+  ${lista.map(d => {
+    const firmas = Datos.todo("aceptaciones").filter(a => a.documentoId === d.id && a.version === d.version);
+    const deben = personas().filter(p => p.rol !== "admin" && faltanDocs(p).some(x => x.id === d.id));
+    return `<article class="doc">
+      <div class="doc-cab">
+        <div><h3>${esc(d.titulo)}</h3>
+          <p class="doc-ver">Versión ${esc(d.version)} · desde el ${esc(d.vigente)}</p></div>
+        <span class="pastilla p-oro">${esc(AUD[d.audiencia] || d.audiencia)}</span>
+      </div>
+      <p style="font-size:.85rem; color:var(--ink-2)">${esc(d.resumen)}</p>
+      <div class="comp-bloque" style="border-top:1px solid var(--line)">
+        <p style="font-size:.8rem; color:var(--ink-2)">
+          ${d.obligatorio ? "Obligatorio para reservar." : "Informativo, no bloquea la reserva."}
+          ${firmas.length} ${firmas.length === 1 ? "firma" : "firmas"} de esta versión.</p>
+        ${deben.length ? `<p style="font-size:.78rem; color:var(--alerta)">
+          Falta: ${esc(listar(deben.map(p => p.nombre.split(" ")[0])))}</p>` : ""}
+      </div>
+      <details><summary style="cursor:pointer; font-size:.82rem; color:var(--accent); font-weight:500">
+        Leer el documento</summary>
+        <div class="doc-cuerpo" style="margin-top:.6rem">${(d.cuerpo || []).map(x =>
+          `<h4>${esc(x.h)}</h4><ul>${(x.l || []).map(y => `<li>${esc(y)}</li>`).join("")}</ul>`).join("")}</div></details>
+      <div class="acciones-admin">
+        <button class="btn btn-oro btn-mini" data-editar-doc="${esc(d.id)}">Editar</button>
+        <button class="btn btn-2 btn-mini" data-borrar-doc="${esc(d.id)}">Borrar</button></div>
+    </article>`;
+  }).join("")}`;
+}
+
+/* El cuerpo se escribe en texto: "# Título" abre una sección, lo demás son puntos. */
+const cuerpoATexto = cuerpo => (cuerpo || [])
+  .map(s => `# ${s.h}\n` + (s.l || []).join("\n")).join("\n\n");
+function textoACuerpo(texto) {
+  const secciones = [];
+  for (const linea of String(texto).split("\n").map(x => x.trim())) {
+    if (!linea) continue;
+    if (linea.startsWith("#")) secciones.push({ h: linea.replace(/^#+\s*/, ""), l: [] });
+    else { if (!secciones.length) secciones.push({ h: "", l: [] }); secciones[secciones.length - 1].l.push(linea); }
+  }
+  return secciones;
+}
+
+function editarDocumento(id) {
+  const d = id ? documento(id) : { titulo:"", version:"1.0", vigente:"", audiencia:"todos",
+    obligatorio:true, resumen:"", cuerpo:[] };
+  if (!d) return;
+  const AUD = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", menor:"Menores de edad" };
+  abrirHoja(id ? "Editar documento" : "Nuevo documento", `
+    <form id="form-doc" style="display:grid; gap:.7rem">
+      <label class="campo">Título<input type="text" name="titulo" required value="${esc(d.titulo)}"></label>
+      <div class="dos-campos">
+        <label class="campo">Versión<input type="text" name="version" required value="${esc(d.version)}"></label>
+        <label class="campo">Vigente desde<input type="text" name="vigente" value="${esc(d.vigente || "")}"
+          placeholder="1 de julio de 2026"></label></div>
+      <label class="campo">¿A quién le toca?<select name="audiencia">${
+        Object.entries(AUD).map(([k, v]) =>
+          `<option value="${k}" ${d.audiencia === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
+        <input type="checkbox" name="obligatorio" ${d.obligatorio ? "checked" : ""} style="width:auto">
+        <span>Hay que firmarlo antes de poder reservar</span></label>
+      <label class="campo">Resumen de una línea
+        <input type="text" name="resumen" value="${esc(d.resumen || "")}"></label>
+      <label class="campo">Texto del documento — una línea que empiece con # abre una sección
+        <textarea name="cuerpo" style="min-height:11rem">${esc(cuerpoATexto(d.cuerpo))}</textarea></label>
+      <p style="font-size:.76rem; color:var(--oro-tinta)">
+        Si subes la versión, a quienes ya lo firmaron se les vuelve a pedir la firma.</p>
+      <button class="btn btn-oro btn-bloque" type="submit">${id ? "Guardar" : "Crear documento"}</button>
+    </form>`,
+    cerrar => {
+      $("#form-doc").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const f = new FormData(ev.target);
+        const titulo = String(f.get("titulo")).trim();
+        const nuevoId = id || titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "doc-" + Date.now();
+        try {
+          await Datos.poner("documentos", nuevoId, {
+            titulo, version:String(f.get("version")).trim(), vigente:String(f.get("vigente") || ""),
+            audiencia:String(f.get("audiencia")), obligatorio:f.get("obligatorio") === "on",
+            resumen:String(f.get("resumen") || ""), cuerpo:textoACuerpo(f.get("cuerpo") || ""),
+            orden: id ? (documento(id).orden || 0) : documentos().length,
+          });
+          avisar(id ? "Documento actualizado." : "Documento creado."); cerrar(); pintar();
+        } catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+      });
+    });
+}
+
+/* ---------------------------------------------------------------- ANUNCIOS
+   Los escribe dirección y le salen a los perfiles que elija (M10). */
+const PERFILES_ANUNCIO = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", tutor:"Tutores" };
+
+function anunciosParaMi() {
+  const hoy = ymd(ahora());
+  return Datos.todo("anuncios")
+    .filter(a => !a.expira || a.expira >= hoy)
+    .filter(a => {
+      if (esAdmin()) return true;
+      const aud = a.audiencia || ["todos"];
+      if (aud.includes("todos")) return true;
+      if (aud.includes(cuenta.rol)) return true;
+      return cuenta.rol === "tutor" && aud.includes("jinete");
+    })
+    .sort((a,b) => (b.fijado ? 1 : 0) - (a.fijado ? 1 : 0) ||
+      (b.publicado || "").localeCompare(a.publicado || ""));
+}
+
+function editarAnuncio(id) {
+  const a = id ? Datos.todo("anuncios").find(x => x.id === id) : { titulo:"", cuerpo:"",
+    audiencia:["todos"], fijado:false, expira:"" };
+  if (!a) return;
+  abrirHoja(id ? "Editar anuncio" : "Nuevo anuncio", `
+    <form id="form-anuncio" style="display:grid; gap:.7rem">
+      <label class="campo">Título<input type="text" name="titulo" required value="${esc(a.titulo)}"
+        placeholder="Cierre por lluvia"></label>
+      <label class="campo">Aviso
+        <textarea name="cuerpo" required style="min-height:5rem"
+          placeholder="No hay clases el miércoles por el estado de la pista.">${esc(a.cuerpo || "")}</textarea></label>
+      <div class="campo">¿A quién le sale?
+        <div class="casillas">${Object.entries(PERFILES_ANUNCIO).map(([k, v]) =>
+          `<label><input type="checkbox" name="audiencia" value="${k}"
+            ${(a.audiencia || []).includes(k) ? "checked" : ""}>${v}</label>`).join("")}</div></div>
+      <label class="campo">Deja de mostrarse el (opcional)
+        <input type="date" name="expira" value="${esc(a.expira || "")}"></label>
+      <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
+        <input type="checkbox" name="fijado" ${a.fijado ? "checked" : ""} style="width:auto">
+        <span>Fijar arriba de todo</span></label>
+      <button class="btn btn-oro btn-bloque" type="submit">${id ? "Guardar" : "Publicar anuncio"}</button>
+      ${id ? '<button class="btn btn-2 btn-bloque" type="button" id="borrar-anuncio">Borrar anuncio</button>' : ""}
+    </form>`,
+    cerrar => {
+      if (id) $("#borrar-anuncio").onclick = async () => {
+        try { await Datos.quitar("anuncios", id); avisar("Anuncio borrado."); }
+        catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+        cerrar(); pintar();
+      };
+      $("#form-anuncio").addEventListener("submit", async ev => {
+        ev.preventDefault();
+        const f = new FormData(ev.target);
+        const aud = f.getAll("audiencia");
+        if (!aud.length) return avisar("Elige al menos un perfil.");
+        try {
+          await Datos.poner("anuncios", id || "a-" + Date.now().toString(36), {
+            titulo:String(f.get("titulo")).trim(), cuerpo:String(f.get("cuerpo")).trim(),
+            audiencia:aud, fijado:f.get("fijado") === "on", expira:String(f.get("expira") || ""),
+            publicado: id ? (a.publicado || new Date().toISOString()) : new Date().toISOString(),
+          });
+          avisar(id ? "Anuncio actualizado." : "Anuncio publicado."); cerrar(); pintar();
+        } catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+      });
+    });
 }
 
 /* ------------------------------------------------------------ COMPETENCIAS */
@@ -1221,14 +1430,49 @@ function bloqueComp(c, pasada) {
   </article>`;
 }
 
+/* Tablero de anuncios: dirección escribe, cada perfil ve lo suyo. */
+function bloqueAnuncios() {
+  const lista = anunciosParaMi();
+  return `
+  ${esAdmin() ? `<div class="admin-caja">
+    <p class="etiqueta">Anuncios del club</p>
+    <p style="font-size:.82rem; color:var(--oro-tinta)">
+      Escribes un aviso y eliges a qué perfiles les sale, o a todos. Les aparece aquí,
+      arriba de sus recordatorios.</p>
+    <div class="acciones-admin"><button class="btn btn-oro btn-mini" data-nuevo-anuncio>Nuevo anuncio</button></div>
+  </div>` : ""}
+  ${lista.length ? `<div>
+    ${esAdmin() ? "" : '<p class="etiqueta" style="margin-bottom:.4rem">Del club</p>'}
+    <div class="vista">${lista.map(a => `
+      <article class="anuncio ${a.fijado ? "fijado" : ""}">
+        <div class="anuncio-cab">
+          <h3>${esc(a.titulo)}</h3>
+          ${a.fijado ? '<span class="pastilla p-oro">Fijado</span>' : ""}
+        </div>
+        <p class="anuncio-cuerpo">${esc(a.cuerpo)}</p>
+        <div class="anuncio-pie">
+          <span>${a.publicado ? esc(fechaLarga(ymd(new Date(a.publicado)))) : ""}${
+            a.expira ? " · hasta el " + esc(fechaLarga(a.expira)) : ""}</span>
+          ${esAdmin() ? `<span class="anuncio-aud">${esc((a.audiencia || []).map(x =>
+            PERFILES_ANUNCIO[x] || x).join(", "))}</span>
+            <button class="btn btn-2 btn-mini" data-editar-anuncio="${esc(a.id)}">Editar</button>` : ""}
+        </div>
+      </article>`).join("")}</div>
+  </div>` : esAdmin() ? "" : ""}`;
+}
+
 /* ----------------------------------------------------------- RECORDATORIOS */
 function verRecordatorios() {
   const autos = recordatoriosAuto();
   const mios = misRecordatorios().sort((a,b) => (a.fecha || "9999").localeCompare(b.fecha || "9999"));
   const hoyClave = ymd(ahora());
   return `
-  <div class="vista-titulo"><h2>Recordatorios</h2>
+  <div class="vista-titulo"><h2>Avisos y recordatorios</h2>
     <span class="sub">${mios.filter(r => !r.hecho).length} pendientes</span></div>
+
+  ${bloqueAnuncios()}
+
+  <p class="etiqueta">Lo tuyo</p>
   <form class="tarjeta" id="nuevo-rec" style="display:grid; gap:.6rem">
     <label class="campo">Qué no se puede olvidar
       <input type="text" name="texto" required maxlength="140" placeholder="Llevar los electrolitos"></label>
@@ -1258,67 +1502,94 @@ function verRecordatorios() {
 /* --------------------------------------------------------- SEMANA (dirección)
    El calendario maestro del club (M11): todas las reservas de la semana, hora
    por hora, con quién monta y en qué caballo. */
-let semanaOffset = 0;   /* 0 = esta semana, 1 = la siguiente */
+let semanaOffset = 0;      /* 0 = esta semana, 1 = la siguiente */
+let diaSemanaSel = "";     /* el día abierto en la agenda */
 
 function verSemana() {
   const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
   const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
+  if (!dias.includes(diaSemanaSel)) diaSemanaSel = dias.find(f => sesionesDe(f).length) || dias[0];
+
   const dela = Datos.todo("reservas").filter(r => dias.includes(r.fecha));
   const porCaballo = {};
   for (const r of dela) porCaballo[r.caballoId] = (porCaballo[r.caballoId] || 0) + 1;
-  const masTrabajado = Object.entries(porCaballo).sort((a,b) => b[1] - a[1])[0];
+  const top = Object.entries(porCaballo).sort((a,b) => b[1] - a[1])[0];
+  const cuenta_ = f => dela.filter(r => r.fecha === f).length;
+  const pico = Math.max(1, ...dias.map(cuenta_));
+
+  const sesiones = sesionesDe(diaSemanaSel);
+  const pSel = partesClub(deYmd(diaSemanaSel, "12:00"));
 
   return `
   <div class="vista-titulo"><h2>La semana</h2>
-    <span class="sub">${esc(fechaLarga(dias[0]))} al ${esc(fechaLarga(dias[6]))}</span></div>
+    <span class="sub">${esc(rangoFechas(dias[0], dias[6]))}</span></div>
 
   <div class="semana-nav">
-    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹ Anterior</button>
+    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹</button>
     <span>${semanaOffset === 0 ? "Esta semana" : semanaOffset === 1 ? "La siguiente"
       : semanaOffset === -1 ? "La pasada" : `${semanaOffset > 0 ? "+" : ""}${semanaOffset} semanas`}</span>
-    <button class="btn btn-2 btn-mini" data-semana="1" ${semanaOffset >= 8 ? "disabled" : ""}>Siguiente ›</button>
+    <button class="btn btn-2 btn-mini" data-semana="1" ${semanaOffset >= 8 ? "disabled" : ""}>›</button>
   </div>
 
-  <div class="resumen">
+  <div class="resumen compacta">
     <div class="dato"><div class="n">${dela.length}</div><div class="t">clases reservadas</div></div>
     <div class="dato"><div class="n">${new Set(dela.map(r => r.personaId)).size}</div><div class="t">jinetes distintos</div></div>
     <div class="dato"><div class="n">${new Set(dela.map(r => r.caballoId)).size}</div><div class="t">caballos en uso</div></div>
-    <div class="dato"><div class="n chico">${masTrabajado
-      ? esc((caballo(masTrabajado[0]) || {}).nombre || masTrabajado[0]) + " · " + masTrabajado[1]
-      : "—"}</div><div class="t">el que más trabaja</div></div>
+    <div class="dato"><div class="n chico">${top
+      ? esc((caballo(top[0]) || {}).nombre || top[0]) + " · " + top[1] : "—"}</div>
+      <div class="t">el que más trabaja</div></div>
   </div>
 
-  ${dias.map(f => {
-    const sesiones = sesionesDe(f);
-    const p = partesClub(deYmd(f, "12:00"));
-    if (!sesiones.length) return `<div class="dia-bloque">
-      <div class="dia-cab"><h3>${DIAS[p.diaSemana]} ${p.dia}</h3><span>sin clases</span></div></div>`;
-    const total = sesiones.reduce((n, x) => n + reservasDeSesion(x).length, 0);
-    return `<div class="dia-bloque">
-      <div class="dia-cab"><h3>${DIAS[p.diaSemana]} ${p.dia}</h3>
-        <span>${total} ${total === 1 ? "reserva" : "reservas"}</span></div>
-      ${sesiones.map(x => {
-        const rs = reservasDeSesion(x);
-        return `<div class="ranura ${rs.length ? "" : "libre"}">
-          <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
-          <div class="ranura-cuerpo">
-            <div class="ranura-meta">${esc(espacio(x.esp))} · ${esc(entrenador(x.ent))}${
-              x.soloPropietarios ? " · solo propietarios" : ""} · ${rs.length}/${x.cupo}</div>
-            ${rs.length ? `<div class="jinetes">${rs.map(r => {
-              const per = persona(r.personaId), cab = caballo(r.caballoId);
-              return `<span class="jinete-chip">${esc(per ? per.nombre : r.personaId)}
-                <b>${esc(cab ? cab.nombre : "—")}</b></span>`;
-            }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
-          </div>
+  <div class="tira">
+    ${dias.map(f => {
+      const p = partesClub(deYmd(f, "12:00"));
+      const n = cuenta_(f);
+      const hay = sesionesDe(f).length;
+      return `<button class="tira-dia" data-diasemana="${f}" aria-pressed="${f === diaSemanaSel}">
+        <span class="td-dia">${DIAS[p.diaSemana].slice(0,2)}</span>
+        <span class="td-num">${p.dia}</span>
+        <span class="td-barra"><span style="height:${hay ? Math.round((n / pico) * 100) : 0}%"></span></span>
+        <span class="td-n">${hay ? n : "—"}</span>
+      </button>`;
+    }).join("")}
+  </div>
+
+  <div class="dia-bloque">
+    <div class="dia-cab">
+      <h3>${DIAS[pSel.diaSemana]} ${pSel.dia}</h3>
+      <span>${sesiones.length
+        ? `${sesiones.reduce((n, x) => n + reservasDeSesion(x).length, 0)} de ${
+            sesiones.reduce((n, x) => n + x.cupo, 0)} lugares`
+        : "sin clases"}</span>
+    </div>
+    ${sesiones.length ? sesiones.map(x => {
+      const rs = reservasDeSesion(x);
+      return `<div class="ranura ${rs.length ? "" : "libre"}">
+        <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
+        <div class="ranura-cuerpo">
+          <div class="ranura-meta">${esc(espacio(x.esp))} · ${esc(entrenador(x.ent))}${
+            x.soloPropietarios ? " · solo propietarios" : ""}</div>
+          ${rs.length ? `<div class="jinetes">${rs.map(r => {
+            const per = persona(r.personaId), cab = caballo(r.caballoId);
+            return `<span class="jinete-chip">${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
+              <b>${esc(cab ? cab.nombre : "—")}</b></span>`;
+          }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
+        </div>
+        <div class="ranura-lado">
+          <span class="ranura-cupo">${rs.length}/${x.cupo}</span>
           <button class="btn btn-2 btn-mini" data-ranura="${esc(x.plantillaId)}">Ajustar</button>
-        </div>`;
-      }).join("")}
-    </div>`;
-  }).join("")}
+        </div>
+      </div>`;
+    }).join("")
+      : `<div class="ranura libre"><div class="ranura-cuerpo" style="grid-column:1/-1">
+          <div class="jinetes vacia">${pSel.diaSemana === 1
+            ? "El lunes no se monta: es el día en que se abre la agenda."
+            : "No hay horas dadas de alta este día."}</div></div></div>`}
+  </div>
 
   <p style="font-size:.75rem; color:var(--ink-3)">
-    Solo dirección ve esta pantalla. «Ajustar» cambia la pista, el entrenador o
-    quita esa hora del horario.</p>`;
+    Solo dirección ve esta pantalla. «Ajustar» cambia la pista, el maestro o el cupo de
+    esa hora, o la quita del horario.</p>`;
 }
 
 /* Dirección ajusta una hora del horario semanal. */
@@ -1579,8 +1850,25 @@ document.addEventListener("click", async e => {
   const ediC = e.target.closest("[data-editar-comp]");   if (ediC) return editarCompetencia(ediC.dataset.editarComp);
   const nuevaP = e.target.closest("[data-nueva-persona]"); if (nuevaP) return editarPersona(null);
   const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
+  const nuevoD = e.target.closest("[data-nuevo-doc]");    if (nuevoD) return editarDocumento(null);
+  const ediD = e.target.closest("[data-editar-doc]");     if (ediD) return editarDocumento(ediD.dataset.editarDoc);
+  const nuevoA = e.target.closest("[data-nuevo-anuncio]"); if (nuevoA) return editarAnuncio(null);
+  const ediA = e.target.closest("[data-editar-anuncio]"); if (ediA) return editarAnuncio(ediA.dataset.editarAnuncio);
+  const bd = e.target.closest("[data-borrar-doc]");
+  if (bd) {
+    const d = documento(bd.dataset.borrarDoc);
+    return abrirHoja("Borrar documento", `
+      <p style="font-size:.9rem">Se quita <b>${esc(d.titulo)}</b> y las firmas que ya tiene dejan de contar.</p>
+      <button class="btn btn-peligro btn-bloque" id="ok-bd">Borrar</button>`,
+      cerrar => { $("#ok-bd").onclick = async () => {
+        try { await Datos.quitar("documentos", d.id); avisar("Documento borrado."); }
+        catch (err) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
+        cerrar(); pintar(); }; });
+  }
   const sem = e.target.closest("[data-semana]");
-  if (sem) { semanaOffset += Number(sem.dataset.semana); return pintar(); }
+  if (sem) { semanaOffset += Number(sem.dataset.semana); diaSemanaSel = ""; return pintar(); }
+  const ds = e.target.closest("[data-diasemana]");
+  if (ds) { diaSemanaSel = ds.dataset.diasemana; return pintar(); }
   const ediP = e.target.closest("[data-editar-persona]"); if (ediP) return editarPersona(ediP.dataset.editarPersona);
 
   const bc = e.target.closest("[data-borrar-comp]");
@@ -1628,7 +1916,7 @@ document.addEventListener("change", e => {
 });
 
 document.addEventListener("submit", async e => {
-  if (["form-comp","form-persona","form-ranura"].includes(e.target.id)) return;
+  if (["form-comp","form-persona","form-ranura","form-doc","form-anuncio"].includes(e.target.id)) return;
   e.preventDefault();
   if (e.target.id === "nuevo-rec") {
     const f = new FormData(e.target);

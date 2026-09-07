@@ -30,8 +30,9 @@ estén libres; un propietario monta el suyo, sin elegir de una lista ajena. Al
 confirmar se descuenta la clase y se muestra la hora exacta del límite de
 cancelación.
 
-**Documentos.** Lo que hay que firmar sale del perfil que dirección asignó al dar
-de alta a la persona, ni más ni menos:
+**Documentos.** Dirección los redacta desde la app —título, versión, a qué perfil
+le tocan, si son obligatorios y el texto— y no firma ninguno. Lo que cada quien
+firma sale del perfil que dirección le asignó al darlo de alta, ni más ni menos:
 
 | Perfil | Firma |
 |---|---|
@@ -46,15 +47,20 @@ Cada documento lleva versión: al publicar una nueva se vuelve a pedir la firma.
 horarios de cada prueba y cierre de inscripciones. El jinete se anota eligiendo
 categoría; solo dirección ve la lista de quién está anotado y en qué.
 
-**La semana (solo dirección).** El calendario maestro: todas las reservas de la
-semana, día por día y hora por hora, con quién monta y en qué caballo, más el
-total de clases, jinetes y caballos en uso y cuál es el que más trabaja. Se
-navega a semanas anteriores y siguientes. Desde ahí dirección ajusta cada hora
-del horario: pista, entrenador, cupo, o quitarla del horario.
+**La semana (solo dirección).** El calendario maestro. Arriba, el pulso de la
+semana: clases reservadas, jinetes distintos, caballos en uso y cuál es el que más
+trabaja. Debajo, una tira de siete días con una barra por día para ver de un
+vistazo dónde se junta la gente; se toca un día y se abre su detalle hora por
+hora, con quién monta y en qué caballo. Se navega a semanas anteriores y
+siguientes, y desde cada hora se ajusta pista, maestro y cupo, o se quita del
+horario.
 
-**Recordatorios.** Los propios, con fecha; y los automáticos que salen de las
-reservas y del calendario — el límite de cancelación de cada clase, el cierre de
-inscripciones, la apertura de la agenda del lunes.
+**Avisos y recordatorios.** Tres capas en la misma pantalla: los anuncios que
+escribe dirección y elige a qué perfiles les salen —o a todos—, con opción de
+fijarlos arriba y de que caduquen solos; los recordatorios que escribe cada quien;
+y los automáticos que salen de las reservas y del calendario — el límite de
+cancelación de cada clase, el cierre de inscripciones, la apertura de la agenda
+del lunes.
 
 ## Perfiles y qué ve cada uno
 
@@ -73,9 +79,9 @@ Nadie se da de alta solo: las personas las crea dirección, y de su perfil sale
 qué documentos firma, qué días puede reservar y qué caballos monta.
 
 **Qué se aplica de verdad y qué no.** Publicada como Artifact, el almacén aplica
-tres reglas que el navegador no puede saltarse: el padrón de personas, el horario
-semanal y el calendario de competencias solo los escribe quien tenga permiso de
-edición de la página. La cuenta de dirección de
+cinco reglas que el navegador no puede saltarse: el padrón de personas, el horario
+semanal, los documentos, los anuncios y el calendario de competencias solo los
+escribe quien tenga permiso de edición de la página. La cuenta de dirección de
 la app solo se abre para esa persona, y se comprueba contra el almacén, no contra
 el código. El resto de la separación por perfil vive en la app: filtra lo que
 muestra, pero los datos del club están en un almacén común, así que alguien con
@@ -118,7 +124,8 @@ servidor:
 - **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
 - **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
   cuadra (M8).
-- **Catálogo de ejemplo.** Caballos y entrenadores son datos de prueba. Los días
+- **Catálogo de ejemplo.** Los caballos son datos de prueba. Los maestros (Tania,
+  Edwin y Otro), las pistas, los días
   y horas de clase, y el calendario de competencias, son los que dio dirección;
   categorías y horarios de cada competencia se publican desde la app.
 - **El reparto de pistas es provisional.** Por defecto las clases de la mañana
