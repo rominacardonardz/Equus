@@ -13,8 +13,10 @@ dist/                 Versiones de archivo único, para publicar como Artifact
 
 ## Qué hace la app
 
-**Reservar.** Vista semanal. Jinetes de escuela reservan de martes a sábado;
-propietarios, de martes a domingo.
+**Reservar.** Vista semanal. A cada jinete se le asigna un maestro, y solo ve las
+clases de ese maestro: una por hora, no las dos. Sin maestro asignado ve las de
+todos. Jinetes de escuela reservan de martes a sábado; propietarios, de martes a
+domingo.
 
 **Cada hora hay dos clases a la vez**, una por maestro y pista: Tania en **Hípico
 Mty** y Edwin en **Equus**. Horarios: de martes a viernes 7, 8 y 9 de la mañana y
@@ -92,6 +94,7 @@ Las contraseñas se guardan como huella SHA-256, no en claro.
 | Perfil | Ve | Notas |
 |---|---|---|
 | Maestro | Su propia agenda de la semana, y lo de un jinete |
+| Jinete asignado | Solo las clases de su maestro |
 | Dirección | Todo, con su propio usuario. Administra caballos, paquetes y personal; da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
 | Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
 | Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |

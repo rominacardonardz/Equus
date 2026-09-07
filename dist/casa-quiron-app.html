@@ -278,12 +278,12 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .dia .punto{width:4px; height:4px; border-radius:50%; background:var(--oro)}
 
 .sesion{display:grid; grid-template-columns:4.6rem 1fr; gap:.1rem .8rem; align-items:center;
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.85rem 1rem}
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.7rem 1rem}
 .sesion .hora{grid-row:1 / span 2; align-self:start; padding-top:.1rem;
   font-family:var(--serif); font-size:1.2rem; line-height:1.2; font-variant-numeric:tabular-nums}
-.sesion .nom{font-weight:600; font-size:.95rem}
+.sesion .nom{font-weight:600; font-size:.95rem; display:flex; gap:.3rem; flex-wrap:wrap}
 .sesion .det{font-size:.78rem; color:var(--ink-2); grid-column:2}
-.sesion .accion{grid-column:1 / -1; display:flex; justify-content:flex-end; margin-top:.6rem}
+.sesion .accion{grid-column:1 / -1; display:flex; justify-content:flex-end; margin-top:.35rem}
 .sesion.llena{opacity:.6}
 @media (min-width:34rem){
   .sesion{grid-template-columns:4.6rem 1fr auto}
@@ -968,6 +968,9 @@ const esAdmin = () => rolEfectivo() === "admin";
 const puedeEditarCatalogo = () => esAdmin() && Datos.esEditor;
 /* Quien da clases entra a La semana, aunque no sea dirección: ve las suyas. */
 const daClases = () => !!(cuenta && cuenta.imparte);
+/* A cada jinete se le asigna un maestro: en la semana solo ve las clases de ese
+   maestro, para que el calendario no salga duplicado. */
+const miMaestro = () => (sujeto && sujeto.maestroId) ? persona(sujeto.maestroId) : null;
 const misCaballos = () => (cuenta.propios || []).map(caballo).filter(Boolean);
 /* Un propietario monta lo suyo; un jinete de escuela, lo que le desbloquearon. */
 const montaPropios = () => ve("propietario") && misCaballos().length > 0;
@@ -1070,6 +1073,8 @@ function caballosPara(sesion) {
 
 function motivoBloqueo(sesion) {
   if (sesion.soloPropietarios && !ve("propietario")) return "oculta";           // domingo
+  const mio = miMaestro();
+  if (mio && sesion.ent !== mio.id) return "oculta";                            // maestro asignado
   if (sesion.inicio <= ahora()) return "Ya pasó";
   const ocupadas = reservasDeSesion(sesion);
   if (ocupadas.some(r => r.personaId === sujeto.id)) return "Ya reservada";
@@ -1211,7 +1216,9 @@ function panelPersonas() {
       const faltan = faltanDocs(p).length;
       return `<div class="persona">
         <span>${esc(p.nombre)}${p.menor ? " · menor" : ""}</span>
-        <span class="rolp">${esc(ROL_NOMBRE[p.rol] || p.rol)}${p.tutorDe
+        <span class="rolp">${p.maestroId && persona(p.maestroId)
+          ? `<span class="pastilla ${claseMaestro(p.maestroId)}">${esc(persona(p.maestroId).nombre)}</span><br>` : ""}${
+          esc(ROL_NOMBRE[p.rol] || p.rol)}${p.tutorDe
           ? " de " + esc((persona(p.tutorDe) || {}).nombre || "—")
           : p.nivel && p.rol !== "admin" ? ` · <span class="pastilla ${claseNivel(p.nivel)}">${
             esc(nivelNombre(p.nivel))}</span>` : ""}<br>
@@ -1436,7 +1443,9 @@ function verReservar() {
 
   return `
   <div class="vista-titulo"><h2>Reservar</h2>
-    <span class="sub">Semana del ${esc(fechaLarga(dias[0]))}</span></div>
+    <span class="sub">${miMaestro()
+      ? `<span class="pastilla ${claseMaestro(miMaestro().id)}">${esc(miMaestro().nombre)}</span> · `
+      : ""}semana del ${esc(fechaLarga(dias[0]))}</span></div>
 
   <div class="ventana ${v.abierta ? "abierta" : "cerrada"}">
     <div class="titulo">${v.abierta ? "La agenda está abierta" : "La agenda está cerrada"}</div>
@@ -1474,9 +1483,10 @@ function verReservar() {
         : `No hay clases el ${esc(fechaLarga(diaSel))}.`}</div>`}</div>
 
   <p style="font-size:.75rem; color:var(--ink-3)">
+    ${miMaestro() ? `Ves las clases de <b>${esc(miMaestro().nombre)}</b>, tu maestro asignado.`
+      : "Ves las clases de todos los maestros: dirección todavía no te asigna uno."}
     Clases de martes a sábado; el domingo, solo propietarios. El lunes no se monta.
-    Todos los horarios están abiertos para cualquier nivel: el nivel solo decide
-    qué caballo puedes montar.</p>`;
+    Todos los horarios están abiertos para cualquier nivel: el nivel decide qué caballo montas.</p>`;
 }
 
 function filaSesion(s) {
@@ -1485,10 +1495,11 @@ function filaSesion(s) {
   const anotados = reservasDeSesion(s);
   return `<article class="sesion ${clasePista(s.esp)} ${motivo ? "llena" : ""}">
     <div class="hora">${esc(horaTexto(s.inicio))}</div>
-    <div class="nom"><span class="pastilla ${claseMaestro(s.ent)}">${esc(entrenador(s.ent))}</span></div>
-    <div class="det"><span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${
-      esc(espacio(s.esp))}</span> ·
-      ${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"}${
+    <div class="nom">${miMaestro()
+      ? `<span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${esc(espacio(s.esp))}</span>`
+      : `<span class="pastilla ${claseMaestro(s.ent)}">${esc(entrenador(s.ent))}</span>
+         <span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${esc(espacio(s.esp))}</span>`}</div>
+    <div class="det">${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"}${
       s.soloPropietarios ? " · solo propietarios" : ""}</div>
     <div class="accion">${motivo ? `<span class="pastilla p-neutro">${esc(motivo)}</span>`
       : `<button class="btn btn-mini" data-reservar="${esc(s.id)}">Reservar</button>`}</div>
@@ -2105,6 +2116,12 @@ function editarPersona(id) {
       <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
         <input type="checkbox" name="imparte" ${p.imparte ? "checked" : ""} style="width:auto">
         <span>Da clases — aparece como maestro al asignar horarios</span></label>
+      <label class="campo">Maestro asignado
+        <select name="maestroId"><option value="">— todos los maestros —</option>${
+          maestros().map(m => `<option value="${m.id}" ${p.maestroId === m.id ? "selected" : ""}>${
+            esc(m.nombre)}</option>`).join("")}</select></label>
+      <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
+        Solo verá las clases de ese maestro al reservar. Sin asignar, ve las de todos.</p>
       <label class="campo">Si es tutor, ¿de quién?
         <select name="tutorDe"><option value="">— no es tutor —</option>${
           menores.map(m => `<option value="${m.id}" ${p.tutorDe === m.id ? "selected" : ""}>${esc(m.nombre)}</option>`).join("")}</select></label>
@@ -2161,6 +2178,7 @@ function editarPersona(id) {
           paquete:(paquete(String(f.get("paqueteId") || "")) || {}).nombre || "",
           usuario:menor ? "" : String(f.get("usuario") || "").trim().toLowerCase(),
           imparte:f.get("imparte") === "on",
+          maestroId:String(f.get("maestroId") || ""),
           clave:claveNueva ? await huella(claveNueva) : (p.clave || ""),
           propios:f.getAll("propios"), habilitados:f.getAll("habilitados"),
         };
