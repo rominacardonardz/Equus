@@ -13,12 +13,13 @@ dist/                 Versiones de archivo único, para publicar como Artifact
 
 ## Qué hace la app
 
-**Reservar.** Vista semanal. El lunes no se monta: es el día en que se abre la
-agenda. Jinetes de escuela reservan de martes a sábado; propietarios, de martes a
-domingo. Horarios: 7, 8 y 9 de la mañana y 4, 5 y 6 de la tarde de martes a
-viernes; 7, 8, 9 y 10 de la mañana sábado y domingo.
+**Reservar.** Vista semanal. Jinetes de escuela reservan de martes a sábado;
+propietarios, de martes a domingo.
 
-Se monta en las dos pistas del club: **Hípico Mty** y **Equus**.
+**Cada hora hay dos clases a la vez**, una por maestro y pista: Tania en **Hípico
+Mty** y Edwin en **Equus**. Horarios: de martes a viernes 7, 8 y 9 de la mañana y
+4, 5 y 6 de la tarde; sábado 7, 8, 9 y 10; domingo 7, 8 y 9, solo para
+propietarios. El lunes no se monta.
 
 **Todos los horarios están abiertos para cualquier nivel**, por decisión de
 dirección: una jinete de cuerdita ve las mismas horas que una de avanzado. El
@@ -54,7 +55,9 @@ y estatus — uno en descanso, lesionado o retirado desaparece del selector aunq
 esté desbloqueado); y los **paquetes** de 4, 8, 10 y 15 clases, editables. El jinete
 ve en su inicio cuántas lleva usadas de su paquete.
 
-**La semana (solo dirección).** El calendario maestro. Arriba, el pulso de la
+**La semana.** El calendario maestro. Un maestro entra y ve **solo sus clases**;
+dirección ve las del club entero, y quien es las dos cosas —como Tania y Edwin—
+abre en las suyas y alterna con un botón. Arriba, el pulso de la
 semana: clases reservadas, jinetes distintos, caballos en uso y cuál es el que más
 trabaja. Debajo, una tira de siete días con una barra por día para ver de un
 vistazo dónde se junta la gente; se toca un día y se abre su detalle hora por
@@ -88,6 +91,7 @@ Las contraseñas se guardan como huella SHA-256, no en claro.
 
 | Perfil | Ve | Notas |
 |---|---|---|
+| Maestro | Su propia agenda de la semana, y lo de un jinete |
 | Dirección | Todo, con su propio usuario. Administra caballos, paquetes y personal; da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos, ajusta el horario semanal y edita el calendario de competencias | Tiene la agenda completa de la semana y ve quién se anotó a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
 | Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
 | Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |

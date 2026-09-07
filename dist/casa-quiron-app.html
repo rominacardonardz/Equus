@@ -24,6 +24,10 @@
   --n4:#8A3A63; --n4-bg:#F7E2EC;   /* avanzado */
   --pista1:#2E5C8A; --pista1-bg:#DEE9F5;   /* Hípico Mty */
   --pista2:#A2542A; --pista2-bg:#F7E7DC;   /* Equus */
+  --m1:#3F5FA8; --m1-bg:#E2E7F7;   /* maestros */
+  --m2:#1F7A6B; --m2-bg:#D9F0EB;
+  --m3:#8C4FA8; --m3-bg:#EFE2F7;
+  --m4:#A8562F; --m4-bg:#F7E6DC;
 
   --ok:#1F6B4F; --ok-bg:#DFF0E7;
   --alerta:#A33227; --alerta-bg:#FBE6E2;
@@ -50,6 +54,10 @@
     --n4:#E091B6; --n4-bg:#2E1622;
     --pista1:#8FB4E0; --pista1-bg:#152436;
     --pista2:#E0A183; --pista2-bg:#2E1C13;
+    --m1:#9FB4EC; --m1-bg:#1A2038;
+    --m2:#77CFBD; --m2-bg:#0F2A26;
+    --m3:#CFA0E4; --m3-bg:#26183A;
+    --m4:#E5A47F; --m4-bg:#301E15;
     --ok:#7FC7A4; --ok-bg:#12281F;
     --alerta:#E9A08D; --alerta-bg:#331B18;
     --aviso:#D9B95C; --aviso-bg:#2C2513;
@@ -68,6 +76,10 @@
   --n4:#E091B6; --n4-bg:#2E1622;
   --pista1:#8FB4E0; --pista1-bg:#152436;
   --pista2:#E0A183; --pista2-bg:#2E1C13;
+  --m1:#9FB4EC; --m1-bg:#1A2038;
+  --m2:#77CFBD; --m2-bg:#0F2A26;
+  --m3:#CFA0E4; --m3-bg:#26183A;
+  --m4:#E5A47F; --m4-bg:#301E15;
   --ok:#7FC7A4; --ok-bg:#12281F;
   --alerta:#E9A08D; --alerta-bg:#331B18;
   --aviso:#D9B95C; --aviso-bg:#2C2513;
@@ -164,6 +176,13 @@ main{padding:1rem 1rem 2rem; max-width:44rem; margin:0 auto}
 .p-n4{background:var(--n4-bg); color:var(--n4)}
 .p-pista1{background:var(--pista1-bg); color:var(--pista1)}
 .p-pista2{background:var(--pista2-bg); color:var(--pista2)}
+.p-m1{background:var(--m1-bg); color:var(--m1)}
+.p-m2{background:var(--m2-bg); color:var(--m2)}
+.p-m3{background:var(--m3-bg); color:var(--m3)}
+.p-m4{background:var(--m4-bg); color:var(--m4)}
+.filtro-maestro{display:flex; align-items:center; justify-content:space-between; gap:.6rem;
+  flex-wrap:wrap; font-size:.82rem; color:var(--ink-2);
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--r); padding:.6rem .85rem}
 .barra{height:8px; background:var(--surface-2); border:1px solid var(--line);
   border-radius:99px; overflow:hidden}
 .barra span{display:block; height:100%; background:var(--accent-2); border-radius:99px}
@@ -501,6 +520,12 @@ const nivelOrden = id => (NIVELES.find(n => n.id === id) || {}).orden || 0;
 const nivelNombre = id => (NIVELES.find(n => n.id === id) || {}).nombre || "—";
 const claseNivel = id => "p-n" + (nivelOrden(id) || 1);
 const clasePista = id => id === "equus" ? "pista2" : "pista1";
+/* Un color por maestro, estable: con dos clases a la misma hora, dice quién da cuál. */
+const claseMaestro = id => {
+  const i = maestros().findIndex(m => m.id === id);
+  return "p-m" + ((i < 0 ? 0 : i) % 4 + 1);
+};
+const claseAudiencia = a => ({ todos:"p-oro", jinete:"p-n2", propietario:"p-n4", tutor:"p-n1" })[a] || "p-neutro";
 
 const CABALLOS_INICIALES = [
   { id:"jazmin",  nombre:"Jazmín",  uso:"escuelita",   min:"principiantes", max:"intermedio",    maxDia:3, estatus:"activo",   edad:11, origen:"KWPN", capa:"alazana" },
@@ -544,24 +569,30 @@ const tipo = id => TIPOS.find(t => t.id === id) || TIPOS[0];
 /* ------------------------------------------------------------------ horarios
    El lunes no se dan clases: es el día en que se abre la agenda.
    Jinetes: martes a sábado. Propietarios: martes a domingo. */
-const HORAS_SEMANA = ["07:00","08:00","09:00","16:00","17:00","18:00"];  /* martes a viernes */
-const HORAS_FINDE  = ["07:00","08:00","09:00","10:00"];                  /* sábado y domingo */
+/* Cada hora se dan dos clases a la vez, una por maestro y pista.
+   El lunes no se monta: es el día en que se abre la agenda. */
+const HORAS_SEMANA  = ["07:00","08:00","09:00","16:00","17:00","18:00"]; /* martes a viernes */
+const HORAS_SABADO  = ["07:00","08:00","09:00","10:00"];
+const HORAS_DOMINGO = ["07:00","08:00","09:00"];                        /* solo propietarios */
+
+/* Quién da clase y en qué pista. Dirección lo cambia hora por hora desde La semana. */
+const TURNOS = [
+  { maestro:"tania", esp:"mty" },
+  { maestro:"edwin", esp:"equus" },
+];
 
 const PLANTILLA = (() => {
   const lista = [];
-  let n = 0;
   const agregar = (dia, hora, soloPropietarios) => {
-    lista.push({
-      id: `d${dia}-${hora.replace(":", "")}`,
-      dia, hora, tipo:"escuela",
-      ent: ["tania","edwin","otro"][n++ % 3],
-      esp: Number(hora.slice(0, 2)) < 12 ? "mty" : "equus",
-      cupo: 6, soloPropietarios: !!soloPropietarios,
+    for (const t of TURNOS) lista.push({
+      id: `d${dia}-${hora.replace(":", "")}-${t.maestro}`,
+      dia, hora, tipo:"escuela", ent:t.maestro, esp:t.esp,
+      cupo:6, soloPropietarios: !!soloPropietarios,
     });
   };
   for (const dia of [2, 3, 4, 5]) for (const h of HORAS_SEMANA) agregar(dia, h, false);
-  for (const h of HORAS_FINDE) agregar(6, h, false);
-  for (const h of HORAS_FINDE) agregar(0, h, true);   /* domingo: solo propietarios */
+  for (const h of HORAS_SABADO) agregar(6, h, false);
+  for (const h of HORAS_DOMINGO) agregar(0, h, true);
   return lista;
 })();
 
@@ -935,6 +966,8 @@ const esAdmin = () => rolEfectivo() === "admin";
 /* Ser dirección en la app y poder escribir el catálogo son cosas distintas: lo
    segundo lo concede el almacén, y sin eso los cambios se rechazan. */
 const puedeEditarCatalogo = () => esAdmin() && Datos.esEditor;
+/* Quien da clases entra a La semana, aunque no sea dirección: ve las suyas. */
+const daClases = () => !!(cuenta && cuenta.imparte);
 const misCaballos = () => (cuenta.propios || []).map(caballo).filter(Boolean);
 /* Un propietario monta lo suyo; un jinete de escuela, lo que le desbloquearon. */
 const montaPropios = () => ve("propietario") && misCaballos().length > 0;
@@ -953,10 +986,10 @@ function sesionesDe(claveFecha) {
   const diaSemana = partesClub(deYmd(claveFecha, "12:00")).diaSemana;
   return plantillaEfectiva().filter(p => p.dia === diaSemana).map(p => {
     const inicio = deYmd(claveFecha, p.hora);
-    return { id:`${claveFecha}__${p.id}`, plantillaId:p.id, fecha:claveFecha, inicio,
+    return { id:`${claveFecha}__${p.id}`, plantillaId:p.id, fecha:claveFecha, hora:p.hora, inicio,
       fin:new Date(inicio.getTime() + tipo(p.tipo).min * 60000),
       tipoId:p.tipo, ent:p.ent, esp:p.esp, cupo:p.cupo, soloPropietarios:p.soloPropietarios };
-  }).sort((a,b) => a.inicio - b.inicio);
+  }).sort((a,b) => a.inicio - b.inicio || a.esp.localeCompare(b.esp));
 }
 
 const reservasDe = clave => Datos.todo("reservas").filter(r => r.fecha === clave);
@@ -1452,7 +1485,7 @@ function filaSesion(s) {
   const anotados = reservasDeSesion(s);
   return `<article class="sesion ${clasePista(s.esp)} ${motivo ? "llena" : ""}">
     <div class="hora">${esc(horaTexto(s.inicio))}</div>
-    <div class="nom">${esc(entrenador(s.ent))}</div>
+    <div class="nom"><span class="pastilla ${claseMaestro(s.ent)}">${esc(entrenador(s.ent))}</span></div>
     <div class="det"><span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${
       esc(espacio(s.esp))}</span> ·
       ${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"}${
@@ -1783,8 +1816,8 @@ function bloqueAnuncios() {
         <div class="anuncio-pie">
           <span>${a.publicado ? esc(fechaLarga(ymd(new Date(a.publicado)))) : ""}${
             a.expira ? " · hasta el " + esc(fechaLarga(a.expira)) : ""}</span>
-          ${esAdmin() ? `<span class="anuncio-aud">${esc((a.audiencia || []).map(x =>
-            PERFILES_ANUNCIO[x] || x).join(", "))}</span>
+          ${esAdmin() ? `<span>${(a.audiencia || []).map(x =>
+            `<span class="pastilla ${claseAudiencia(x)}">${esc(PERFILES_ANUNCIO[x] || x)}</span>`).join(" ")}</span>
             <button class="btn btn-2 btn-mini" data-editar-anuncio="${esc(a.id)}">Editar</button>` : ""}
         </div>
       </article>`).join("")}</div>
@@ -1834,25 +1867,37 @@ function verRecordatorios() {
    por hora, con quién monta y en qué caballo. */
 let semanaOffset = 0;      /* 0 = esta semana, 1 = la siguiente */
 let diaSemanaSel = "";     /* el día abierto en la agenda */
+let soloMisClases = true;  /* un maestro abre en las suyas */
 
 function verSemana() {
   const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
   const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
   if (!dias.includes(diaSemanaSel)) diaSemanaSel = dias.find(f => sesionesDe(f).length) || dias[0];
 
-  const dela = Datos.todo("reservas").filter(r => dias.includes(r.fecha));
+  /* Un maestro ve su propia agenda; dirección puede ver la del club entera. */
+  const mias = daClases() && soloMisClases;
+  const deMi = x => !mias || x.ent === cuenta.id;
+  const dela = Datos.todo("reservas").filter(r => dias.includes(r.fecha) &&
+    (!mias || (ranura(r.plantillaId) || {}).ent === cuenta.id));
   const porCaballo = {};
   for (const r of dela) porCaballo[r.caballoId] = (porCaballo[r.caballoId] || 0) + 1;
   const top = Object.entries(porCaballo).sort((a,b) => b[1] - a[1])[0];
   const cuenta_ = f => dela.filter(r => r.fecha === f).length;
   const pico = Math.max(1, ...dias.map(cuenta_));
 
-  const sesiones = sesionesDe(diaSemanaSel);
+  const sesiones = sesionesDe(diaSemanaSel).filter(deMi);
   const pSel = partesClub(deYmd(diaSemanaSel, "12:00"));
 
   return `
-  <div class="vista-titulo"><h2>La semana</h2>
+  <div class="vista-titulo"><h2>${mias ? "Mi semana" : "La semana"}</h2>
     <span class="sub">${esc(rangoFechas(dias[0], dias[6]))}</span></div>
+
+  ${daClases() ? `<div class="filtro-maestro">
+    <span>${mias ? `Solo las clases de ${esc(cuenta.nombre.split(" ")[0])}`
+      : "Todas las clases del club"}</span>
+    ${esAdmin() ? `<button class="btn btn-2 btn-mini" data-alternar-mias>
+      Ver ${mias ? "todas" : "solo las mías"}</button>` : ""}
+  </div>` : ""}
 
   <div class="semana-nav">
     <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹</button>
@@ -1874,7 +1919,7 @@ function verSemana() {
     ${dias.map(f => {
       const p = partesClub(deYmd(f, "12:00"));
       const n = cuenta_(f);
-      const hay = sesionesDe(f).length;
+      const hay = sesionesDe(f).filter(deMi).length;
       return `<button class="tira-dia" data-diasemana="${f}" aria-pressed="${f === diaSemanaSel}">
         <span class="td-dia">${DIAS[p.diaSemana].slice(0,2)}</span>
         <span class="td-num">${p.dia}</span>
@@ -1897,7 +1942,9 @@ function verSemana() {
       return `<div class="ranura ${clasePista(x.esp)} ${rs.length ? "" : "libre"}">
         <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
         <div class="ranura-cuerpo">
-          <div class="ranura-meta">${esc(espacio(x.esp))} · ${esc(entrenador(x.ent))}${
+          <div class="ranura-meta"><span class="pastilla ${clasePista(x.esp) === "pista2"
+            ? "p-pista2" : "p-pista1"}">${esc(espacio(x.esp))}</span>
+            <span class="pastilla ${claseMaestro(x.ent)}">${esc(entrenador(x.ent))}</span>${
             x.soloPropietarios ? " · solo propietarios" : ""}</div>
           ${rs.length ? `<div class="jinetes">${rs.map(r => {
             const per = persona(r.personaId), cab = caballo(r.caballoId);
@@ -1970,7 +2017,7 @@ function editarRanura(id) {
 const VISTAS = { inicio:verInicio, reservar:verReservar, semana:verSemana, documentos:verDocumentos,
   competencias:verCompetencias, recordatorios:verRecordatorios };
 /* La agenda completa del club es solo de dirección. */
-const vistasVisibles = () => Object.keys(VISTAS).filter(n => n !== "semana" || esAdmin());
+const vistasVisibles = () => Object.keys(VISTAS).filter(n => n !== "semana" || esAdmin() || daClases());
 const ICONOS = {
   inicio:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
   reservar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
@@ -2232,6 +2279,8 @@ document.addEventListener("click", async e => {
         catch (err) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
         cerrar(); pintar(); }; });
   }
+  const alt = e.target.closest("[data-alternar-mias]");
+  if (alt) { soloMisClases = !soloMisClases; return pintar(); }
   const sem = e.target.closest("[data-semana]");
   if (sem) { semanaOffset += Number(sem.dataset.semana); diaSemanaSel = ""; return pintar(); }
   const ds = e.target.closest("[data-diasemana]");
