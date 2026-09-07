@@ -13,13 +13,26 @@ dist/                 Versiones de archivo único, para publicar como Artifact
 
 ## Qué hace la app
 
-**Reservar.** Vista semanal con las clases que el nivel y el paquete del jinete
-autorizan; lo demás se oculta. Se elige sesión y después caballo, solo entre los
-que el entrenador habilitó y estén libres a esa hora. Al confirmar se descuenta
-la clase y se muestra la hora exacta del límite de cancelación.
+**Reservar.** Vista semanal. El lunes no se monta: es el día en que se abre la
+agenda. Jinetes de escuela reservan de martes a sábado; propietarios, de martes a
+domingo. Horarios: 7, 8 y 9 de la mañana y 4, 5 y 6 de la tarde de martes a
+viernes; 7, 8, 9 y 10 de la mañana sábado y domingo.
 
-**Reglamento y contratos.** Cada perfil ve solo sus documentos. Los obligatorios
-se firman escribiendo el nombre completo, y sin esa firma no se puede reservar.
+Al reservar, un jinete de escuela elige entre los caballos que le desbloquearon y
+estén libres; un propietario monta el suyo, sin elegir de una lista ajena. Al
+confirmar se descuenta la clase y se muestra la hora exacta del límite de
+cancelación.
+
+**Documentos.** Lo que hay que firmar sale del perfil que dirección asignó al dar
+de alta a la persona, ni más ni menos:
+
+| Perfil | Firma |
+|---|---|
+| Jinete | Reglamento del club y contrato de jinete |
+| Propietario y jinete | Esos dos, más el contrato de pupilaje |
+| Menor de edad | Los de jinete, más la carta responsiva que firma el tutor |
+
+Se firman escribiendo el nombre completo, y sin esa firma no se puede reservar.
 Cada documento lleva versión: al publicar una nueva se vuelve a pedir la firma.
 
 **Competencias.** Calendario que carga y edita dirección: fechas, sede, categorías,
@@ -34,7 +47,7 @@ inscripciones, la apertura de la agenda del lunes.
 
 | Perfil | Ve | Notas |
 |---|---|---|
-| Dirección | Todo, y edita el calendario de competencias | Puede agendar fuera de la ventana del lunes (RN-20) |
+| Dirección | Todo. Da de alta personas, les asigna perfil y nivel, les carga clases, les desbloquea caballos y edita el calendario de competencias | Ve cuántos y quiénes se anotaron a cada clase; puede agendar fuera de la ventana del lunes (RN-20) |
 | Propietario | Lo de propietario y lo de jinete | Ficha de su caballo, pupilaje, requisitos y autorización de uso |
 | Jinete | Solo lo de jinete | Reglamento y contrato de jinete; nunca documentos de propietario |
 | Tutor | Lo de jinete, sobre la cuenta del menor | Reserva, cancela y firma en nombre del menor (RN-18) |
@@ -43,9 +56,13 @@ Nadie fuera de dirección ve las reservas, firmas, recordatorios ni inscripcione
 de otra persona. La lista de anotados a una competencia es información del club:
 un jinete solo sabe si él está anotado.
 
+Nadie se da de alta solo: las personas las crea dirección, y de su perfil sale
+qué documentos firma, qué días puede reservar y qué caballos monta.
+
 **Qué se aplica de verdad y qué no.** Publicada como Artifact, el almacén aplica
-una regla que el navegador no puede saltarse: el calendario de competencias solo
-lo escribe quien tenga permiso de edición de la página. La cuenta de dirección de
+dos reglas que el navegador no puede saltarse: el padrón de personas y el
+calendario de competencias solo los escribe quien tenga permiso de edición de la
+página. La cuenta de dirección de
 la app solo se abre para esa persona, y se comprueba contra el almacén, no contra
 el código. El resto de la separación por perfil vive en la app: filtra lo que
 muestra, pero los datos del club están en un almacén común, así que alguien con
@@ -60,13 +77,13 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 |---|---|
 | RN-01 | Cancelación sin costo hasta 10 horas antes; después la clase se cobra |
 | RN-03 | No se reserva sin saldo; lo carga el administrador tras el cobro presencial |
-| RN-04 | Solo caballos que el entrenador habilitó para ese alumno |
+| RN-04 | El jinete de escuela solo monta caballos que le desbloquearon; el propietario, los suyos |
 | RN-05 | El caballo debe ser compatible con el nivel del jinete |
 | RN-06 | Máximo de clases por día por caballo; al llegar al tope desaparece |
 | RN-08 | Un caballo apartado deja de ofrecerse a los demás, al confirmar |
 | RN-09 | No se excede el cupo de la sesión ni la capacidad de la pista |
 | RN-10 | Sin traslapes de jinete ni de caballo |
-| RN-11 | La agenda se abre y se cierra el lunes |
+| RN-11 | La agenda se abre y se cierra el lunes, día en que no hay clases |
 | RN-12 | Solo se ven las sesiones que el paquete autoriza |
 | RN-15 | Sin documentos firmados no hay primera reserva |
 | RN-16 | Cada perfil ve solo sus documentos |
@@ -88,9 +105,11 @@ servidor:
 - **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
 - **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
   cuadra (M8).
-- **Catálogo de ejemplo.** Caballos, entrenadores, horarios y jinetes son datos
-  de prueba. Las competencias sí son las del calendario real que dio dirección;
-  sus categorías y horarios se publican desde la app.
+- **Catálogo de ejemplo.** Caballos y entrenadores son datos de prueba. Los días
+  y horas de clase, y el calendario de competencias, son los que dio dirección;
+  categorías y horarios de cada competencia se publican desde la app.
+- **Los niveles no dividen los horarios todavía.** Cada hora está abierta a todos
+  los niveles hasta que dirección diga qué nivel va en cada una.
 
 ## Cómo verlo
 
