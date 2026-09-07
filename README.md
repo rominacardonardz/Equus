@@ -6,6 +6,7 @@ dependencias ni compilación.
 
 ```
 index.html            La app
+backend/              Esquema, reglas de acceso y datos iniciales para el servidor
 especificacion/       El documento fuente (especificación funcional v2.0) como sitio
 tools/                Genera las versiones de archivo único de dist/
 dist/                 Versiones de archivo único, para publicar como Artifact
@@ -147,6 +148,17 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 | RN-15 | Sin documentos firmados no hay primera reserva |
 | RN-16 | Cada perfil ve solo sus documentos |
 | RN-20 | Dirección puede saltarse la ventana; la reserva queda marcada |
+
+## Pasar a producción
+
+`backend/` trae lo que falta: el esquema de PostgreSQL, las reglas de acceso que
+aplican la separación entre socios **en el servidor** en vez de en el navegador, y
+los datos de arranque. Los tres archivos se ejecutaron y se probaron contra
+PostgreSQL 16 con usuarios de cada perfil. `backend/README.md` lleva los pasos
+para montarlo en Supabase y publicar el sitio.
+
+Queda una sola pieza de código: el adaptador que sustituya la capa `Datos` de
+`index.html` por llamadas a Supabase.
 
 ## Lo que este prototipo todavía no es
 
