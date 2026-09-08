@@ -8,6 +8,8 @@ cuenta. Correr después de cualquier cambio:
 
     python3 tools/build-artifact.py
 """
+import base64
+import mimetypes
 import pathlib
 import re
 
@@ -37,6 +39,17 @@ def construir(origen: pathlib.Path, destino: pathlib.Path) -> None:
     for src in re.findall(r'<script src="((?!http)[^"]+)"></script>', cuerpo):
         codigo = (base / src).read_text(encoding="utf-8")
         cuerpo = cuerpo.replace(f'<script src="{src}"></script>', f"<script>\n{codigo}\n</script>")
+
+    # El Artifact es un archivo suelto: no hay carpeta assets/ que valga, asi
+    # que las imagenes viajan dentro del propio HTML.
+    for ruta in sorted(set(re.findall(r'src="((?!https?:|data:)[^"]+\.(?:png|jpg|jpeg|svg))"', cuerpo))):
+        archivo = base / ruta
+        if not archivo.exists():
+            print(f"  falta {ruta}, se queda como estaba")
+            continue
+        tipo = mimetypes.guess_type(archivo.name)[0] or "image/png"
+        datos = base64.b64encode(archivo.read_bytes()).decode("ascii")
+        cuerpo = cuerpo.replace(f'src="{ruta}"', f'src="data:{tipo};base64,{datos}"')
 
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(

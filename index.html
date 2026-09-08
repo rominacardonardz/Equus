@@ -77,6 +77,15 @@
     --sombra:0 1px 2px rgba(0,0,0,.45), 0 12px 32px -24px rgba(0,0,0,.9);
   }
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .marca-logo .tinta-clara{display:none}
+  :root:not([data-theme="light"]) .marca-logo .tinta-oscura{display:block}
+}
+:root[data-theme="dark"] .marca-logo .tinta-clara{display:none}
+:root[data-theme="dark"] .marca-logo .tinta-oscura{display:block}
+:root[data-theme="light"] .marca-logo .tinta-clara{display:block}
+:root[data-theme="light"] .marca-logo .tinta-oscura{display:none}
+
 :root[data-theme="dark"] {
   --bg:#0A1120; --surface:#121C2C; --surface-2:#1A2536;
   --ink:#E9EEF7; --ink-2:#A6B2C7; --ink-3:#76829A;
@@ -120,12 +129,15 @@ button{font:inherit; color:inherit; cursor:pointer; background:none; border:0}
   backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);
 }
 .marca{display:flex; align-items:center; gap:.55rem; margin-right:auto; min-width:0}
-/* Cuando existe assets/logo.png manda el logo; si no, queda el monograma. */
+/* Cuando existen los PNG del logo mandan ellos; si no, queda el monograma. */
 .marca-logo{display:grid; place-items:center; flex:none}
 .marca-logo img{height:2rem; width:auto; max-width:5.5rem; object-fit:contain}
 .marca-logo img + .mono-q{display:none}
-.marca-logo.grande{margin:0 auto}
-.marca-logo.grande img{height:4.2rem; max-width:11rem}
+/* El trazo es cafe sobre claro y dorado sobre oscuro: sobre el azul de noche el
+   cafe original se pierde. Es el mismo dibujo, solo cambia la tinta. */
+.marca-logo .tinta-oscura{display:none}
+.marca-logo.grande{margin:0 auto .2rem}
+.marca-logo.grande img{height:auto; width:min(15rem,72%); max-width:none}
 .mono-q{
   display:grid; place-items:center; width:2rem; height:2rem; border-radius:7px; flex:none;
   background:var(--azul); color:var(--oro);
@@ -414,8 +426,9 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <header class="app-head">
   <div class="marca">
-    <span class="marca-logo" aria-hidden="true"><img src="assets/logo.png" alt=""
-      onerror="this.remove()"><span class="mono-q">E</span></span>
+    <span class="marca-logo" aria-hidden="true"><img class="tinta-clara" src="assets/marca.png"
+      alt="" onerror="this.remove()"><img class="tinta-oscura" src="assets/marca-clara.png"
+      alt="" onerror="this.remove()"><span class="mono-q">E</span></span>
     <b>Equus</b>
     <span class="sello-admin" id="sello" hidden>Dirección</span>
   </div>
@@ -444,10 +457,11 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <div class="portada" id="portada" hidden>
   <form class="acceso" id="form-entrar">
-    <span class="marca-logo grande" aria-hidden="true"><img src="assets/logo.png" alt=""
-      onerror="this.remove()"><span class="mono-q grande">E</span></span>
-    <h1>Equus</h1>
-    <p class="acceso-sub">Reservas y portal de socios</p>
+    <span class="marca-logo grande" aria-hidden="true"><img class="tinta-clara"
+      src="assets/logo.png" alt="" onerror="this.remove()"><img class="tinta-oscura"
+      src="assets/logo-claro.png" alt="" onerror="this.remove()"><span class="mono-q grande">E</span></span>
+    <h1>Te damos la bienvenida</h1>
+    <p class="acceso-sub">Club Ecuestre Equus · reservas y portal de socios</p>
     <label class="campo">Usuario
       <input type="text" name="usuario" autocomplete="username" autocapitalize="none"
         spellcheck="false" required></label>
@@ -480,7 +494,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .dia-bloque{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
 .dia-cab{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem;
   padding:.6rem .9rem; background:var(--surface-2); border-bottom:1px solid var(--line)}
-.dia-cab h3{font-size:1.05rem; text-transform:capitalize}
+.dia-cab h3{font-size:1.05rem}
+.dia-cab h3::first-letter{text-transform:uppercase}
 .dia-cab span{font-size:.74rem; color:var(--ink-3)}
 .tira{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem}
 .tira-dia{display:grid; justify-items:center; gap:.15rem; padding:.45rem .1rem .35rem;
@@ -532,7 +547,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .oa-aviso{border-left-color:var(--aviso)} .oa-aviso .oa-e{background:var(--aviso-bg); color:var(--aviso)}
 .oa-mover{border-left-color:var(--pista1)} .oa-mover .oa-e{background:var(--pista1-bg); color:var(--pista1)}
 .hueco-dia{display:grid; gap:.35rem}
-.hd-titulo{font-size:.8rem; font-weight:600; text-transform:capitalize}
+.hd-titulo{font-size:.8rem; font-weight:600}
+.hd-titulo::first-letter{text-transform:uppercase}
 .hd-horas{display:grid; gap:.35rem}
 .hueco{display:grid; grid-template-columns:5rem 1fr auto; gap:.6rem; align-items:center; text-align:left;
   background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:.55rem .8rem}
@@ -545,13 +561,42 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
   padding:1.5rem; background:var(--bg); overflow-y:auto}
 .acceso{display:grid; gap:.75rem; width:min(22rem,100%); justify-items:stretch; text-align:center}
 .acceso .mono-q.grande{width:3.4rem; height:3.4rem; font-size:2rem; border-radius:12px; margin:0 auto}
-.acceso h1{font-size:1.9rem; letter-spacing:.02em}
+.acceso h1{font-family:var(--serif); font-size:1.75rem; font-weight:600;
+  letter-spacing:.01em; line-height:1.15; text-wrap:balance}
 .acceso-sub{font-size:.82rem; color:var(--ink-3); margin-bottom:.6rem}
 .acceso .campo{text-align:left}
 .acceso-error{font-size:.8rem; color:var(--alerta); background:var(--alerta-bg);
   border:1px solid color-mix(in srgb,var(--alerta) 30%,transparent);
   border-radius:var(--r-sm); padding:.5rem .7rem}
 .acceso-pie{font-size:.74rem; color:var(--ink-3); margin-top:.3rem}
+
+/* ---- La hoja de la cuadra ----------------------------------------------
+   #programa vive escondido; al imprimir es lo unico que queda en la hoja.
+   Va en blanco y negro a proposito: se imprime en la caseta y se fotocopia. */
+#programa{display:none}
+@media print{
+  @page{size:A4 portrait; margin:13mm}
+  html,body{background:#fff; color:#000; font-size:10.5pt}
+  body > *{display:none !important}
+  body.imprimiendo #programa{display:block !important}
+  .pg-cab{display:flex; align-items:flex-start; gap:.8rem; padding-bottom:.5rem;
+    border-bottom:1.5pt solid #000; margin-bottom:.9rem}
+  .pg-logo{height:14mm; width:auto; flex:none}
+  .pg-cab h1{font-family:var(--serif); font-size:16pt; letter-spacing:.01em; margin:0}
+  .pg-cab p{font-size:9.5pt; margin:.15rem 0 0}
+  .pg-sello{margin-left:auto; text-align:right; white-space:nowrap; color:#444}
+  .pg-dia{break-inside:avoid; page-break-inside:avoid; margin-bottom:.9rem}
+  .pg-dia h2{font-family:var(--serif); font-size:12.5pt; margin:0 0 .25rem;
+    border-bottom:.5pt solid #999; padding-bottom:.12rem}
+  .pg-dia h2::first-letter{text-transform:uppercase}
+  .pg-dia table{width:100%; border-collapse:collapse; font-size:9.5pt}
+  .pg-dia th{text-align:left; font-size:8pt; text-transform:uppercase; letter-spacing:.05em;
+    color:#333; border-bottom:.5pt solid #999; padding:.18rem .3rem}
+  .pg-dia td{padding:.28rem .3rem; border-bottom:.4pt solid #CCC; vertical-align:top}
+  .pg-hora{font-variant-numeric:tabular-nums; white-space:nowrap; width:14mm}
+  .pg-notas{width:38mm}                       /* el renglon en blanco para el caballerango */
+  .pg-vacio{font-size:11pt; padding:1rem 0}
+}
 .anuncio{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
   border-radius:var(--r); padding:.85rem 1rem; display:grid; gap:.4rem}
 .anuncio.fijado{border-left-color:var(--oro); background:color-mix(in srgb,var(--oro-fondo) 45%,var(--surface))}
@@ -1001,8 +1046,17 @@ let vista  = "inicio";
 let diaSel = ymd(ahora());
 const idTab = "t" + Math.random().toString(36).slice(2, 10);
 
+/* El navegador puede negar el almacenamiento (ventana privada, ajustes que
+   bloquean datos de sitio). Si pasa, la app funciona igual y solo se olvida
+   la sesion al recargar; sin esto, entrar tronaba sin decir nada. */
+const recuerdo = {
+  leer:   k     => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  poner:  (k,v) => { try { localStorage.setItem(k, v); } catch (e) {} },
+  borrar: k     => { try { localStorage.removeItem(k); } catch (e) {} },
+};
+
 function refrescarSesion() {
-  cuenta = persona(localStorage.getItem("cq:sesion")) || null;
+  cuenta = persona(recuerdo.leer("cq:sesion")) || null;
   sujeto = cuenta ? (cuenta.tutorDe ? (persona(cuenta.tutorDe) || cuenta) : cuenta) : null;
 }
 const haySesion = () => cuenta !== null;
@@ -1018,13 +1072,13 @@ async function entrar(usuario, clave) {
   const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !x.sinCuenta);
   if (!p || !p.clave) return false;
   if (await huella(clave) !== p.clave) return false;
-  localStorage.setItem("cq:sesion", p.id);
-  localStorage.removeItem("cq:direccion");
+  recuerdo.poner("cq:sesion", p.id);
+  recuerdo.borrar("cq:direccion");
   return true;
 }
 function salir() {
-  localStorage.removeItem("cq:sesion");
-  localStorage.removeItem("cq:direccion");
+  recuerdo.borrar("cq:sesion");
+  recuerdo.borrar("cq:direccion");
   vista = "inicio";
   pintar();
 }
@@ -1125,23 +1179,53 @@ function intervaloReserva(r) {
 /* Los propietarios montan sus propios caballos; los jinetes de escuela eligen
    entre los que su entrenador les desbloqueó (RN-04). */
 const propiosDe = per => (per.propios || []).map(caballo).filter(Boolean);
-const montaLosSuyos = per => (SECCIONES[per.rol] || []).includes("propietario") && propiosDe(per).length > 0;
+const desbloqueadosDe = per => caballos().filter(c => (per.habilitados || []).includes(c.id));
+const esSuyo = (per, id) => (per.propios || []).includes(id);
+const montaLosSuyos = per => propiosDe(per).length > 0;
 
+/* Los caballos de una persona: los suyos y los que le desbloquearon, juntos. Ser
+   dueño de un caballo no depende del perfil: si está a tu nombre, es tuyo.
+   El filtro de nivel cuida a quien monta caballos del club; sobre el propio
+   decide su dueño, no la app. */
 function caballosParaPersona(per, sesion) {
   const delDia = reservasDe(sesion.fecha);
-  const base = montaLosSuyos(per)
-    ? propiosDe(per)
-    : caballos().filter(c => (per.habilitados || []).includes(c.id));
+  const vistos = new Set();
+  const base = propiosDe(per).concat(desbloqueadosDe(per))
+    .filter(c => !vistos.has(c.id) && vistos.add(c.id));
   return base.filter(c => {
     if (c.estatus !== "activo") return false;
-    const n = nivelOrden(per.nivel);
-    if (n < nivelOrden(c.min) || n > nivelOrden(c.max)) return false;           // RN-05
+    if (!esSuyo(per, c.id)) {                                                   // RN-05
+      const n = nivelOrden(per.nivel);
+      if (n < nivelOrden(c.min) || n > nivelOrden(c.max)) return false;
+    }
     const suyas = delDia.filter(r => r.caballoId === c.id);
     if (suyas.length >= c.maxDia) return false;                                 // RN-06
     if (suyas.some(r => { const [i,f] = intervaloReserva(r);
       return traslapa(sesion.inicio, sesion.fin, i, f); })) return false;       // RN-08
     return true;
-  }).map(c => ({ ...c, trabajadas: delDia.filter(r => r.caballoId === c.id).length }));
+  }).map(c => ({ ...c, trabajadas: delDia.filter(r => r.caballoId === c.id).length,
+    propio: esSuyo(per, c.id) }));
+}
+
+/* Por qué esta persona no tiene caballo para esta hora. Sirve para no dejar a
+   dirección adivinando. */
+function porQueSinCaballo(per, sesion) {
+  const todos = propiosDe(per).concat(desbloqueadosDe(per));
+  if (!todos.length) return "no tiene caballo asignado ni desbloqueado";
+  const delDia = reservasDe(sesion.fecha);
+  const motivos = [];
+  for (const c of todos) {
+    if (c.estatus !== "activo") { motivos.push(`${c.nombre} está ${c.estatus}`); continue; }
+    const n = nivelOrden(per.nivel);
+    if (!esSuyo(per, c.id) && (n < nivelOrden(c.min) || n > nivelOrden(c.max))) {
+      motivos.push(`${c.nombre} es de ${nivelNombre(c.min)} a ${nivelNombre(c.max)}`); continue; }
+    const suyas = delDia.filter(r => r.caballoId === c.id);
+    if (suyas.length >= c.maxDia) { motivos.push(`${c.nombre} ya trabajó ${suyas.length} de ${c.maxDia} hoy`); continue; }
+    if (suyas.some(r => { const [i,f] = intervaloReserva(r);
+      return traslapa(sesion.inicio, sesion.fin, i, f); })) {
+      motivos.push(`${c.nombre} ya está en otra clase a esa hora`); continue; }
+  }
+  return motivos[0] || "sin caballo libre";
 }
 const caballosPara = sesion => caballosParaPersona(sujeto, sesion);
 
@@ -1253,7 +1337,7 @@ function bloquesCaballos() {
     <p class="etiqueta" style="margin-bottom:.4rem">${mios.length === 1 ? "Mi caballo" : "Mis caballos"}</p>
     <div class="vista">${mios.map(c => {
       const hoy = reservasDe(ymd(ahora())).filter(r => r.caballoId === c.id).length;
-      const abierto = localStorage.getItem("cq:escuela:" + c.id) === "1";
+      const abierto = recuerdo.leer("cq:escuela:" + c.id) === "1";
       return `<article class="ficha">
         <div class="ficha-cab">
           <span class="ficha-ini" aria-hidden="true">${esc(c.nombre[0])}</span>
@@ -2309,7 +2393,7 @@ function agregarAClase(clave) {
       if (otras.some(r => r.personaId === per.id && r.fecha === fecha &&
         traslapa(s.inicio, s.fin, ...intervaloReserva(r)))) razones.push("ya tiene clase a esa hora");
       const cab = caballosParaPersona(per, s);
-      if (!cab.length) razones.push("sin caballo libre");
+      if (!cab.length) razones.push(porQueSinCaballo(per, s));
       return { per, cab, razones };
     })
     .sort((a, b) => a.razones.length - b.razones.length || a.per.nombre.localeCompare(b.per.nombre));
@@ -2351,7 +2435,7 @@ function elegirCaballoPara(per, s) {
       <button class="opcion" data-cab="${c.id}" aria-pressed="${unico}">
         <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
         <span><span class="n">${esc(c.nombre)}</span>
-          <span class="m">${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}</span></span>
+          <span class="m">${c.propio ? "su caballo" : `${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}`}</span></span>
         <span class="carga">${c.trabajadas}/${c.maxDia}<br>hoy</span></button>`).join("")}</div>
     <div class="nota">Se le descuenta <b>1</b> clase del saldo. Le quedan ${saldo(per)}.</div>
     <button class="btn btn-bloque" id="ok-anotar-cab" ${unico ? "" : "disabled"}>Anotar</button>`,
@@ -2415,6 +2499,7 @@ function programaCuadra() {
 
   document.getElementById("programa").innerHTML = `
     <header class="pg-cab">
+      <img class="pg-logo" src="assets/marca.png" alt="" onerror="this.remove()">
       <div><h1>Equus · Programa de la cuadra</h1>
         <p>${esc(rangoFechas(dias[0], dias[6]))} · ${total} ${total === 1 ? "monta" : "montas"}</p></div>
       <p class="pg-sello">Impreso el ${esc(fechaLarga(ymd(ahora())))}, ${esc(horaTexto(ahora()))}</p>
@@ -2603,9 +2688,9 @@ function editarPersona(id) {
       <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
         Un menor no lleva usuario: entra su tutor. La contraseña se guarda como huella,
         no en claro, pero se comprueba en el navegador: no la uses para nada delicado.</p>
-      <div class="campo">Caballos propios (lo vuelven propietario)
-        <div class="casillas">${casillas("propios", caballos().filter(c => c.uso === "propietario"))}</div></div>
-      <div class="campo">Caballos desbloqueados (solo para jinetes de escuela)
+      <div class="campo">Caballos propios (a su nombre; monta el suyo sin importar nivel)
+        <div class="casillas">${casillas("propios", caballos())}</div></div>
+      <div class="campo">Caballos del club desbloqueados (se respeta el nivel)
         <div class="casillas">${casillas("habilitados", caballosDeEscuela())}</div></div>
       <button class="btn btn-oro btn-bloque" type="submit">${id ? "Guardar" : "Crear persona"}</button>
       ${id ? '<button class="btn btn-2 btn-bloque" type="button" id="borrar-persona">Dar de baja</button>' : ""}
@@ -2804,7 +2889,7 @@ document.addEventListener("click", async e => {
 document.addEventListener("change", e => {
   const pool = e.target.closest("[data-escuela]");
   if (pool) {
-    localStorage.setItem("cq:escuela:" + pool.dataset.escuela, pool.checked ? "1" : "0");
+    recuerdo.poner("cq:escuela:" + pool.dataset.escuela, pool.checked ? "1" : "0");
     avisar(pool.checked ? "Autorizado para el pool de escuela." : "Retirado del pool de escuela.");
   }
 });
@@ -2944,7 +3029,7 @@ $("#btn-reiniciar").addEventListener("click", () => {
       guardadas en este navegador.${Datos.compartido ? " Lo del almacén compartido no se toca." : ""}</p>
     <button class="btn btn-peligro btn-bloque" id="ok-borrar">Borrar</button>`,
     cerrar => { $("#ok-borrar").onclick = async () => {
-      await Datos.limpiarLocal(); localStorage.removeItem("cq:direccion");
+      await Datos.limpiarLocal(); recuerdo.borrar("cq:direccion");
       cerrar(); avisar("Datos locales borrados."); pintar(); }; });
 });
 

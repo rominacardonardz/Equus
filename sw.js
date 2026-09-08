@@ -1,9 +1,11 @@
 /* Equus — service worker.
    La app se guarda para que abra al instante y aguante un rato sin señal, pero
    la red manda: si hay versión nueva, esa se usa. */
-const CACHE = "equus-v1";
+const CACHE = "equus-v2";   /* al subir el logo real */
 const BASE = new URL("./", self.location).pathname;
-const ESENCIALES = [BASE, BASE + "index.html", BASE + "manifest.json"];
+const ESENCIALES = [BASE, BASE + "index.html", BASE + "manifest.json",
+  BASE + "assets/logo.png", BASE + "assets/logo-claro.png",
+  BASE + "assets/marca.png", BASE + "assets/marca-clara.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ESENCIALES)).then(() => self.skipWaiting()));
