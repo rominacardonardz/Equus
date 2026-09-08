@@ -6,6 +6,7 @@ dependencias ni compilación.
 
 ```
 index.html            La app
+assets/logo.png       El logo del club (opcional: si está, sustituye al monograma)
 manifest.json  sw.js  Para instalarla en el teléfono
 .github/workflows/    Publica el sitio en GitHub Pages en cada push
 backend/              Esquema, reglas de acceso y datos iniciales para el servidor

@@ -120,6 +120,12 @@ button{font:inherit; color:inherit; cursor:pointer; background:none; border:0}
   backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);
 }
 .marca{display:flex; align-items:center; gap:.55rem; margin-right:auto; min-width:0}
+/* Cuando existe assets/logo.png manda el logo; si no, queda el monograma. */
+.marca-logo{display:grid; place-items:center; flex:none}
+.marca-logo img{height:2rem; width:auto; max-width:5.5rem; object-fit:contain}
+.marca-logo img + .mono-q{display:none}
+.marca-logo.grande{margin:0 auto}
+.marca-logo.grande img{height:4.2rem; max-width:11rem}
 .mono-q{
   display:grid; place-items:center; width:2rem; height:2rem; border-radius:7px; flex:none;
   background:var(--azul); color:var(--oro);
@@ -408,7 +414,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <header class="app-head">
   <div class="marca">
-    <span class="mono-q" aria-hidden="true">E</span>
+    <span class="marca-logo" aria-hidden="true"><img src="assets/logo.png" alt=""
+      onerror="this.remove()"><span class="mono-q">E</span></span>
     <b>Equus</b>
     <span class="sello-admin" id="sello" hidden>Dirección</span>
   </div>
@@ -437,7 +444,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <div class="portada" id="portada" hidden>
   <form class="acceso" id="form-entrar">
-    <span class="mono-q grande" aria-hidden="true">E</span>
+    <span class="marca-logo grande" aria-hidden="true"><img src="assets/logo.png" alt=""
+      onerror="this.remove()"><span class="mono-q grande">E</span></span>
     <h1>Equus</h1>
     <p class="acceso-sub">Reservas y portal de socios</p>
     <label class="campo">Usuario
