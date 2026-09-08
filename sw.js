@@ -1,7 +1,7 @@
-/* Casa Quirón — service worker.
+/* Equus — service worker.
    La app se guarda para que abra al instante y aguante un rato sin señal, pero
    la red manda: si hay versión nueva, esa se usa. */
-const CACHE = "casa-quiron-v1";
+const CACHE = "equus-v1";
 const BASE = new URL("./", self.location).pathname;
 const ESENCIALES = [BASE, BASE + "index.html", BASE + "manifest.json"];
 

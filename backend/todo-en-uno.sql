@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Casa Quirón · todo en uno
+-- Equus · todo en uno
 --
 -- Pega este archivo completo en el SQL Editor de Supabase y ejecútalo.
 -- Crea las tablas, las reglas de acceso y los datos de arranque.
@@ -262,7 +262,7 @@ create index on auditoria (cuando desc);
 
 
 -- ===========================================================================
--- Casa Quirón · reglas de acceso (Row Level Security)
+-- Equus · reglas de acceso (Row Level Security)
 --
 -- Esto es lo que hoy no existe: la separación entre socios la aplica el
 -- servidor, no el navegador. Un jinete solo lee lo suyo aunque manipule la
@@ -403,7 +403,7 @@ create policy auditoria_alta on auditoria for insert to authenticated
 
 
 -- ===========================================================================
--- Casa Quirón · datos de arranque
+-- Equus · datos de arranque
 -- Catálogos que no dependen de las cuentas de usuario. Las personas se crean
 -- después, cuando existan sus cuentas (ver el README).
 -- ===========================================================================
@@ -452,6 +452,16 @@ insert into competencias (nombre, inicio, fin, sede, disciplina) values
   ('Paloma Blanca',    '2026-10-01', '2026-10-04', 'Paloma Blanca',          'Salto'),
   ('Hípico Monterrey', '2026-10-22', '2026-10-25', 'Club Hípico Monterrey',  'Salto'),
   ('Hípico La Silla',  '2026-11-02', '2026-11-15', 'Club Hípico La Silla',   'Salto');
+-- Concurso Interclub de La Silla, sábado 12 de septiembre.
+insert into competencias (nombre, inicio, fin, sede, disciplina, categorias, horarios, nota) values
+  ('Concurso Interclub · La Silla', '2026-09-12', '2026-09-12',
+   'Club Hípico La Silla', 'Salto',
+   array['1.20 m','1.10 m','1.00 m','0.90 m','0.80 m','0.60 m'],
+   array['Sábado 12 — Inicio a las 8:00 a.m.',
+         '1.20 m y 1.10 m — Pista 2 Sierra Madre, césped (ría opcional)',
+         '1.00 m, 0.90 m, 0.80 m y 0.60 m — Pista Techada, arena',
+         'Cada prueba — Al término de la anterior'],
+   '$950 por binomio, en efectivo o transferencia. Trofeo a los primeros tres lugares y moña cada cuatro binomios.');
 
 -- Documentos. El texto es de muestra: dirección lo sustituye desde la app.
 insert into documentos (titulo, version, vigente_desde, audiencia, obligatorio, resumen, orden, cuerpo) values

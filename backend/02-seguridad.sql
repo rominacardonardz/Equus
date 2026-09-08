@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Casa Quirón · reglas de acceso (Row Level Security)
+-- Equus · reglas de acceso (Row Level Security)
 --
 -- Esto es lo que hoy no existe: la separación entre socios la aplica el
 -- servidor, no el navegador. Un jinete solo lee lo suyo aunque manipule la

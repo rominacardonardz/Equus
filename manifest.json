@@ -1,6 +1,6 @@
 {
-  "name": "Casa Quirón · Reservas",
-  "short_name": "Casa Quirón",
+  "name": "Equus · Reservas",
+  "short_name": "Equus",
   "description": "Reserva de clases, reglamento, competencias y recordatorios del club.",
   "start_url": "./index.html",
   "scope": "./",

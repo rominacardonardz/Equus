@@ -13,8 +13,8 @@ import re
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 SITIOS = [
-    ("index.html",                "dist/casa-quiron-app.html"),
-    ("especificacion/index.html", "dist/casa-quiron-especificacion.html"),
+    ("index.html",                "dist/equus-app.html"),
+    ("especificacion/index.html", "dist/equus-especificacion.html"),
 ]
 
 

@@ -1,4 +1,4 @@
-# Backend de Casa Quirón
+# Backend de Equus
 
 Lo que falta para que la app deje de ser un prototipo: una base de datos de
 verdad, cuentas con contraseña, y las reglas aplicadas **en el servidor** en vez

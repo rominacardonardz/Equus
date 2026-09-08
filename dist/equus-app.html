@@ -1,9 +1,9 @@
-<title>Casa Quirón · Reservas</title>
+<title>Equus · Reservas</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* ==========================================================================
-   Casa Quirón — app de reservas. Azules y dorados.
+   Equus — app de reservas. Azules y dorados.
    Todos los colores son tokens: al llegar el manual de marca (§08) se
    cambian aquí y en ningún otro lado.
    ========================================================================== */
@@ -393,8 +393,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <header class="app-head">
   <div class="marca">
-    <span class="mono-q" aria-hidden="true">Q</span>
-    <b>Casa Quirón</b>
+    <span class="mono-q" aria-hidden="true">E</span>
+    <b>Equus</b>
     <span class="sello-admin" id="sello" hidden>Dirección</span>
   </div>
   <button class="quien" id="btn-quien">
@@ -414,7 +414,7 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
   <section class="vista" id="v-recordatorios" hidden></section>
 
   <footer class="pie">
-    <p id="pie-datos">Casa Quirón · Sistema de reservas</p>
+    <p id="pie-datos">Equus · Sistema de reservas</p>
     <p>Caballos, horarios y jinetes son <b>datos de ejemplo</b>; las competencias las carga dirección.</p>
     <p><button id="btn-reiniciar" type="button">Borrar mis datos de prueba</button></p>
   </footer>
@@ -422,8 +422,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <div class="portada" id="portada" hidden>
   <form class="acceso" id="form-entrar">
-    <span class="mono-q grande" aria-hidden="true">Q</span>
-    <h1>Casa Quirón</h1>
+    <span class="mono-q grande" aria-hidden="true">E</span>
+    <h1>Equus</h1>
     <p class="acceso-sub">Reservas y portal de socios</p>
     <label class="campo">Usuario
       <input type="text" name="usuario" autocomplete="username" autocapitalize="none"
@@ -435,6 +435,7 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
     <p class="acceso-pie">Las cuentas las crea dirección. Si no tienes uno, pídeselo.</p>
   </form>
 </div>
+<div id="programa" aria-hidden="true"></div>
 <div id="capa"></div>
 <div class="brindis" id="brindis" hidden></div>
 <style>
@@ -485,6 +486,11 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip b{font-weight:600; color:var(--accent-2)}
 .jinete-chip.accionable{cursor:pointer; border-style:dashed; border-color:var(--line-fuerte)}
 .jinete-chip.accionable:hover{background:var(--oro-fondo); border-color:var(--oro-borde)}
+.jinete-chip.agregar{margin-top:.3rem; cursor:pointer; color:var(--oro-tinta);
+  background:var(--oro-fondo); border:1px dashed var(--oro-borde); font-weight:600}
+.bloque-maestro{display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  padding:.5rem .9rem; background:var(--surface-2); border-top:1px solid var(--line);
+  font-size:.74rem; color:var(--ink-3)}
 .ficha-ajuste{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:.9rem 1rem}
 .fa-nombre{font-family:var(--serif); font-size:1.35rem; margin-bottom:.5rem}
 .fa-datos{display:grid; gap:.3rem; margin:0; font-size:.82rem}
@@ -538,7 +544,7 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 <script>
 "use strict";
 /* ==========================================================================
-   Casa Quirón — catálogos, personas y tiempo del club.
+   Equus — catálogos, personas y tiempo del club.
    ========================================================================== */
 
 const NIVELES = [
@@ -749,7 +755,7 @@ const DOCUMENTOS_INICIALES = [
         "Botas de montar y pantalón adecuado.","Chaleco protector obligatorio en salto para menores de edad."] },
       { h:"Uso de instalaciones", l:["El acceso a caballerizas es solo con autorización del equipo de cuadra.",
         "La pista se libera puntualmente al terminar cada clase.","Prohibido dar alimento a caballos que no sean propios."] },
-      { h:"Horarios", l:["El lunes no hay clases: es el día en que se abre la agenda de la semana.",
+      { h:"Horarios", l:["El lunes no hay clases: es el día recomendado para armar la semana.",
         "Jinetes de escuela: de martes a sábado.","Propietarios: de martes a domingo.",
         "Todos los horarios están abiertos para cualquier nivel.",
         "Presentarse 15 minutos antes de la clase para ensillar."] },
@@ -817,6 +823,14 @@ const paquete = id => paquetes().find(p => p.id === id);
 
 /* ------------------------------------------------------------- competencias */
 const COMPETENCIAS_INICIALES = [
+  { id:"interclub-la-silla", nombre:"Concurso Interclub · La Silla",
+    inicio:"2026-09-12", fin:"2026-09-12", sede:"Club Hípico La Silla", disciplina:"Salto",
+    categorias:["1.20 m","1.10 m","1.00 m","0.90 m","0.80 m","0.60 m"],
+    horarios:["Sábado 12 — Inicio a las 8:00 a.m.",
+      "1.20 m y 1.10 m — Pista 2 Sierra Madre, césped (ría opcional)",
+      "1.00 m, 0.90 m, 0.80 m y 0.60 m — Pista Techada, arena",
+      "Cada prueba — Al término de la anterior"],
+    cierre:"", nota:"$950 por binomio, en efectivo o transferencia. Trofeo a los primeros tres lugares y moña cada cuatro binomios." },
   { id:"san-pedro",     nombre:"San Pedro",        inicio:"2026-09-17", fin:"2026-09-20",
     sede:"San Pedro", disciplina:"Salto", categorias:[], horarios:[], cierre:"", nota:"" },
   { id:"paloma-blanca", nombre:"Paloma Blanca",    inicio:"2026-10-01", fin:"2026-10-04",
@@ -1070,15 +1084,14 @@ const faltanDocs = p => p.rol === "admin" ? [] : documentos().filter(d => {
 }).filter(d => d.obligatorio && !Datos.todo("aceptaciones")
   .some(a => a.personaId === p.id && a.documentoId === d.id && a.version === d.version));
 
-const VENTANA = { abre:8, cierra:22 };
-function estadoVentana() {
+/* Se puede reservar cualquier día. El lunes no es un candado, es la
+   recomendación: dejar la semana armada desde el principio. */
+function recomendacionSemanal() {
   const p = partesClub(ahora());
-  const abierta = p.diaSemana === 1 && p.hora >= VENTANA.abre && p.hora < VENTANA.cierra;
+  const esLunes = p.diaSemana === 1;
   const lunes = lunesDeLaSemana(ahora());
-  return { abierta, proximoLunes: ymd(p.diaSemana === 1 && p.hora < VENTANA.abre ? lunes : sumarDias(lunes, 7)) };
+  return { esLunes, proximoLunes: ymd(esLunes ? lunes : sumarDias(lunes, 7)) };
 }
-const modoDireccion = () => esAdmin() && localStorage.getItem("cq:direccion") === "1";
-const puedeAgendar = () => estadoVentana().abierta || modoDireccion();
 
 const traslapa = (a1,a2,b1,b2) => a1 < b2 && b1 < a2;
 function intervaloReserva(r) {
@@ -1088,14 +1101,17 @@ function intervaloReserva(r) {
 
 /* Los propietarios montan sus propios caballos; los jinetes de escuela eligen
    entre los que su entrenador les desbloqueó (RN-04). */
-function caballosPara(sesion) {
+const propiosDe = per => (per.propios || []).map(caballo).filter(Boolean);
+const montaLosSuyos = per => (SECCIONES[per.rol] || []).includes("propietario") && propiosDe(per).length > 0;
+
+function caballosParaPersona(per, sesion) {
   const delDia = reservasDe(sesion.fecha);
-  const base = montaPropios()
-    ? misCaballos()
-    : caballos().filter(c => (sujeto.habilitados || []).includes(c.id));
+  const base = montaLosSuyos(per)
+    ? propiosDe(per)
+    : caballos().filter(c => (per.habilitados || []).includes(c.id));
   return base.filter(c => {
     if (c.estatus !== "activo") return false;
-    const n = nivelOrden(sujeto.nivel);
+    const n = nivelOrden(per.nivel);
     if (n < nivelOrden(c.min) || n > nivelOrden(c.max)) return false;           // RN-05
     const suyas = delDia.filter(r => r.caballoId === c.id);
     if (suyas.length >= c.maxDia) return false;                                 // RN-06
@@ -1104,6 +1120,7 @@ function caballosPara(sesion) {
     return true;
   }).map(c => ({ ...c, trabajadas: delDia.filter(r => r.caballoId === c.id).length }));
 }
+const caballosPara = sesion => caballosParaPersona(sujeto, sesion);
 
 function motivoBloqueo(sesion) {
   if (sesion.soloPropietarios && !ve("propietario")) return "oculta";           // domingo
@@ -1120,7 +1137,6 @@ function motivoBloqueo(sesion) {
   if (saldo() < tipo(sesion.tipoId).consume) return "Sin clases disponibles";   // RN-03
   if (pendientesDeFirma().length) return "Falta firmar";                        // RN-15
   if (!caballosPara(sesion).length) return montaPropios() ? "Tu caballo no está libre" : "Sin caballos libres";
-  if (!puedeAgendar()) return "Fuera de la ventana";                            // RN-11
   return null;
 }
 
@@ -1146,9 +1162,9 @@ function recordatoriosAuto() {
     if (cierre > ahora()) lista.push({ id:"auto-comp-" + c.id, vence:cierre,
       texto:`Cierran las inscripciones de ${c.nombre}` });
   }
-  const v = estadoVentana();
-  if (!v.abierta) lista.push({ id:"auto-ventana", vence:deYmd(v.proximoLunes, "08:00"),
-    texto:"Se abre la agenda de la semana: deja reservadas todas tus clases" });
+  const v = recomendacionSemanal();
+  if (!v.esLunes) lista.push({ id:"auto-ventana", vence:deYmd(v.proximoLunes, "08:00"),
+    texto:"Lunes: día recomendado para dejar armada tu semana" });
   return lista.sort((a,b) => a.vence - b.vence);
 }
 const misRecordatorios = () => soloMio("recordatorios");
@@ -1161,7 +1177,6 @@ function verInicio() {
   const proximas = misReservas().filter(r => deYmd(r.fecha, r.hora) > ahora());
   const pasadas  = historialDe();
   const firmas = pendientesDeFirma();
-  const v = estadoVentana();
   const sigComp = competencias().filter(c => deYmd(c.fin || c.inicio, "23:59") > ahora())[0];
 
   return `
@@ -1184,7 +1199,7 @@ function verInicio() {
   <div class="resumen">
     <div class="dato"><div class="n">${saldo()}</div><div class="t">clases disponibles</div></div>
     <div class="dato"><div class="n">${proximas.length}</div><div class="t">clases reservadas</div></div>
-    <div class="dato"><div class="n chico">${v.abierta ? "Abierta" : "Cerrada"}</div><div class="t">agenda de la semana</div></div>
+    <div class="dato"><div class="n chico">${esc(String(saldo() > 0 ? "Abierta" : "Sin saldo"))}</div><div class="t">puedes reservar</div></div>
     <div class="dato"><div class="n chico">${sigComp ? esc(rangoFechas(sigComp.inicio, sigComp.fin)) : "—"}</div>
       <div class="t">próxima competencia</div></div>
   </div>
@@ -1475,8 +1490,6 @@ function tarjetaClase(r, pasada) {
       pasada && r.estado && r.estado !== "asistio"
         ? `<span class="pastilla ${r.cobrada ? "p-alerta" : "p-ok"}" style="margin-left:.3rem">${
             esc(ESTADO_TEXTO[r.estado] || r.estado)}</span>` : ""}</div>
-    ${r.override ? `<div class="nota oro" style="padding:.45rem .6rem; font-size:.75rem">
-      Agendada por dirección fuera de la ventana del lunes.</div>` : ""}
     ${pasada ? "" : `<div class="clase-pie">
       ${aTiempo
         ? `<span class="limite">Cancelación sin costo hasta <b>${esc(momentoTexto(limiteCancelacion(inicio)))}</b></span>
@@ -1489,10 +1502,12 @@ function tarjetaClase(r, pasada) {
 
 /* ---------------------------------------------------------------- RESERVAR */
 function verReservar() {
-  const v = estadoVentana();
-  const lunes = lunesDeLaSemana(ahora());
+  const v = recomendacionSemanal();
+  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaReserva * 7);
   const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
-  if (!dias.includes(diaSel)) diaSel = dias.find(d => deYmd(d, "23:59") > ahora()) || dias[0];
+  /* Al cambiar de semana, abre en el primer día que sí tenga clases. */
+  if (!dias.includes(diaSel)) diaSel = dias.find(d => deYmd(d, "23:59") > ahora() && sesionesDe(d).length)
+    || dias.find(d => deYmd(d, "23:59") > ahora()) || dias[0];
   const visibles = sesionesDe(diaSel).filter(s => motivoBloqueo(s) !== "oculta");
   const firmas = pendientesDeFirma();
   const esLunes = partesClub(deYmd(diaSel, "12:00")).diaSemana === 1;
@@ -1500,17 +1515,21 @@ function verReservar() {
   return `
   <div class="vista-titulo"><h2>Reservar</h2>
     <span class="sub">${miMaestro()
-      ? `<span class="pastilla ${claseMaestro(miMaestro().id)}">${esc(miMaestro().nombre)}</span> · `
-      : ""}semana del ${esc(fechaLarga(dias[0]))}</span></div>
+      ? `<span class="pastilla ${claseMaestro(miMaestro().id)}">${esc(miMaestro().nombre)}</span>` : ""}</span></div>
 
-  <div class="ventana ${v.abierta ? "abierta" : "cerrada"}">
-    <div class="titulo">${v.abierta ? "La agenda está abierta" : "La agenda está cerrada"}</div>
-    <div class="detalle">${v.abierta
-      ? `Hoy es lunes. Deja reservadas todas las clases de la semana antes de las ${VENTANA.cierra}:00.`
-      : `Se abre el ${esc(fechaLarga(v.proximoLunes))} a las ${VENTANA.abre}:00. Fuera de esa ventana solo dirección puede agendar.`}</div>
-    ${!v.abierta && esAdmin() ? `<label style="display:flex; gap:.5rem; align-items:flex-start; font-size:.8rem; margin-top:.2rem">
-      <input type="checkbox" id="chk-direccion" ${modoDireccion() ? "checked" : ""} style="width:auto; margin-top:.2rem">
-      <span>Agendar como dirección (RN-20). Queda marcado en la reserva.</span></label>` : ""}
+  <div class="semana-nav">
+    <button class="btn btn-2 btn-mini" data-semana-res="-1" ${semanaReserva <= 0 ? "disabled" : ""}>‹</button>
+    <span>${semanaReserva === 0 ? "Esta semana" : semanaReserva === 1 ? "La siguiente"
+      : `En ${semanaReserva} semanas`} · ${esc(fechaLarga(dias[0]))}</span>
+    <button class="btn btn-2 btn-mini" data-semana-res="1" ${semanaReserva >= 3 ? "disabled" : ""}>›</button>
+  </div>
+
+  <div class="ventana abierta">
+    <div class="titulo">${v.esLunes ? "Hoy es lunes: arma tu semana" : "Puedes reservar cualquier día"}</div>
+    <div class="detalle">${v.esLunes
+      ? "Es el día recomendado para dejar apartadas todas tus clases de la semana, cuando hay más lugares y más caballos libres."
+      : `Te recomendamos dejar la semana armada los lunes —el próximo es el ${esc(fechaLarga(v.proximoLunes))}—,
+         pero puedes reservar hoy mismo lo que quede libre.`}</div>
   </div>
 
   ${firmas.length ? `<div class="nota alerta"><b>Primero firma los documentos.</b>
@@ -1935,6 +1954,7 @@ function verRecordatorios() {
 let semanaOffset = 0;      /* 0 = esta semana, 1 = la siguiente */
 let diaSemanaSel = "";     /* el día abierto en la agenda */
 let soloMisClases = true;  /* un maestro abre en las suyas */
+let semanaReserva = 0;     /* 0 = esta semana, 1 = la siguiente… */
 
 function verSemana() {
   const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
@@ -1965,6 +1985,10 @@ function verSemana() {
     ${esAdmin() ? `<button class="btn btn-2 btn-mini" data-alternar-mias>
       Ver ${mias ? "todas" : "solo las mías"}</button>` : ""}
   </div>` : ""}
+
+  <div class="acciones-admin" style="justify-content:flex-end">
+    <button class="btn btn-oro btn-mini" data-programa>Programa para la cuadra</button>
+  </div>
 
   <div class="semana-nav">
     <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹</button>
@@ -2004,32 +2028,22 @@ function verSemana() {
             sesiones.reduce((n, x) => n + x.cupo, 0)} lugares`
         : "sin clases"}</span>
     </div>
-    ${sesiones.length ? sesiones.map(x => {
-      const rs = reservasDeSesion(x);
-      return `<div class="ranura ${clasePista(x.esp)} ${rs.length ? "" : "libre"}">
-        <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
-        <div class="ranura-cuerpo">
-          <div class="ranura-meta"><span class="pastilla ${clasePista(x.esp) === "pista2"
-            ? "p-pista2" : "p-pista1"}">${esc(espacio(x.esp))}</span>
-            <span class="pastilla ${claseMaestro(x.ent)}">${esc(entrenador(x.ent))}</span>${
-            x.soloPropietarios ? " · solo propietarios" : ""}</div>
-          ${rs.length ? `<div class="jinetes">${rs.map(r => {
-            const per = persona(r.personaId), cab = caballo(r.caballoId);
-            const texto = `${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
-              <b>${esc(cab ? cab.nombre : "—")}</b>`;
-            /* Dirección y el maestro de esa clase pueden quitar a alguien. */
-            return (esAdmin() || x.ent === cuenta.id)
-              ? `<button class="jinete-chip accionable" data-ajustar="${esc(r.id)}"
-                  title="Ajustar esta reserva">${texto}</button>`
-              : `<span class="jinete-chip">${texto}</span>`;
-          }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
-        </div>
-        <div class="ranura-lado">
-          <span class="ranura-cupo">${rs.length}/${x.cupo}</span>
-          <button class="btn btn-2 btn-mini" data-ranura="${esc(x.plantillaId)}">Ajustar</button>
-        </div>
-      </div>`;
-    }).join("")
+    ${sesiones.length ? (() => {
+      /* Separadas por maestro: las de cada quien juntas, que es como se leen. */
+      const porMaestro = {};
+      for (const x of sesiones) (porMaestro[x.ent || "sin"] ||= []).push(x);
+      const claves = Object.keys(porMaestro).sort((a, b) =>
+        (entrenador(a) || "").localeCompare(entrenador(b) || ""));
+      return claves.map(k => {
+        const grupo = porMaestro[k];
+        const anotados = grupo.reduce((n, x) => n + reservasDeSesion(x).length, 0);
+        const cupo = grupo.reduce((n, x) => n + x.cupo, 0);
+        return `${claves.length > 1 ? `<div class="bloque-maestro">
+          <span class="pastilla ${claseMaestro(k)}">${esc(entrenador(k))}</span>
+          <span>${anotados} de ${cupo} lugares</span></div>` : ""}
+          ${grupo.map(filaAgenda).join("")}`;
+      }).join("");
+    })()
       : `<div class="ranura libre"><div class="ranura-cuerpo" style="grid-column:1/-1">
           <div class="jinetes vacia">${pSel.diaSemana === 1
             ? "El lunes no se monta: es el día en que se abre la agenda."
@@ -2224,6 +2238,183 @@ function panelFaltas() {
     </div>`).join("")}</div>`
       : '<p style="font-size:.82rem; color:var(--oro-tinta)">Nadie tiene faltas ni cancelaciones tardías.</p>'}
   </div>`;
+}
+
+/* Una hora de la agenda: quién está anotado, con qué caballo, y qué puede hacer
+   dirección con ella. */
+function filaAgenda(x) {
+  const rs = reservasDeSesion(x);
+  const libres = Math.min(x.cupo, (ESPACIOS.find(e => e.id === x.esp) || {}).cap || x.cupo) - rs.length;
+  return `<div class="ranura ${clasePista(x.esp)} ${rs.length ? "" : "libre"}">
+    <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
+    <div class="ranura-cuerpo">
+      <div class="ranura-meta"><span class="pastilla ${clasePista(x.esp) === "pista2"
+        ? "p-pista2" : "p-pista1"}">${esc(espacio(x.esp))}</span>${
+        x.soloPropietarios ? " · solo propietarios" : ""}</div>
+      ${rs.length ? `<div class="jinetes">${rs.map(r => {
+        const per = persona(r.personaId), cab = caballo(r.caballoId);
+        const texto = `${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
+          <b>${esc(cab ? cab.nombre : "—")}</b>`;
+        return (esAdmin() || x.ent === cuenta.id)
+          ? `<button class="jinete-chip accionable" data-ajustar="${esc(r.id)}"
+              title="Ajustar esta reserva">${texto}</button>`
+          : `<span class="jinete-chip">${texto}</span>`;
+      }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
+      ${esAdmin() && libres > 0 ? `<button class="jinete-chip agregar"
+        data-agregar="${esc(x.fecha)}|${esc(x.plantillaId)}">+ anotar a alguien</button>` : ""}
+    </div>
+    <div class="ranura-lado">
+      <span class="ranura-cupo">${rs.length}/${x.cupo}</span>
+      <button class="btn btn-2 btn-mini" data-ranura="${esc(x.plantillaId)}">Ajustar</button>
+    </div>
+  </div>`;
+}
+
+/* Dirección anota a alguien en una clase: primero la persona, luego su caballo. */
+function agregarAClase(clave) {
+  const [fecha, plantillaId] = clave.split("|");
+  const s = sesionesDe(fecha).find(x => x.plantillaId === plantillaId);
+  if (!s) return;
+  const otras = Datos.todo("reservas");
+  const candidatos = personas()
+    .filter(per => ["jinete","propietario"].includes(per.rol))
+    .map(per => {
+      const razones = [];
+      if (s.soloPropietarios && !(SECCIONES[per.rol] || []).includes("propietario"))
+        razones.push("el domingo es solo de propietarios");
+      if (saldo(per) <= 0) razones.push("sin clases disponibles");
+      if (otras.some(r => r.personaId === per.id && r.fecha === fecha &&
+        traslapa(s.inicio, s.fin, ...intervaloReserva(r)))) razones.push("ya tiene clase a esa hora");
+      const cab = caballosParaPersona(per, s);
+      if (!cab.length) razones.push("sin caballo libre");
+      return { per, cab, razones };
+    })
+    .sort((a, b) => a.razones.length - b.razones.length || a.per.nombre.localeCompare(b.per.nombre));
+
+  abrirHoja(`Anotar en ${horaTexto(s.inicio)}`, `
+    <div class="ficha-ajuste">
+      <dl class="fa-datos">
+        <div><dt>Clase</dt><dd>${esc(fechaLarga(fecha))}, ${esc(horaTexto(s.inicio))}</dd></div>
+        <div><dt>Dónde</dt><dd>${esc(espacio(s.esp))} · ${esc(entrenador(s.ent))}</dd></div>
+        <div><dt>Lugares</dt><dd>${lugaresLibres(s)} libres de ${s.cupo}</dd></div>
+      </dl>
+    </div>
+    <p class="etiqueta">¿A quién anotas?</p>
+    <div class="vista" id="candidatos">${candidatos.map(c => `
+      <button class="opcion" data-anotar="${esc(c.per.id)}" ${c.razones.length ? "disabled" : ""}
+        style="${c.razones.length ? "opacity:.5" : ""}">
+        <span class="ini" aria-hidden="true">${esc(c.per.nombre[0])}</span>
+        <span><span class="n">${esc(c.per.nombre)}</span>
+          <span class="m">${c.razones.length ? esc(c.razones[0])
+            : `${saldo(c.per)} clases · ${c.cab.length} ${c.cab.length === 1 ? "caballo" : "caballos"}`}</span></span>
+      </button>`).join("")}</div>`,
+    cerrar => {
+      $("#candidatos").addEventListener("click", e => {
+        const b = e.target.closest("[data-anotar]"); if (!b || b.disabled) return;
+        const per = persona(b.dataset.anotar);
+        cerrar();
+        elegirCaballoPara(per, s);
+      });
+    });
+}
+
+function elegirCaballoPara(per, s) {
+  const opciones = caballosParaPersona(per, s);
+  const unico = opciones.length === 1;
+  abrirHoja(`Caballo para ${per.nombre.split(" ")[0]}`, `
+    <p style="font-size:.85rem; color:var(--ink-2)">${esc(fechaLarga(s.fecha))} ·
+      ${esc(horaTexto(s.inicio))} · ${esc(espacio(s.esp))}</p>
+    <div class="vista" id="cab-admin">${opciones.map(c => `
+      <button class="opcion" data-cab="${c.id}" aria-pressed="${unico}">
+        <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
+        <span><span class="n">${esc(c.nombre)}</span>
+          <span class="m">${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}</span></span>
+        <span class="carga">${c.trabajadas}/${c.maxDia}<br>hoy</span></button>`).join("")}</div>
+    <div class="nota">Se le descuenta <b>1</b> clase del saldo. Le quedan ${saldo(per)}.</div>
+    <button class="btn btn-bloque" id="ok-anotar-cab" ${unico ? "" : "disabled"}>Anotar</button>`,
+    cerrar => {
+      let elegido = unico ? opciones[0].id : null;
+      const btn = $("#ok-anotar-cab");
+      $("#cab-admin").addEventListener("click", e => {
+        const b = e.target.closest("[data-cab]"); if (!b) return;
+        elegido = b.dataset.cab;
+        $("#cab-admin").querySelectorAll(".opcion").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+        btn.disabled = false;
+      });
+      btn.onclick = async () => {
+        btn.disabled = true; btn.textContent = "Anotando…";
+        const gano = await Datos.apartar("reservas", `${s.fecha}__${s.plantillaId}__${elegido}`, {
+          personaId:per.id, reservadaPor:cuenta.id, fecha:s.fecha, hora:ranura(s.plantillaId).hora,
+          plantillaId:s.plantillaId, caballoId:elegido, tipoId:s.tipoId, ent:s.ent, esp:s.esp,
+          consume:1, creada:new Date().toISOString(),
+        }, idTab);
+        if (!gano) { btn.disabled = false; btn.textContent = "Anotar"; return avisar("Ese caballo ya lo tomaron."); }
+        avisar(`${per.nombre.split(" ")[0]} queda anotada.`);
+        cerrar(); pintar();
+      };
+    });
+}
+
+/* El programa de la semana en papel, para el equipo de cuadra: por día y por
+   hora, qué caballo sale con quién. Se imprime o se guarda como PDF desde el
+   propio navegador, así que funciona en cualquier teléfono. */
+function programaCuadra() {
+  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
+  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
+
+  const cuerpo = dias.map(f => {
+    const sesiones = sesionesDe(f);
+    const filas = [];
+    for (const x of sesiones) {
+      for (const r of reservasDeSesion(x).sort((a,b) =>
+        (persona(a.personaId)?.nombre || "").localeCompare(persona(b.personaId)?.nombre || ""))) {
+        const per = persona(r.personaId), cab = caballo(r.caballoId);
+        filas.push({ hora:horaTexto(x.inicio), caballo:cab ? cab.nombre : "—",
+          jinete:per ? per.nombre : r.personaId, maestro:entrenador(x.ent), pista:espacio(x.esp) });
+      }
+    }
+    if (!filas.length) return "";
+    const p = partesClub(deYmd(f, "12:00"));
+    return `<section class="pg-dia">
+      <h2>${DIAS[p.diaSemana]} ${p.dia} de ${MESES[p.mes - 1]} · ${filas.length} ${
+        filas.length === 1 ? "monta" : "montas"}</h2>
+      <table><thead><tr>
+        <th>Hora</th><th>Caballo</th><th>Jinete</th><th>Maestro</th><th>Pista</th><th class="pg-notas">Notas</th>
+      </tr></thead><tbody>${filas.map(x => `<tr>
+        <td class="pg-hora">${esc(x.hora)}</td><td><b>${esc(x.caballo)}</b></td>
+        <td>${esc(x.jinete)}</td><td>${esc(x.maestro)}</td><td>${esc(x.pista)}</td><td></td>
+      </tr>`).join("")}</tbody></table>
+    </section>`;
+  }).join("");
+
+  const total = dias.reduce((n, f) => n + sesionesDe(f)
+    .reduce((m, x) => m + reservasDeSesion(x).length, 0), 0);
+
+  document.getElementById("programa").innerHTML = `
+    <header class="pg-cab">
+      <div><h1>Equus · Programa de la cuadra</h1>
+        <p>${esc(rangoFechas(dias[0], dias[6]))} · ${total} ${total === 1 ? "monta" : "montas"}</p></div>
+      <p class="pg-sello">Impreso el ${esc(fechaLarga(ymd(ahora())))}, ${esc(horaTexto(ahora()))}</p>
+    </header>
+    ${cuerpo || '<p class="pg-vacio">No hay reservas en esta semana.</p>'}`;
+
+  abrirHoja("Programa para la cuadra", `
+    <p style="font-size:.85rem; color:var(--ink-2)">
+      ${total} ${total === 1 ? "monta" : "montas"} en la semana del ${esc(rangoFechas(dias[0], dias[6]))},
+      por día y por hora, con una columna en blanco para que anoten.</p>
+    <div class="nota">Al imprimir, elige <b>«Guardar como PDF»</b> como destino.
+      Así lo puedes mandar por WhatsApp.</div>
+    <button class="btn btn-bloque" id="ok-imprimir">Imprimir o guardar como PDF</button>`,
+    cerrar => {
+      $("#ok-imprimir").onclick = () => {
+        cerrar();
+        document.body.classList.add("imprimiendo");
+        const limpiar = () => { document.body.classList.remove("imprimiendo");
+          window.removeEventListener("afterprint", limpiar); };
+        window.addEventListener("afterprint", limpiar);
+        setTimeout(() => { window.print(); setTimeout(limpiar, 1000); }, 60);
+      };
+    });
 }
 
 /* Dirección ajusta una hora del horario semanal. */
@@ -2523,6 +2714,8 @@ document.addEventListener("click", async e => {
   const nuevaC = e.target.closest("[data-nueva-comp]");  if (nuevaC) return editarCompetencia(null);
   const ediC = e.target.closest("[data-editar-comp]");   if (ediC) return editarCompetencia(ediC.dataset.editarComp);
   const nuevaP = e.target.closest("[data-nueva-persona]"); if (nuevaP) return editarPersona(null);
+  if (e.target.closest("[data-programa]")) return programaCuadra();
+  const ag = e.target.closest("[data-agregar]");         if (ag) return agregarAClase(ag.dataset.agregar);
   const aj = e.target.closest("[data-ajustar]");          if (aj) return ajustarReserva(aj.dataset.ajustar);
   const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
   const nuevoQ = e.target.closest("[data-nuevo-paquete]"); if (nuevoQ) return editarPaquete(null);
@@ -2544,6 +2737,8 @@ document.addEventListener("click", async e => {
         catch (err) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
         cerrar(); pintar(); }; });
   }
+  const sres = e.target.closest("[data-semana-res]");
+  if (sres) { semanaReserva = Math.max(0, Math.min(3, semanaReserva + Number(sres.dataset.semanaRes))); return pintar(); }
   const alt = e.target.closest("[data-alternar-mias]");
   if (alt) { soloMisClases = !soloMisClases; return pintar(); }
   const sem = e.target.closest("[data-semana]");
@@ -2584,11 +2779,6 @@ document.addEventListener("click", async e => {
 });
 
 document.addEventListener("change", e => {
-  if (e.target.id === "chk-direccion") {
-    localStorage.setItem("cq:direccion", e.target.checked ? "1" : "0");
-    avisar(e.target.checked ? "Modo dirección activo." : "Modo dirección apagado.");
-    return pintar();
-  }
   const pool = e.target.closest("[data-escuela]");
   if (pool) {
     localStorage.setItem("cq:escuela:" + pool.dataset.escuela, pool.checked ? "1" : "0");
@@ -2667,7 +2857,7 @@ async function confirmarReserva(s, caballoId) {
     personaId:sujeto.id, reservadaPor:cuenta.id, fecha:s.fecha,
     hora:ranura(s.plantillaId).hora, plantillaId:s.plantillaId,
     caballoId, tipoId:s.tipoId, ent:s.ent, esp:s.esp, consume:tipo(s.tipoId).consume,
-    creada:new Date().toISOString(), override:!estadoVentana().abierta,
+    creada:new Date().toISOString(),
   }, idTab);
   if (!gano) { avisar(`${caballo(caballoId).nombre} lo acaba de apartar alguien más.`); pintar(); return false; }
   avisar(`Listo. Cancelación sin costo hasta ${momentoTexto(limiteCancelacion(s.inicio))}`);

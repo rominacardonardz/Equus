@@ -1,4 +1,4 @@
-/* Casa Quirón — comportamiento del sitio de especificación.
+/* Equus — comportamiento del sitio de especificación.
    Sin dependencias externas. */
 (function () {
   'use strict';

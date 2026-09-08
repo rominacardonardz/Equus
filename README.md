@@ -1,4 +1,4 @@
-# Casa Quirón — Sistema de Reservas
+# Equus — Sistema de Reservas
 
 App web del club: reserva de clases, reglamento y contratos, calendario de
 competencias y recordatorios. Mobile-first, en español de México, sin

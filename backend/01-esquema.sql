@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Casa Quirón · esquema de la base de datos
+-- Equus · esquema de la base de datos
 -- PostgreSQL / Supabase. Ejecutar primero este archivo, luego 02-seguridad.sql.
 --
 -- En Supabase, el esquema `auth` y la tabla `auth.users` ya existen: los crea
