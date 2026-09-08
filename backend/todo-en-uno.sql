@@ -1,18 +1,47 @@
 -- ===========================================================================
 -- Casa Quirón · todo en uno
 --
--- Pega este archivo completo en el SQL Editor de Supabase y ejecútalo UNA vez.
+-- Pega este archivo completo en el SQL Editor de Supabase y ejecútalo.
 -- Crea las tablas, las reglas de acceso y los datos de arranque.
--- Es seguro: no borra nada, y si algo ya existe se detiene con un error claro.
+--
+-- SE PUEDE VOLVER A CORRER: empieza borrando lo suyo y lo vuelve a crear, así
+-- que si algo falló a la mitad, basta con correrlo otra vez.
+--
+-- OJO: al volver a correrlo se borran las reservas, firmas y demás datos que ya
+-- hubiera. Mientras el club no lo esté usando de verdad, eso no importa.
 -- ===========================================================================
 
--- ===========================================================================
--- Casa Quirón · esquema de la base de datos
--- PostgreSQL / Supabase. Ejecutar primero este archivo, luego 02-seguridad.sql.
---
--- En Supabase, el esquema `auth` y la tabla `auth.users` ya existen: los crea
--- Supabase al dar de alta el proyecto. Aquí no se tocan.
--- ===========================================================================
+-- ------------------------------------------------------------- borrón y cuenta nueva
+drop view if exists saldos cascade;
+drop view if exists ocupacion cascade;
+
+drop table if exists auditoria cascade;
+drop table if exists recordatorios cascade;
+drop table if exists inscripciones cascade;
+drop table if exists competencias cascade;
+drop table if exists anuncios cascade;
+drop table if exists aceptaciones cascade;
+drop table if exists documentos cascade;
+drop table if exists reservas cascade;
+drop table if exists horarios cascade;
+drop table if exists caballos_habilitados cascade;
+drop table if exists caballos cascade;
+drop table if exists personas cascade;
+drop table if exists espacios cascade;
+drop table if exists paquetes cascade;
+
+drop function if exists cq_persona_actual() cascade;
+drop function if exists cq_es_admin() cascade;
+drop function if exists cq_imparte() cascade;
+drop function if exists cq_mis_personas() cascade;
+drop function if exists cq_doy_esa_clase(uuid) cascade;
+
+drop type if exists cq_rol cascade;
+drop type if exists cq_nivel cascade;
+drop type if exists cq_uso cascade;
+drop type if exists cq_estado_caballo cascade;
+drop type if exists cq_estado_reserva cascade;
+drop type if exists cq_audiencia cascade;
 
 create extension if not exists "pgcrypto";
 
