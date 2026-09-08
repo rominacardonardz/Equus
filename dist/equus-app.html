@@ -729,9 +729,13 @@ const PLANTILLA = (() => {
 })();
 
 /* Contraseñas guardadas como huella SHA-256, no en claro. Aun así el cotejo
-   ocurre en el navegador: es una puerta con llave, no una caja fuerte. */
-const CLAVE_ADMIN = "689e1ac37810ee4364a057ba0c3fe168a8e48c460ccd82c549267b7a03257e21";   /* casaquiron */
-const CLAVE_DEMO  = "65e53453d1269bf6aa97df098a80bad73f529c57bc5d572253336ed24d766c6b";   /* quiron */
+   ocurre en el navegador: es una puerta con llave, no una caja fuerte.
+   Una sola clave para todo el club: cómoda de repartir, pero cualquiera que la
+   tenga puede entrar como dirección si adivina el usuario. Dirección lo sabe y
+   puede cambiarle la contraseña a cada quien desde su ficha. */
+const CLAVE_CLUB  = "04ff2c93496abb8ca0978928a00bd08d4e062e92f499791edf61df9d2e7ad619";   /* equus */
+const CLAVE_ADMIN = CLAVE_CLUB;
+const CLAVE_DEMO  = CLAVE_CLUB;
 
 /* --------------------------------------------------------------- personas
    Una persona es un registro que crea dirección: nombre, perfil, nivel,
