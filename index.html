@@ -391,8 +391,11 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .marcar svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
 
 /* ---------- avisos ---------- */
-.nota{display:grid; gap:.3rem; padding:.75rem .9rem; border-radius:var(--r-sm);
+/* El texto corre normal. Con display:grid cada <b> se volvia un renglon aparte
+   y el aviso se leia "Se le descuenta / 1 / clase del saldo". */
+.nota{display:block; padding:.75rem .9rem; border-radius:var(--r-sm);
   font-size:.82rem; background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2)}
+.nota > span{display:block}          /* el boton de un aviso sí va en su renglon */
 .nota b{color:var(--ink)}
 .nota.alerta{background:var(--alerta-bg); border-color:color-mix(in srgb,var(--alerta) 30%,transparent); color:var(--alerta)}
 .nota.alerta b{color:var(--alerta)}
@@ -2394,7 +2397,10 @@ function agregarAClase(clave) {
         traslapa(s.inicio, s.fin, ...intervaloReserva(r)))) razones.push("ya tiene clase a esa hora");
       const cab = caballosParaPersona(per, s);
       if (!cab.length) razones.push(porQueSinCaballo(per, s));
-      return { per, cab, razones };
+      /* Firmar no es un candado para dirección —la firma puede estar en papel—
+         pero sí tiene que verse: es el deslinde de responsabilidad (RN-15). */
+      const sinFirmar = faltanDocs(per);
+      return { per, cab, razones, sinFirmar };
     })
     .sort((a, b) => a.razones.length - b.razones.length || a.per.nombre.localeCompare(b.per.nombre));
 
@@ -2411,10 +2417,14 @@ function agregarAClase(clave) {
       <button class="opcion" data-anotar="${esc(c.per.id)}" ${c.razones.length ? "disabled" : ""}
         style="${c.razones.length ? "opacity:.5" : ""}">
         <span class="ini" aria-hidden="true">${esc(c.per.nombre[0])}</span>
-        <span><span class="n">${esc(c.per.nombre)}</span>
+        <span><span class="n">${esc(c.per.nombre)}${c.sinFirmar.length && !c.razones.length
+            ? ` <span class="pastilla p-alerta">${c.sinFirmar.length} sin firmar</span>` : ""}</span>
           <span class="m">${c.razones.length ? esc(c.razones[0])
             : `${saldo(c.per)} clases · ${c.cab.length} ${c.cab.length === 1 ? "caballo" : "caballos"}`}</span></span>
-      </button>`).join("")}</div>`,
+      </button>`).join("")}</div>
+    ${candidatos.some(c => c.sinFirmar.length && !c.razones.length) ? `<div class="nota alerta">
+      A quien sale marcado le faltan documentos por firmar. Ellos no pueden reservarse
+      solos hasta firmarlos; tú sí los puedes anotar, por si la firma la tienes en papel.</div>` : ""}`,
     cerrar => {
       $("#candidatos").addEventListener("click", e => {
         const b = e.target.closest("[data-anotar]"); if (!b || b.disabled) return;
@@ -2437,6 +2447,9 @@ function elegirCaballoPara(per, s) {
         <span><span class="n">${esc(c.nombre)}</span>
           <span class="m">${c.propio ? "su caballo" : `${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}`}</span></span>
         <span class="carga">${c.trabajadas}/${c.maxDia}<br>hoy</span></button>`).join("")}</div>
+    ${faltanDocs(per).length ? `<div class="nota alerta">
+      A ${esc(per.nombre.split(" ")[0])} le faltan por firmar:
+      <b>${esc(listar(faltanDocs(per).map(d => d.titulo)))}</b>.</div>` : ""}
     <div class="nota">Se le descuenta <b>1</b> clase del saldo. Le quedan ${saldo(per)}.</div>
     <button class="btn btn-bloque" id="ok-anotar-cab" ${unico ? "" : "disabled"}>Anotar</button>`,
     cerrar => {
