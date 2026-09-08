@@ -12,6 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Equus">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="assets/js/supabase-config.js"></script>
+<script src="assets/js/nube.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
@@ -973,11 +976,24 @@ const Datos = {
   cache: Object.fromEntries(COLECCIONES.map(c => [c, {}])),
   alCambiar: () => {},
 
-  get compartido() { return this.db !== null; },
+  get compartido() { return this.enNube || this.db !== null; },
+
+  get enNube() { return !!(window.Nube && Nube.listo); },
 
   async iniciar() {
     for (const c of COLECCIONES) this.cache[c] = this.leerLocal(c);
     this.sembrarLocal();
+    /* Primero la base del club: si hay sesión abierta en este aparato, manda
+       ella y lo local no se toca. */
+    try {
+      if (window.Nube && Nube.configurado) {
+        this.nubeLista = true;
+        if (await Nube.iniciar(() => this.alCambiar())) {
+          this.listo = true; this.alCambiar(); return;
+        }
+        this.listo = true; this.alCambiar(); return;   /* falta entrar */
+      }
+    } catch (e) { console.warn("base del club:", e.message); }
     try {
       const db = window.claude && (await window.claude.use("db"));
       if (db) {
@@ -1035,9 +1051,13 @@ const Datos = {
   leerLocal(c) { try { return JSON.parse(localStorage.getItem("cq:" + c) || "{}"); } catch (e) { return {}; } },
   guardarLocal(c) { try { localStorage.setItem("cq:" + c, JSON.stringify(this.cache[c])); } catch (e) {} },
 
-  todo(c) { return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ id, ...d })); },
+  todo(c) {
+    if (this.enNube) return Nube.todo(c);
+    return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ id, ...d }));
+  },
 
   async poner(c, id, datos) {
+    if (this.enNube) { await Nube.poner(c, id, datos); this.alCambiar(); return; }
     const previo = this.cache[c][id];
     this.cache[c][id] = datos;
     if (this.db) { try { await this.db.collection(c).doc(id).set(datos); }
@@ -1046,6 +1066,7 @@ const Datos = {
   },
 
   async quitar(c, id) {
+    if (this.enNube) { await Nube.quitar(c, id); this.alCambiar(); return; }
     const previo = this.cache[c][id];
     delete this.cache[c][id];
     if (this.db) { try { await this.db.collection(c).doc(id).delete(); }
@@ -1056,6 +1077,7 @@ const Datos = {
   /* Aparta el lugar antes de escribir: sin esto dos jinetes pueden creer que
      ganaron el mismo caballo (RN-08). */
   async apartar(c, id, datos, quien) {
+    if (this.enNube) { const gano = await Nube.apartar(c, id, datos); this.alCambiar(); return gano; }
     if (!this.db) {
       if (this.cache[c][id]) return false;
       await this.poner(c, id, datos); return true;
@@ -1107,7 +1129,11 @@ const recuerdo = {
 };
 
 function refrescarSesion() {
-  cuenta = persona(recuerdo.leer("cq:sesion")) || null;
+  /* Conectados al club, quién entró lo dice la base, no este aparato: la
+     sesión es la de la cuenta, no una nota guardada en el teléfono. */
+  cuenta = Datos.enNube
+    ? (personas().find(p => p.authId === Nube.authId) || null)
+    : (persona(recuerdo.leer("cq:sesion")) || null);
   sujeto = cuenta ? (cuenta.tutorDe ? (persona(cuenta.tutorDe) || cuenta) : cuenta) : null;
 }
 const haySesion = () => cuenta !== null;
@@ -1119,6 +1145,10 @@ async function huella(texto) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 async function entrar(usuario, clave) {
+  /* Contra la base del club la contraseña la revisa el servidor: esta página
+     nunca ve la huella de nadie. Sin base, se coteja aquí, que es una puerta
+     con llave y no una caja fuerte. */
+  if (window.Nube && Nube.configurado && Nube.cliente) return Nube.entrar(usuario, clave);
   const u = String(usuario).trim().toLowerCase();
   const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !x.sinCuenta);
   if (!p || !p.clave) return false;
@@ -1127,7 +1157,8 @@ async function entrar(usuario, clave) {
   recuerdo.borrar("cq:direccion");
   return true;
 }
-function salir() {
+async function salir() {
+  if (Datos.enNube) await Nube.salir();
   recuerdo.borrar("cq:sesion");
   recuerdo.borrar("cq:direccion");
   vista = "inicio";
@@ -1154,7 +1185,9 @@ const soloMio = (col, campo = "personaId") => Datos.todo(col).filter(d => d[camp
 /* La plantilla que trae la página, con los cambios que hizo dirección encima:
    pista, entrenador y si esa hora se da o no. */
 function plantillaEfectiva() {
-  const ajustes = Datos.cache.horarios || {};
+  const ajustes = Datos.enNube
+    ? Object.fromEntries(Datos.todo("horarios").map(h => [h.id, h]))
+    : (Datos.cache.horarios || {});
   return PLANTILLA.map(p => ({ ...p, ...(ajustes[p.id] || {}) })).filter(p => p.activo !== false);
 }
 const ranura = id => plantillaEfectiva().find(p => p.id === id) || PLANTILLA.find(p => p.id === id);
@@ -1460,6 +1493,20 @@ function inicioDireccion() {
   </div>
 
   <button class="btn btn-bloque btn-grande" data-ir="semana">Ver la semana del club</button>
+  ${(() => {
+    /* Al pasar los datos del club a la base, las fichas llegan sin cuenta:
+       existen, pero nadie puede entrar con ellas hasta crearlas. */
+    if (!Datos.enNube) return "";
+    const faltan = personas().filter(x => x.usuario && !x.authId && !x.sinCuenta);
+    if (!faltan.length) return "";
+    return `<div class="nota alerta">
+      <b>${faltan.length} ${faltan.length === 1 ? "persona no puede entrar todavía"
+        : "personas no pueden entrar todavía"}.</b>
+      Tienen ficha pero les falta su cuenta: ${esc(listar(faltan.map(x => x.nombre.split(" ")[0])))}.
+      <span><button class="btn btn-mini" data-crear-cuentas style="margin-top:.35rem">
+        Crear las cuentas que faltan</button></span></div>`;
+  })()}
+
   <div class="acciones-rapidas">
     <button class="btn btn-2 btn-mini" data-programa>Hoja para la cuadra</button>
     <button class="btn btn-2 btn-mini" data-ir="registro">Registro de faltas</button>
@@ -2622,6 +2669,51 @@ function elegirCaballoPara(per, s) {
     });
 }
 
+/* Le crea la cuenta a quien ya tiene ficha pero todavía no puede entrar. Pasa
+   una sola vez, al mudar los datos del club a la base. */
+function crearCuentasQueFaltan() {
+  const faltan = personas().filter(x => x.usuario && !x.authId && !x.sinCuenta);
+  abrirHoja("Crear las cuentas que faltan", `
+    <p style="font-size:.88rem">Se les va a crear su cuenta a
+      <b>${faltan.length}</b> ${faltan.length === 1 ? "persona" : "personas"}:
+      ${esc(listar(faltan.map(x => x.nombre)))}.</p>
+    <label class="campo">Contraseña con la que van a entrar
+      <input type="text" id="clave-masiva" value="equus" autocomplete="off"></label>
+    <div class="nota">La misma para todas. Cada quien la puede cambiar después desde su
+      ficha, y conviene: con una sola contraseña, quien la sepa puede entrar como
+      cualquiera si adivina el usuario.</div>
+    <button class="btn btn-oro btn-bloque" id="ok-cuentas">Crear las cuentas</button>
+    <p id="avance-cuentas" style="font-size:.8rem; color:var(--ink-2)"></p>`,
+    cerrar => {
+      $("#ok-cuentas").onclick = async () => {
+        const clave = String($("#clave-masiva").value || "").trim();
+        if (clave.length < 6) return avisar("La contraseña necesita al menos 6 caracteres.");
+        const btn = $("#ok-cuentas"), avance = $("#avance-cuentas");
+        btn.disabled = true;
+        let hechas = 0; const fallidas = [];
+        for (const per of faltan) {
+          avance.textContent = `Creando ${per.nombre}… (${hechas} de ${faltan.length})`;
+          try {
+            const authId = await Nube.crearCuenta(per.usuario, clave);
+            const { id, ...resto } = per;
+            await Datos.poner("personas", id, { ...resto, authId });
+            hechas++;
+          } catch (err) { fallidas.push(`${per.nombre}: ${err.message}`); }
+        }
+        cerrar();
+        avisar(fallidas.length
+          ? `${hechas} listas, ${fallidas.length} con problema.`
+          : `Listo: ${hechas} ${hechas === 1 ? "cuenta creada" : "cuentas creadas"}.`);
+        if (fallidas.length) abrirHoja("No se pudieron crear", `
+          <div class="nota alerta">${fallidas.map(esc).join("<br>")}</div>
+          <p style="font-size:.82rem; color:var(--ink-2)">Lo más común es que en Supabase
+            siga encendida la confirmación por correo. Apágala en Authentication →
+            Sign In / Providers y vuelve a intentar.</p>`);
+        pintar();
+      };
+    });
+}
+
 /* El programa de la semana en papel, para el equipo de cuadra: por día y por
    hora, qué caballo sale con quién. Se imprime o se guarda como PDF desde el
    propio navegador, así que funciona en cualquier teléfono. */
@@ -3081,9 +3173,10 @@ function pintar() {
   }
 
   $("#pie-datos").textContent = !Datos.listo ? "Conectando…"
+    : Datos.enNube ? (esAdmin() ? "Conectado al club · dirección" : "Conectado al club · solo ves lo tuyo")
     : Datos.compartido
-      ? (esAdmin() ? "Conectado al club · tienes permiso de edición"
-                   : "Conectado al club · solo ves lo tuyo")
+      ? (esAdmin() ? "Almacén compartido · tienes permiso de edición"
+                   : "Almacén compartido · solo ves lo tuyo")
       : "Sin conexión al club · guardado solo en este dispositivo";
 }
 function irA(n) { vista = n; pintar(); window.scrollTo({ top:0, behavior:"instant" }); }
@@ -3141,8 +3234,9 @@ function editarPersona(id) {
           <input type="text" name="clave" autocomplete="off" placeholder="${id && p.clave ? "sin cambios" : ""}"></label>
       </div>
       <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
-        Un menor no lleva usuario: entra su tutor. La contraseña se guarda como huella,
-        no en claro, pero se comprueba en el navegador: no la uses para nada delicado.</p>
+        Un menor no lleva usuario: entra su tutor. ${Datos.enNube
+          ? "Al poner usuario y contraseña se le crea su cuenta en la base del club."
+          : "Sin conexión al club la contraseña se comprueba en el navegador: es una puerta con llave, no una caja fuerte."}</p>
       <div class="campo">Caballos propios (a su nombre; monta el suyo sin importar nivel)
         <div class="casillas">${casillas("propios", caballos())}</div></div>
       <div class="campo">Caballos del club desbloqueados (se respeta el nivel)
@@ -3183,6 +3277,12 @@ function editarPersona(id) {
           propios:f.getAll("propios"), habilitados:f.getAll("habilitados"),
         };
         try {
+          /* Conectados al club, una persona con usuario necesita además su
+             cuenta en la base: sin eso tiene ficha pero no puede entrar. */
+          if (Datos.enNube && datos.usuario && !p.authId && claveNueva) {
+            try { datos.authId = await Nube.crearCuenta(datos.usuario, claveNueva); }
+            catch (err) { return avisar("No se pudo crear la cuenta: " + err.message); }
+          } else if (p.authId) datos.authId = p.authId;
           await Datos.poner("personas", nuevoId, datos);
           avisar(id ? "Persona actualizada." : "Persona creada.");
           cerrar(); pintar();
@@ -3282,6 +3382,7 @@ document.addEventListener("click", async e => {
   const aj = e.target.closest("[data-ajustar]");          if (aj) return ajustarReserva(aj.dataset.ajustar);
   const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
   const edReg = e.target.closest("[data-editar-registro]"); if (edReg) return editarRegistro(edReg.dataset.editarRegistro);
+  if (e.target.closest("[data-crear-cuentas]")) return crearCuentasQueFaltan();
   if (e.target.closest("[data-nuevo-registro]")) return nuevoRegistro();
   if (e.target.closest("[data-registro-pdf]")) return registroEnPapel();
   const sreg = e.target.closest("[data-semana-reg]");
