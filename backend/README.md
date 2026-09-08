@@ -32,11 +32,32 @@ En Supabase, en **SQL Editor**, correr en este orden:
 1. `almacen.sql` — la tabla y las reglas. Se puede repetir cuantas veces haga falta.
 2. `datos-del-club.sql` — los datos que ya había en la app, para no empezar de cero.
 
-Luego, en **Authentication → Sign In / Providers**, hay que **apagar la
-confirmación por correo** (*Confirm email*). Las cuentas del club no llevan
-correo de verdad: se entra con usuario, y la base necesita algo con forma de
-correo, así que la app le pega `@cuentas.equus.mx` por detrás. Nadie lo ve ni
-recibe nada ahí.
+### Antes hace falta un dominio del club
+
+Se entra con usuario, no con correo. Pero la base necesita algo con forma de
+correo, así que la app le pega un dominio por detrás. **Ese dominio tiene que
+existir y ser del club.**
+
+Está comprobado contra el proyecto: Supabase **rechaza** un dominio inventado
+(`cuentas.equus.mx` → *"Email address is invalid"*). Y poner uno ajeno es peor:
+le manda correos de confirmación a un desconocido. `equus.mx`, por ejemplo, ya
+es de alguien más.
+
+Cuando esté comprado, se pone en `assets/js/supabase-config.js`:
+
+```js
+dominioCuentas: "equusmty.com",
+```
+
+Mientras esté vacío, la app funciona guardando en cada aparato y lo avisa en
+pantalla. No falla en silencio.
+
+### Y apagar la confirmación por correo
+
+En **Authentication → Sign In / Providers**, apagar *Confirm email*. Si queda
+encendida, Supabase intenta mandarle un correo a cada cuenta nueva, choca con
+su propio límite de envíos, y nadie puede entrar hasta confirmar un correo que
+no existe.
 
 Por último, entrar a la app como dirección: sale un aviso con el botón
 **«Crear las cuentas que faltan»**. Ese botón le crea la cuenta a cada persona

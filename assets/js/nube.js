@@ -23,13 +23,17 @@ window.Nube = {
 
   get configurado() {
     const c = window.EQUUS_NUBE;
-    return !!(c && c.url && c.llave && window.supabase);
+    /* Sin dominio propio no se pueden crear cuentas —Supabase rechaza los
+       inventados—, así que la app se queda en modo local y lo dice, en vez de
+       fallar al entrar sin explicar por qué. */
+    return !!(c && c.url && c.llave && c.dominioCuentas && window.supabase);
   },
 
   /* Las cuentas de la base necesitan forma de correo, pero en el club nadie
      usa uno para entrar: se escribe el usuario y aquí se le pone el resto. */
   correoDe(usuario) {
-    const dominio = (window.EQUUS_NUBE || {}).dominioCuentas || "cuentas.equus.mx";
+    const dominio = (window.EQUUS_NUBE || {}).dominioCuentas;
+    if (!dominio) throw new Error("Falta el dominio del club en supabase-config.js");
     return String(usuario).trim().toLowerCase() + "@" + dominio;
   },
 
