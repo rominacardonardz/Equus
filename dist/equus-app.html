@@ -515,6 +515,10 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip.accionable:hover{background:var(--oro-fondo); border-color:var(--oro-borde)}
 .jinete-chip.agregar{margin-top:.3rem; cursor:pointer; color:var(--oro-tinta);
   background:var(--oro-fondo); border:1px dashed var(--oro-borde); font-weight:600}
+.reg-en-agenda{display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.35rem}
+.jinete-chip.cerrada{cursor:pointer; background:var(--alerta-bg); border-color:transparent;
+  color:var(--alerta); text-decoration:line-through; text-decoration-thickness:1px}
+.jinete-chip.cerrada:hover{text-decoration:none}
 .bloque-maestro{display:flex; align-items:center; justify-content:space-between; gap:.5rem;
   padding:.5rem .9rem; background:var(--surface-2); border-top:1px solid var(--line);
   font-size:.74rem; color:var(--ink-3)}
@@ -1061,7 +1065,6 @@ const Datos = {
 
 const personas = () => Datos.todo("personas");
 const persona = id => personas().find(p => p.id === id);
-const conCuenta = () => personas().filter(p => !p.sinCuenta);
 const competencias = () => Datos.todo("competencias").slice()
   .sort((a,b) => (a.inicio || "").localeCompare(b.inicio || ""));
 const competencia = id => competencias().find(c => c.id === id);
@@ -1121,17 +1124,15 @@ function salir() {
 const rolEfectivo = () => cuenta ? cuenta.rol : "jinete";
 const ve = seccion => SECCIONES[rolEfectivo()].includes(seccion);
 const esAdmin = () => rolEfectivo() === "admin";
-/* Ser dirección en la app y poder escribir el catálogo son cosas distintas: lo
-   segundo lo concede el almacén, y sin eso los cambios se rechazan. */
-const puedeEditarCatalogo = () => esAdmin() && Datos.esEditor;
 /* Quien da clases entra a La semana, aunque no sea dirección: ve las suyas. */
 const daClases = () => !!(cuenta && cuenta.imparte);
 /* A cada jinete se le asigna un maestro: en la semana solo ve las clases de ese
    maestro, para que el calendario no salga duplicado. */
 const miMaestro = () => (sujeto && sujeto.maestroId) ? persona(sujeto.maestroId) : null;
-const misCaballos = () => (cuenta.propios || []).map(caballo).filter(Boolean);
-/* Un propietario monta lo suyo; un jinete de escuela, lo que le desbloquearon. */
-const montaPropios = () => ve("propietario") && misCaballos().length > 0;
+/* Los caballos de quien monta —para una tutora, los del menor a su cargo—.
+   Tener uno a tu nombre basta: el perfil no decide de quién es un caballo. */
+const misCaballos = () => (sujeto.propios || []).map(caballo).filter(Boolean);
+const montaPropios = () => misCaballos().length > 0;
 
 const soloMio = (col, campo = "personaId") => Datos.todo(col).filter(d => d[campo] === sujeto.id);
 
@@ -1212,12 +1213,10 @@ function intervaloReserva(r) {
   return [i, new Date(i.getTime() + tipo(r.tipoId).min * 60000)];
 }
 
-/* Los propietarios montan sus propios caballos; los jinetes de escuela eligen
-   entre los que su entrenador les desbloqueó (RN-04). */
+/* Los caballos que están a nombre de alguien, y los que le desbloquearon (RN-04). */
 const propiosDe = per => (per.propios || []).map(caballo).filter(Boolean);
 const desbloqueadosDe = per => caballos().filter(c => (per.habilitados || []).includes(c.id));
 const esSuyo = (per, id) => (per.propios || []).includes(id);
-const montaLosSuyos = per => propiosDe(per).length > 0;
 
 /* Los caballos de una persona: los suyos y los que le desbloquearon, juntos. Ser
    dueño de un caballo no depende del perfil: si está a tu nombre, es tuyo.
@@ -1279,7 +1278,7 @@ function motivoBloqueo(sesion) {
   })) return "Otra clase a esa hora";                                          // RN-10
   if (saldo() < tipo(sesion.tipoId).consume) return "Sin clases disponibles";   // RN-03
   if (pendientesDeFirma().length) return "Falta firmar";                        // RN-15
-  if (!caballosPara(sesion).length) return montaPropios() ? "Tu caballo no está libre" : "Sin caballos libres";
+  if (!caballosPara(sesion).length) return porQueSinCaballo(sujeto, sesion);
   return null;
 }
 
@@ -1384,7 +1383,7 @@ function inicioJinete() {
     <div class="vista">${proximas.slice(1).map(r => tarjetaClase(r, false)).join("")}</div>
   </div>` : ""}
 
-  ${ve("propietario") ? bloquesCaballos() : ""}
+  ${misCaballos().length ? bloquesCaballos() : ""}
   ${(sujeto.clasesCargadas || sujeto.paquete) ? bloquePaquete(sujeto) : ""}
 
   ${pasadas.length ? `<details class="tarjeta plana">
@@ -2203,7 +2202,9 @@ function verRecordatorios() {
 /* --------------------------------------------------------- SEMANA (dirección)
    El calendario maestro del club (M11): todas las reservas de la semana, hora
    por hora, con quién monta y en qué caballo. */
-let semanaOffset = 0;      /* 0 = esta semana, 1 = la siguiente */
+let semanaOffset = 0;      /* 0 = esta semana. La comparten La semana y el Registro:
+                              si dirección cierra una clase mirando la semana pasada,
+                              al abrir el Registro cae en esa misma semana. */
 let diaSemanaSel = "";     /* el día abierto en la agenda */
 let soloMisClases = true;  /* un maestro abre en las suyas */
 let semanaReserva = 0;     /* 0 = esta semana, 1 = la siguiente… */
@@ -2243,9 +2244,8 @@ function verSemana() {
   </div>
 
   <div class="semana-nav">
-    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -4 ? "disabled" : ""}>‹</button>
-    <span>${semanaOffset === 0 ? "Esta semana" : semanaOffset === 1 ? "La siguiente"
-      : semanaOffset === -1 ? "La pasada" : `${semanaOffset > 0 ? "+" : ""}${semanaOffset} semanas`}</span>
+    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -12 ? "disabled" : ""}>‹</button>
+    <span>${textoSemana()}</span>
     <button class="btn btn-2 btn-mini" data-semana="1" ${semanaOffset >= 8 ? "disabled" : ""}>›</button>
   </div>
 
@@ -2320,6 +2320,7 @@ function ajustarReserva(reservaId) {
   const cerrarCon = async (estado, cobrada, mensaje) => {
     await Datos.poner("historial", "h-" + r.id + "-" + Date.now(), {
       personaId:r.personaId, fecha:r.fecha, hora:r.hora, caballoId:r.caballoId,
+      plantillaId:r.plantillaId, ent:r.ent, esp:r.esp,
       tipoId:r.tipoId, consume:r.consume || 1, estado, cobrada,
       ajustadaPor:cuenta.id, cuando:new Date().toISOString(),
     });
@@ -2491,6 +2492,18 @@ function filaAgenda(x) {
       }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
       ${esAdmin() && libres > 0 ? `<button class="jinete-chip agregar"
         data-agregar="${esc(x.fecha)}|${esc(x.plantillaId)}">+ anotar a alguien</button>` : ""}
+      ${(() => {
+        /* Lo que se cerró en esta hora. Sin esto la agenda dice "Nadie anotado" y
+           dirección no se entera de que alguien salió por falta. */
+        const cerradas = registroDeSesion(x);
+        if (!cerradas.length) return "";
+        return `<div class="reg-en-agenda">${cerradas.map(h => {
+          const per = persona(h.personaId);
+          return `<button class="jinete-chip cerrada" data-editar-registro="${esc(h.id)}"
+            title="Ver en el registro">${esc(per ? per.nombre.split(" ")[0] : h.personaId)}
+            · ${esc(estadoTexto(h.estado))}${h.cobrada ? " · se cobró" : ""}</button>`;
+        }).join("")}</div>`;
+      })()}
     </div>
     <div class="ranura-lado">
       <span class="ranura-cupo">${rs.length}/${x.cupo}</span>
@@ -2654,7 +2667,6 @@ function programaCuadra() {
    Las clases que se cobraron sin haberse dado. Es un registro de dinero, no
    una bitácora: por eso se corrige —una falta mal puesta le cuesta una clase
    a alguien— y por eso se saca en papel. */
-let semanaRegistro = 0;
 
 const ESTADOS = {
   no_show:            { t:"No se presentó",   d:"No llegó y no avisó.",                     cobra:true,  p:"p-alerta" },
@@ -2665,12 +2677,21 @@ const ESTADOS = {
 const estadoTexto = e => (ESTADOS[e] || {}).t || ESTADO_TEXTO[e] || e;
 const estadoPastilla = e => (ESTADOS[e] || {}).p || "p-neutro";
 
+/* Lo cerrado en una hora concreta. Solo cuenta lo que trae la marca de su clase:
+   a la misma hora hay dos maestros y sería mentira repartirlo por la hora sola. */
+const registroDeSesion = x => Datos.todo("historial")
+  .filter(h => h.fecha === x.fecha && h.plantillaId === x.plantillaId);
+
 const registroDe = dias => Datos.todo("historial")
   .filter(h => dias.includes(h.fecha))
   .sort((a,b) => deYmd(a.fecha, a.hora || "12:00") - deYmd(b.fecha, b.hora || "12:00"));
 
+const textoSemana = () => semanaOffset === 0 ? "Esta semana"
+  : semanaOffset === 1 ? "La siguiente" : semanaOffset === -1 ? "La pasada"
+  : `${semanaOffset > 0 ? "+" : ""}${semanaOffset} semanas`;
+
 const semanaDeRegistro = () => {
-  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaRegistro * 7);
+  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaOffset * 7);
   return Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
 };
 
@@ -2693,11 +2714,9 @@ function verRegistro() {
     quitas el cobro, la clase le vuelve al saldo del jinete.</p>
 
   <div class="semana-nav">
-    <button class="btn btn-2 btn-mini" data-semana-reg="-1" ${semanaRegistro <= -12 ? "disabled" : ""}>‹</button>
-    <span>${semanaRegistro === 0 ? "Esta semana" : semanaRegistro === -1 ? "La pasada"
-      : semanaRegistro === 1 ? "La siguiente"
-      : `${semanaRegistro > 0 ? "+" : ""}${semanaRegistro} semanas`}</span>
-    <button class="btn btn-2 btn-mini" data-semana-reg="1" ${semanaRegistro >= 1 ? "disabled" : ""}>›</button>
+    <button class="btn btn-2 btn-mini" data-semana="-1" ${semanaOffset <= -12 ? "disabled" : ""}>‹</button>
+    <span>${textoSemana()}</span>
+    <button class="btn btn-2 btn-mini" data-semana="1" ${semanaOffset >= 8 ? "disabled" : ""}>›</button>
   </div>
 
   <div class="resumen compacta">
@@ -2729,7 +2748,7 @@ function verRegistro() {
     </button>`;
   }).join("")}</div>`
     : `<div class="vacio">Nada en el registro esta semana.
-        ${semanaRegistro === 0 ? "<br>Ojalá siga así." : ""}</div>`}
+        ${semanaOffset === 0 ? "<br>Ojalá siga así." : ""}</div>`}
 
   ${acumulado.length ? `<div class="admin-caja">
     <p class="etiqueta">Acumulado, desde siempre</p>
@@ -3251,8 +3270,6 @@ document.addEventListener("click", async e => {
   if (e.target.closest("[data-nuevo-registro]")) return nuevoRegistro();
   if (e.target.closest("[data-registro-pdf]")) return registroEnPapel();
   const sreg = e.target.closest("[data-semana-reg]");
-  if (sreg) { semanaRegistro = Math.max(-12, Math.min(1, semanaRegistro + Number(sreg.dataset.semanaReg)));
-    return pintar(); }
   const nuevoQ = e.target.closest("[data-nuevo-paquete]"); if (nuevoQ) return editarPaquete(null);
   const ediQ = e.target.closest("[data-editar-paquete]"); if (ediQ) return editarPaquete(ediQ.dataset.editarPaquete);
   const nuevoC = e.target.closest("[data-nuevo-caballo]"); if (nuevoC) return editarCaballo(null);
@@ -3277,7 +3294,8 @@ document.addEventListener("click", async e => {
   const alt = e.target.closest("[data-alternar-mias]");
   if (alt) { soloMisClases = !soloMisClases; return pintar(); }
   const sem = e.target.closest("[data-semana]");
-  if (sem) { semanaOffset += Number(sem.dataset.semana); diaSemanaSel = ""; return pintar(); }
+  if (sem) { semanaOffset = Math.max(-12, Math.min(8, semanaOffset + Number(sem.dataset.semana)));
+    diaSemanaSel = ""; return pintar(); }
   const ds = e.target.closest("[data-diasemana]");
   if (ds) { diaSemanaSel = ds.dataset.diasemana; return pintar(); }
   const ediP = e.target.closest("[data-editar-persona]"); if (ediP) return editarPersona(ediP.dataset.editarPersona);
@@ -3355,8 +3373,9 @@ function elegirCaballo(sesionId) {
   abrirHoja("Clase de " + horaTexto(s.inicio), `
     <p style="font-size:.85rem; color:var(--ink-2)">${esc(fechaLarga(fecha))} · ${esc(horaTexto(s.inicio))} ·
       ${esc(entrenador(s.ent))} · ${esc(espacio(s.esp))}</p>
-    <p class="etiqueta">${montaPropios()
+    <p class="etiqueta">${opciones.every(c => c.propio)
       ? (unico ? "Tu caballo" : "Elige cuál de tus caballos")
+      : opciones.some(c => c.propio) ? "Elige caballo"
       : "Elige caballo, de los que te desbloquearon"}</p>
     <div class="vista" id="lista-caballos">${opciones.map(c => `
       <button class="opcion" data-caballo="${c.id}" aria-pressed="${unico}">
@@ -3418,6 +3437,7 @@ async function cancelar(reservaId) {
       $("#ok-cancelar").onclick = async () => {
         await Datos.poner("historial", "h-" + r.id + "-" + Date.now(), {
           personaId:r.personaId, fecha:r.fecha, hora:r.hora, caballoId:r.caballoId, tipoId:r.tipoId,
+          plantillaId:r.plantillaId, ent:r.ent, esp:r.esp,
           consume:r.consume || 1, estado:aTiempo ? "cancelada_a_tiempo" : "cancelada_tarde",
           cobrada:!aTiempo, cuando:new Date().toISOString() });
         await Datos.quitar("reservas", r.id);
