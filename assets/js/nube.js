@@ -42,6 +42,23 @@ window.Nube = {
     return window.supabase.createClient(c.url, c.llave, opciones);
   },
 
+  /* Estar configurado no es estar listo: mientras no se haya corrido
+     almacen.sql la base no tiene dónde guardar nada, y mandar el acceso ahí
+     deja a todos fuera. Por eso se comprueba antes de usarla. */
+  disponible: false,
+
+  async hayBase() {
+    try {
+      const { error } = await this.cliente.from("almacen").select("coleccion").limit(1);
+      /* Sin filas por las reglas de acceso es una respuesta buena: la tabla
+         está. Lo que descarta la nube es que la tabla no exista. */
+      if (error && (error.code === "PGRST205" || error.code === "42P01")) return false;
+      if (error && error.message && /almacen/i.test(error.message)
+          && /find|exist/i.test(error.message)) return false;
+      return !error || !!error.code;   /* un error de permisos también dice que existe */
+    } catch (e) { return false; }
+  },
+
   /* Devuelve true si ya había sesión abierta en este aparato. */
   async iniciar(alCambiar) {
     if (!this.configurado) return false;
@@ -50,13 +67,19 @@ window.Nube = {
       this.cliente = this.crearCliente({
         auth: { persistSession: true, autoRefreshToken: true },
       });
+      this.disponible = await this.hayBase();
+      if (!this.disponible) {
+        console.warn("La base del club todavía no está montada (falta correr " +
+                     "backend/almacen.sql). La app se queda guardando en este aparato.");
+        return false;
+      }
       const { data } = await this.cliente.auth.getSession();
       if (!data || !data.session) return false;
       await this.tomarSesion(data.session);
       return true;
     } catch (e) {
       console.warn("No se pudo conectar con la base del club:", e.message);
-      this.cliente = null;
+      this.cliente = null; this.disponible = false;
       return false;
     }
   },

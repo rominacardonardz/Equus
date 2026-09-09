@@ -987,11 +987,11 @@ const Datos = {
        ella y lo local no se toca. */
     try {
       if (window.Nube && Nube.configurado) {
-        this.nubeLista = true;
-        if (await Nube.iniciar(() => this.alCambiar())) {
-          this.listo = true; this.alCambiar(); return;
-        }
-        this.listo = true; this.alCambiar(); return;   /* falta entrar */
+        await Nube.iniciar(() => this.alCambiar());
+        /* Solo manda la nube si la base existe de verdad. Si todavía no está
+           montada, la app sigue como si no la hubiera: guardando aquí y
+           diciéndolo, en vez de dejar a todos fuera. */
+        if (Nube.disponible) { this.listo = true; this.alCambiar(); return; }
       }
     } catch (e) { console.warn("base del club:", e.message); }
     try {
@@ -1150,7 +1150,7 @@ async function entrar(usuario, clave) {
   /* Contra la base del club la contraseña la revisa el servidor: esta página
      nunca ve la huella de nadie. Sin base, se coteja aquí, que es una puerta
      con llave y no una caja fuerte. */
-  if (window.Nube && Nube.configurado && Nube.cliente) return Nube.entrar(usuario, clave);
+  if (window.Nube && Nube.disponible && Nube.cliente) return Nube.entrar(usuario, clave);
   const u = String(usuario).trim().toLowerCase();
   const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !x.sinCuenta);
   if (!p || !p.clave) return false;
