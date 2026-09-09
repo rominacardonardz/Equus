@@ -102,26 +102,14 @@ window.Nube = {
     const correo = this.correoDe(usuario);
     const clv = String(clave);
 
-    let { data, error } = await this.cliente.auth.signInWithPassword({ email: correo, password: clv });
+    const { data, error } = await this.cliente.auth.signInWithPassword({ email: correo, password: clv });
 
-    /* La primera vez que alguien entra todavía no tiene cuenta: se le crea al
-       vuelo y se engancha con la ficha que dirección ya le había hecho. El
-       enganche lo autoriza el servidor comprobando la contraseña, así que
-       registrarse con el nombre de otro no sirve de nada. */
+    /* No se registra nadie por su cuenta: el registro abierto está apagado a
+       propósito, para que nadie ajeno al club se cree un acceso. Las cuentas
+       las da dirección. */
     if (error || !data.session) {
-      const alta = await this.cliente.auth.signUp({ email: correo, password: clv });
-      if (alta.error) {
-        /* Ya existía: entonces la contraseña estaba mal, sin más. */
-        this.ultimoMotivo = /already/i.test(alta.error.message || "") ? "clave" : "alta";
-        return false;
-      }
-      if (!alta.data.session) {
-        /* Cuenta creada pero sin sesión: Supabase está esperando que confirmen
-           un correo que no existe. */
-        this.ultimoMotivo = "confirmacion";
-        return false;
-      }
-      data = alta.data;
+      this.ultimoMotivo = /not confirmed/i.test((error || {}).message || "") ? "confirmacion" : "clave";
+      return false;
     }
 
     const enganche = await this.engancharFicha(data.session, usuario, clv);
@@ -152,19 +140,19 @@ window.Nube = {
     for (const k of Object.keys(this.cache)) this.cache[k] = {};
   },
 
-  /* Alta de una persona. signUp deja al recién creado como sesión activa, así
-     que se hace con un cliente aparte y desechable: dirección no pierde la
-     suya. Requiere que en Supabase esté apagada la confirmación por correo,
-     porque estos correos no existen. */
+  /* Alta de una cuenta. La hace el servidor, y solo si quien la pide es
+     dirección: así el registro puede quedarse apagado para todo el mundo y aun
+     así dirección da de alta a quien quiera desde la app. */
   async crearCuenta(usuario, clave) {
-    const suelto = this.crearCliente({
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
-    const { data, error } = await suelto.auth.signUp({
-      email: this.correoDe(usuario), password: String(clave),
+    const dominio = (window.EQUUS_NUBE || {}).dominioCuentas;
+    const { data, error } = await this.cliente.rpc("crear_acceso", {
+      p_usuario: String(usuario), p_clave: String(clave), p_dominio: dominio,
     });
     if (error) throw new Error(error.message);
-    return (data.user || {}).id || null;
+    if (data === "listo" || data === "ya existia") return true;
+    if (data === "solo direccion") throw new Error("Solo dirección puede crear accesos.");
+    if (data === "sin ficha") throw new Error("Primero hay que guardar la ficha de esa persona.");
+    throw new Error(String(data));
   },
 
   async cargarTodo() {

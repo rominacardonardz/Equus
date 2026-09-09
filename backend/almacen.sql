@@ -222,6 +222,105 @@ $$;
 revoke all on function public.reclamar_ficha(text, text) from public, anon;
 grant execute on function public.reclamar_ficha(text, text) to authenticated;
 
+-- --------------------------------------------------- crear los accesos
+-- El registro abierto queda APAGADO en Supabase: nadie se crea una cuenta por
+-- su cuenta. Las crea dirección, y para eso está esta función.
+--
+-- Escribe en auth.users, que es cosa de Supabase, así que solo la puede llamar
+-- alguien que ya sea dirección —y la primera vez la llama el propio instalador,
+-- que corre con todos los permisos—.
+create extension if not exists pgcrypto with schema extensions;
+
+create or replace function public.crear_acceso(p_usuario text, p_clave text, p_dominio text)
+  returns text
+  language plpgsql security definer set search_path = public, auth, extensions as $$
+declare
+  correo text := lower(trim(p_usuario)) || '@' || lower(trim(p_dominio));
+  nuevo  uuid := gen_random_uuid();
+  ficha  record;
+begin
+  -- Solo dirección. La excepción es el arranque, cuando todavía no hay nadie
+  -- enganchado y esto lo corre el instalador desde el editor de SQL.
+  if auth.uid() is not null and not cq_priv.es_admin() then
+    return 'solo direccion';
+  end if;
+
+  select * into ficha from almacen
+   where coleccion = 'personas' and lower(datos->>'usuario') = lower(trim(p_usuario)) limit 1;
+  if not found then return 'sin ficha'; end if;
+
+  if exists (select 1 from auth.users where email = correo) then
+    -- Ya existía: solo hay que asegurarse de que la ficha lo sepa.
+    update almacen set datos = datos || jsonb_build_object('authId',
+             (select id::text from auth.users where email = correo))
+     where coleccion = 'personas' and doc_id = ficha.doc_id;
+    return 'ya existia';
+  end if;
+
+  insert into auth.users (
+    instance_id, id, aud, role, email, encrypted_password,
+    email_confirmed_at, created_at, updated_at,
+    raw_app_meta_data, raw_user_meta_data, is_super_admin,
+    confirmation_token, recovery_token, email_change_token_new, email_change)
+  values (
+    '00000000-0000-0000-0000-000000000000', nuevo, 'authenticated', 'authenticated',
+    correo, extensions.crypt(p_clave, extensions.gen_salt('bf')),
+    now(), now(), now(),
+    '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false,
+    '', '', '', '');
+
+  -- GoTrue quiere además la identidad; en versiones viejas no existe
+  -- provider_id, así que se pregunta antes de escribir.
+  if to_regclass('auth.identities') is not null then
+    if exists (select 1 from information_schema.columns
+                where table_schema='auth' and table_name='identities' and column_name='provider_id') then
+      insert into auth.identities (id, user_id, provider_id, identity_data, provider,
+                                   last_sign_in_at, created_at, updated_at)
+      values (gen_random_uuid(), nuevo, nuevo::text,
+              jsonb_build_object('sub', nuevo::text, 'email', correo),
+              'email', now(), now(), now());
+    else
+      insert into auth.identities (id, user_id, identity_data, provider,
+                                   last_sign_in_at, created_at, updated_at)
+      values (nuevo, nuevo, jsonb_build_object('sub', nuevo::text, 'email', correo),
+              'email', now(), now(), now());
+    end if;
+  end if;
+
+  update almacen set datos = datos || jsonb_build_object('authId', nuevo::text)
+   where coleccion = 'personas' and doc_id = ficha.doc_id;
+  return 'listo';
+end;
+$$;
+
+revoke all on function public.crear_acceso(text, text, text) from public, anon;
+grant execute on function public.crear_acceso(text, text, text) to authenticated;
+
+-- Le crea el acceso a toda ficha que tenga usuario y todavía no tenga cuenta.
+-- Se corre una vez al instalar, y otra vez cuando haga falta: lo que ya está
+-- no se toca.
+create or replace function public.crear_accesos_faltantes(p_dominio text, p_clave text default null)
+  returns table(usuario text, resultado text)
+  language plpgsql security definer set search_path = public, auth, extensions as $$
+declare f record;
+begin
+  if auth.uid() is not null and not cq_priv.es_admin() then
+    return query select ''::text, 'solo direccion'::text; return;
+  end if;
+  for f in select datos->>'usuario' as u, datos->>'clave' as h from almacen
+            where coleccion = 'personas'
+              and coalesce(datos->>'usuario','') <> ''
+              and coalesce(datos->>'authId','') = ''
+  loop
+    -- Si no se pasa contraseña se usa la del club, que es la que ya conocen.
+    return query select f.u, public.crear_acceso(f.u, coalesce(p_clave, 'equus'), p_dominio);
+  end loop;
+end;
+$$;
+
+revoke all on function public.crear_accesos_faltantes(text, text) from public, anon;
+grant execute on function public.crear_accesos_faltantes(text, text) to authenticated;
+
 -- ------------------------------------------------------------------ tiempo
 create or replace function cq_priv.marcar_hora() returns trigger
   language plpgsql as $$

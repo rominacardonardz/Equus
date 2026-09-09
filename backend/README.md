@@ -39,25 +39,41 @@ de datos no le borra nada.** Está probado corriéndolo tres veces seguidas con
 actividad de por medio: las reservas, el registro, las personas nuevas y las
 fichas editadas siguen ahí igual.
 
-**2. Apagar la confirmación por correo.** En **Authentication → Sign In /
-Providers**, apagar *Confirm email*. Las cuentas del club no llevan correo de
-verdad; si queda encendida, Supabase espera que confirmen algo que no existe y
-nadie entra. Si se olvida, la app lo dice en la pantalla de acceso con todas
-sus letras, no con un "usuario o contraseña incorrectos".
+**2. Darle su acceso a quien ya tiene ficha.** En el mismo SQL Editor, una
+línea, una sola vez:
 
-Ya está. **No hay tercer paso**: cada quien se registra solo la primera vez que
-entra, con su usuario y su contraseña de siempre.
+```sql
+select * from public.crear_accesos_faltantes('hipicoequus.com');
+```
 
-### Cómo puede ser eso seguro
+Devuelve una lista diciendo a quién le creó su acceso. La contraseña es la del
+club; si se quiere otra: `crear_accesos_faltantes('hipicoequus.com', 'otra')`.
 
-Al entrar por primera vez la app crea la cuenta y le pide al servidor que la
-enganche con la ficha que dirección ya había hecho. **El servidor comprueba la
-contraseña contra la huella guardada en la ficha** antes de enganchar nada, y
-solo engancha fichas libres.
+**3. En Authentication → Sign In / Providers**, dejarlo así:
 
-Así que registrarse con el nombre de otra persona no sirve: sin su contraseña
-el enganche se rechaza, y si esa ficha ya está enganchada, tampoco. Probado
-contra PostgreSQL:
+| | |
+|---|---|
+| **Email** (el proveedor) | **encendido** |
+| **Confirm email** | **apagado** — estos correos no existen |
+| **Allow new users to sign up** | **apagado** — nadie se registra solo |
+
+Ya está.
+
+### Cómo se da de alta a alguien nuevo
+
+Desde la app, como siempre: dirección crea la ficha con su usuario y su
+contraseña, y al guardarla **el servidor le crea el acceso**. No hace falta
+volver a Supabase.
+
+Eso funciona con el registro apagado porque la cuenta no la crea el navegador:
+la crea una función del servidor que **solo obedece a dirección**. Cualquier
+otro que la llame recibe un no.
+
+### Y si alguien ya tenía cuenta
+
+Al entrar, el servidor engancha su cuenta con su ficha, pero **solo si la
+contraseña coincide** con la huella guardada, y solo si esa ficha está libre.
+Probado contra PostgreSQL:
 
 | Intento | Resultado |
 |---|---|

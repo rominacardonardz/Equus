@@ -7,11 +7,6 @@
 <meta name="description" content="Reserva de clases, reglamento, calendario de competencias y recordatorios de Equus.">
 <meta name="theme-color" content="#1B3A5F">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231B3A5F'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='58' fill='%23D6AE4A' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/icono-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Equus">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="assets/js/supabase-config.js"></script>
 <script src="assets/js/nube.js"></script>
@@ -2858,21 +2853,19 @@ function crearCuentasQueFaltan() {
         for (const per of faltan) {
           avance.textContent = `Creando ${per.nombre}… (${hechas} de ${faltan.length})`;
           try {
-            const authId = await Nube.crearCuenta(per.usuario, clave);
-            const { id, ...resto } = per;
-            await Datos.poner("personas", id, { ...resto, authId });
+            await Nube.crearCuenta(per.usuario, clave);
             hechas++;
           } catch (err) { fallidas.push(`${per.nombre}: ${err.message}`); }
         }
+        await Nube.recargar();
         cerrar();
         avisar(fallidas.length
           ? `${hechas} listas, ${fallidas.length} con problema.`
           : `Listo: ${hechas} ${hechas === 1 ? "cuenta creada" : "cuentas creadas"}.`);
         if (fallidas.length) abrirHoja("No se pudieron crear", `
           <div class="nota alerta">${fallidas.map(esc).join("<br>")}</div>
-          <p style="font-size:.82rem; color:var(--ink-2)">Lo más común es que en Supabase
-            siga encendida la confirmación por correo. Apágala en Authentication →
-            Sign In / Providers y vuelve a intentar.</p>`);
+          <p style="font-size:.82rem; color:var(--ink-2)">Si dice que solo dirección puede,
+            es que tu propia cuenta todavía no está enganchada con tu ficha.</p>`);
         pintar();
       };
     });
@@ -3399,7 +3392,7 @@ function editarPersona(id) {
       </div>
       <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
         Un menor no lleva usuario: entra su tutor. ${Datos.enNube
-          ? "Al poner usuario y contraseña se le crea su cuenta en la base del club."
+          ? "Al poner usuario y contraseña se le crea su acceso al club. Nadie se registra solo: las cuentas las das tú."
           : "Sin conexión al club la contraseña se comprueba en el navegador: es una puerta con llave, no una caja fuerte."}</p>
       <div class="campo">Caballos propios (a su nombre; monta el suyo sin importar nivel)
         <div class="casillas">${casillas("propios", caballos())}</div></div>
@@ -3443,11 +3436,15 @@ function editarPersona(id) {
         try {
           /* Conectados al club, una persona con usuario necesita además su
              cuenta en la base: sin eso tiene ficha pero no puede entrar. */
-          if (Datos.enNube && datos.usuario && !p.authId && claveNueva) {
-            try { datos.authId = await Nube.crearCuenta(datos.usuario, claveNueva); }
-            catch (err) { return avisar("No se pudo crear la cuenta: " + err.message); }
-          } else if (p.authId) datos.authId = p.authId;
+          if (p.authId) datos.authId = p.authId;
           await Datos.poner("personas", nuevoId, datos);
+          /* La cuenta se pide después de guardar: el servidor la engancha con
+             la ficha, y para eso la ficha tiene que existir. */
+          if (Datos.enNube && datos.usuario && !datos.authId && claveNueva) {
+            try { await Nube.crearCuenta(datos.usuario, claveNueva); await Nube.recargar(); }
+            catch (err) { avisar("Ficha guardada, pero el acceso no: " + err.message);
+              cerrar(); pintar(); return; }
+          }
           avisar(id ? "Persona actualizada." : "Persona creada.");
           cerrar(); pintar();
         } catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
@@ -3786,18 +3783,25 @@ $("#form-entrar").addEventListener("submit", async e => {
     confirmacion: "La base del club está pidiendo confirmar por correo. Dirección tiene que " +
                   "apagar «Confirm email» en Supabase → Authentication → Sign In / Providers.",
     "sin-ficha":  "No hay ninguna ficha con ese usuario. Pídesela a dirección.",
+    clave:        "Usuario o contraseña incorrectos. Si nunca has entrado, pídele a dirección que te dé tu acceso.",
     rpc:          "No se pudo enganchar tu cuenta con tu ficha. Avísale a dirección.",
     alta:         "No se pudo crear tu cuenta. Avísale a dirección.",
   }[(window.Nube || {}).ultimoMotivo] || "Usuario o contraseña incorrectos.";
   if (ok) { e.target.reset(); refrescarSesion(); vista = vistaInicial(); pintar(); }
 });
 
-/* Se instala en el teléfono: el icono abre la app a pantalla completa.
-   Solo cuando el sitio se sirve por https —en un archivo local no aplica. */
-if ("serviceWorker" in navigator && location.protocol === "https:") {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
+/* Esto es un sitio web, no una app que se instala. Quien la haya abierto antes
+   trae un trabajador de servicio guardando páginas viejas en su teléfono: hay
+   que retirarlo y tirar lo que guardó, o seguiría sirviendo la versión de ayer
+   aunque el sitio ya esté al día. */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then(rs => rs.forEach(r => r.unregister()))
+    .catch(() => {});
+  if (window.caches && caches.keys) {
+    caches.keys().then(ks => ks.filter(k => /equus|casa|quiron/i.test(k))
+      .forEach(k => caches.delete(k))).catch(() => {});
+  }
 }
 
 /* ------------------------------------------------------------------ arranque */

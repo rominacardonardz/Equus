@@ -7,7 +7,6 @@ dependencias ni compilación.
 ```
 index.html            La app
 assets/logo.png       El logo del club (opcional: si está, sustituye al monograma)
-manifest.json  sw.js  Para instalarla en el teléfono
 .github/workflows/    Publica el sitio en GitHub Pages en cada push
 backend/              Esquema, reglas de acceso y datos iniciales para el servidor
 especificacion/       El documento fuente (especificación funcional v2.0) como sitio
@@ -157,8 +156,8 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 El repositorio ya trae el flujo que publica en GitHub Pages en cada push. Está
 en línea en **https://rominacardonardz.github.io/Equus/**
 
-La app es instalable: al abrir el sitio en el celular, «Agregar a pantalla de
-inicio» la deja con su icono, a pantalla completa, y abre aunque no haya señal.
+Es un sitio web, no una app que se instala: se abre con el enlace, en
+cualquier navegador. Está hecho pensando primero en el teléfono.
 
 ## Conectar el club
 
