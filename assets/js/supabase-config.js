@@ -12,10 +12,10 @@
    traga—, y poner uno ajeno le manda correos a un desconocido. Nadie va a
    recibir nada en estas direcciones, pero el dominio tiene que ser suyo.
 
-   Mientras no haya dominio propio, se deja vacío: la app funciona guardando en
-   cada aparato y lo dice en pantalla. */
+   Si se deja vacío, la app funciona guardando en cada aparato y lo dice en
+   pantalla, en vez de fallar al entrar sin explicar por qué. */
 window.EQUUS_NUBE = {
   url: "https://zegbggcxftytfdsnkdxu.supabase.co",
   llave: "sb_publishable_Rbmh47Y4_QHoEXcA8YmZ9w_miKkAX1x",
-  dominioCuentas: "",          /* p. ej. "equusmty.com" cuando esté comprado */
+  dominioCuentas: "hipicoequus.com",   /* comprobado: Supabase lo acepta */
 };

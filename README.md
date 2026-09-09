@@ -154,53 +154,69 @@ Las de la especificación (§04), calculadas siempre en la zona horaria del club
 
 ## Publicar el sitio
 
-El repositorio ya trae el flujo que publica en GitHub Pages en cada push. Falta un
-solo clic, una sola vez: **Settings → Pages → Source: GitHub Actions**. A partir de
-ahí cada cambio se publica solo.
+El repositorio ya trae el flujo que publica en GitHub Pages en cada push. Está
+en línea en **https://rominacardonardz.github.io/Equus/**
 
 La app es instalable: al abrir el sitio en el celular, «Agregar a pantalla de
 inicio» la deja con su icono, a pantalla completa, y abre aunque no haya señal.
-Probado por https con el service worker activo.
 
-**Ojo:** publicada así, y hasta conectar el backend, cada teléfono guarda lo suyo
-por separado. La versión con datos compartidos sigue siendo el Artifact.
+## El dominio del club
 
-## Pasar a producción
+El club tiene **hipicoequus.com**. Sirve para dos cosas a la vez: es la
+dirección del sitio, y es lo que hace posible que la gente entre con usuario en
+lugar de con correo (ver `backend/README.md`).
 
-`backend/` trae lo que falta: el esquema de PostgreSQL, las reglas de acceso que
-aplican la separación entre socios **en el servidor** en vez de en el navegador, y
-los datos de arranque. Los tres archivos se ejecutaron y se probaron contra
-PostgreSQL 16 con usuarios de cada perfil. `backend/README.md` lleva los pasos
-para montarlo en Supabase y publicar el sitio.
+**Primero el DNS, después GitHub.** En ese orden: si se añade el dominio en
+GitHub antes de que el DNS apunte, el sitio deja de abrirse.
 
-Queda una sola pieza de código: el adaptador que sustituya la capa `Datos` de
-`index.html` por llamadas a Supabase.
+En el panel del registrador, para `hipicoequus.com`:
 
-## Lo que este prototipo todavía no es
+| Tipo | Nombre | Valor |
+|---|---|---|
+| A | `@` | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+| CNAME | `www` | `rominacardonardz.github.io` |
 
-Es una app funcional, no el sistema de producción. Falta lo que necesita un
-servidor:
+Los cuatro registros A son de GitHub Pages y los cuatro hacen falta. Tarda entre
+unos minutos y unas horas en propagarse.
 
-- **El acceso es una puerta con llave, no una caja fuerte.** Hay usuario y
-  contraseña, y cada quien entra a lo suyo, pero la comprobación pasa en el
-  navegador. El sistema real la hace en el servidor, con teléfono o correo (§08).
-- **Contraseña compartida entre los cinco administradores.** Es lo que pidió
-  dirección; en producción conviene una por persona, para saber quién hizo cada
-  cambio.
-- **Las reglas se aplican en el navegador.** La especificación pide que se
-  apliquen en el servidor. Al apartar un caballo se usa una reserva de lugar
-  antes de escribir, así que dos jinetes no se lo ganan a la vez, pero el resto
-  de los topes se revisan del lado del cliente.
+Cuando `hipicoequus.com` ya resuelva a esas direcciones, se añade un archivo
+`CNAME` en la raíz del repositorio con una sola línea:
+
+```
+hipicoequus.com
+```
+
+GitHub emite entonces el certificado y conviene marcar **Settings → Pages →
+Enforce HTTPS**. A partir de ahí el sitio vive en `https://hipicoequus.com` y la
+dirección de github.io redirige sola.
+
+## Lo que falta y lo que ya no
+
+Ya no es un prototipo suelto: `backend/almacen.sql` guarda los datos en un
+servidor y **las reglas de acceso las aplica Postgres**, no el navegador. Están
+probadas con usuarios simulados: un jinete no puede reservar a nombre de otro,
+ni subirse las clases del paquete, ni borrar la falta que se le cobró.
+
+Lo que sigue pendiente:
+
+- **Una sola contraseña para todo el club.** Es lo que pidió dirección. Mientras
+  siga así, quien la sepa puede entrar como dirección si adivina el usuario —y
+  los usuarios son el nombre de pila—. Las reglas del servidor protegen a *quien
+  entró*: si alguien entra como dirección, para la base es dirección. Se cambia
+  por persona desde su ficha.
+- **Los topes se revisan en el navegador.** El cupo, el nivel del caballo, el
+  límite de cancelación. Apartar un caballo sí es a prueba de empates —lo
+  resuelve la llave de la tabla—, pero el resto se puede saltar con la consola.
 - **Sin notificaciones por WhatsApp** (M12): los recordatorios viven en la app.
-- **Sin panel administrativo** (M11), portal de propietarios (M9) ni notas de
-  cuadra (M8).
-- **Catálogo de ejemplo.** Los caballos que vienen cargados son de prueba, pero ya
-  se editan desde la app. Los maestros, las pistas, los días
-  y horas de clase, y el calendario de competencias, son los que dio dirección;
-  categorías y horarios de cada competencia se publican desde la app.
 - **El reparto de pistas es provisional.** Por defecto las clases de la mañana
-  son en Hípico Mty y las de la tarde en Equus; dirección lo cambia hora por hora
-  desde *La semana*.
+  son en Hípico Mty y las de la tarde en Equus; dirección lo cambia hora por
+  hora desde *La semana*.
+- **El esquema relacional de `backend/01-esquema.sql` está aplicado pero la app
+  no lo usa.** Se quedó como el camino de más adelante, si hacen falta reportes
+  o cobros.
 
 ## Cómo verlo
 
