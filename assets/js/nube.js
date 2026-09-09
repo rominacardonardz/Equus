@@ -147,7 +147,9 @@ window.Nube = {
   },
 
   todo(c) {
-    return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ id, ...d }));
+    /* El id va al final a propósito: manda el de la colección. Si un documento
+       trae un campo id guardado, no debe tapar al de verdad. */
+    return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ ...d, id }));
   },
 
   async poner(c, id, datos) {

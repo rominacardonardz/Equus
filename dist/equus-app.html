@@ -1035,7 +1035,9 @@ const Datos = {
 
   todo(c) {
     if (this.enNube) return Nube.todo(c);
-    return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ id, ...d }));
+    /* El id va al final a propósito: manda el de la colección. Si un documento
+       trae un campo id guardado, no debe tapar al de verdad. */
+    return Object.entries(this.cache[c] || {}).map(([id, d]) => ({ ...d, id }));
   },
 
   async poner(c, id, datos) {
@@ -2492,8 +2494,11 @@ function moverReserva(reservaId) {
         if (!destino) return;
         b.disabled = true;
         const nuevoId = `${fecha}__${plantillaId}__${r.caballoId}`;
+        /* El id no se guarda dentro del documento: es la llave, y la reserva se
+           está mudando justo a otra. */
+        const { id: _viejo, ...resto } = r;
         const gano = await Datos.apartar("reservas", nuevoId, {
-          ...r, id:undefined, fecha, hora:destino.hora, plantillaId,
+          ...resto, fecha, hora:destino.hora, plantillaId,
           ent:destino.ent, esp:destino.esp, movidaPor:cuenta.id,
         }, idTab);
         if (!gano) { b.disabled = false; return avisar("Ese lugar lo acaban de tomar."); }
