@@ -167,6 +167,50 @@ create view ocupacion_app with (security_invoker = false) as
 revoke all on ocupacion_app from public, anon;
 grant select on ocupacion_app to authenticated;
 
+-- --------------------------------------------------- el primer acceso
+-- Huevo y gallina: para crear las cuentas hay que entrar como dirección, y
+-- para entrar hacen falta las cuentas. Se rompe así: cada quien se registra la
+-- primera vez, y esta función engancha su cuenta nueva con la ficha que ya
+-- tenía —pero solo si sabe la contraseña—.
+--
+-- La comprobación pasa en el servidor, contra la huella guardada en la ficha.
+-- Sin esto cualquiera podría registrarse como "romina" y quedarse con
+-- dirección. Y solo engancha fichas libres: una ya enganchada no se toca.
+create or replace function public.reclamar_ficha(p_usuario text, p_clave text)
+  returns text
+  language plpgsql security definer set search_path = public, auth as $$
+declare
+  fila   record;
+  huella text;
+begin
+  if auth.uid() is null then return 'sin sesion'; end if;
+
+  -- ¿esta cuenta ya tiene ficha?
+  select doc_id into fila from almacen
+   where coleccion = 'personas' and datos->>'authId' = auth.uid()::text limit 1;
+  if found then return 'ya'; end if;
+
+  select * into fila from almacen
+   where coleccion = 'personas'
+     and lower(datos->>'usuario') = lower(trim(p_usuario))
+     and coalesce(datos->>'authId', '') = ''
+   limit 1;
+  if not found then return 'sin ficha'; end if;
+
+  -- sha256 es de PostgreSQL, sin extensiones de por medio
+  huella := encode(sha256(convert_to(p_clave, 'UTF8')), 'hex');
+  if huella is distinct from coalesce(fila.datos->>'clave', '') then return 'clave'; end if;
+
+  update almacen
+     set datos = datos || jsonb_build_object('authId', auth.uid()::text)
+   where coleccion = 'personas' and doc_id = fila.doc_id;
+  return 'listo';
+end;
+$$;
+
+revoke all on function public.reclamar_ficha(text, text) from public, anon;
+grant execute on function public.reclamar_ficha(text, text) to authenticated;
+
 -- ------------------------------------------------------------------ tiempo
 create or replace function cq_priv.marcar_hora() returns trigger
   language plpgsql as $$

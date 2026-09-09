@@ -840,6 +840,7 @@ function rangoFechas(ini, fin) {
   const [,m1,d1] = ini.split("-").map(Number), [,m2,d2] = fin.split("-").map(Number);
   return m1 === m2 ? `${d1} al ${d2} de ${MESES[m1-1]}` : `${d1} de ${MESES[m1-1]} al ${d2} de ${MESES[m2-1]}`;
 }
+const pesos = n => "$" + Number(n || 0).toLocaleString("es-MX");
 const listar = xs => xs.length < 2 ? (xs[0] || "") : xs.slice(0,-1).join(", ") + " y " + xs[xs.length-1];
 </script>
 
@@ -914,15 +915,21 @@ const documento = id => documentos().find(d => d.id === id);
 
 /* ------------------------------------------------------------------ paquetes
    Lo que se le carga a un jinete cuando paga. Dirección los edita. */
+/* Los planes del club son mensuales y por veces por semana, no por número de
+   clases; el número sale de la frecuencia y dirección lo ajusta si hace falta.
+   La inscripción es un pago único, no un plan: no se le carga a nadie como
+   clases, pero sí aparece en el reporte. */
 const PAQUETES_INICIALES = [
-  { id:"p4",  nombre:"4 clases",  clases:4,  vigencia:"" },
-  { id:"p8",  nombre:"8 clases",  clases:8,  vigencia:"" },
-  { id:"p10", nombre:"10 clases", clases:10, vigencia:"" },
-  { id:"p15", nombre:"15 clases", clases:15, vigencia:"" },
+  { id:"insc", nombre:"Inscripción", clases:0,  vecesSemana:0, precio:1000, unica:true, vigencia:"pago único" },
+  { id:"m2",   nombre:"2 veces por semana", clases:8,  vecesSemana:2, precio:6000, vigencia:"mensual" },
+  { id:"m3",   nombre:"3 veces por semana", clases:12, vecesSemana:3, precio:7600, vigencia:"mensual" },
+  { id:"m4",   nombre:"4 veces por semana", clases:16, vecesSemana:4, precio:8500, vigencia:"mensual" },
+  { id:"m5",   nombre:"5 veces por semana", clases:20, vecesSemana:5, precio:9300, vigencia:"mensual" },
 ];
 const paquetes = () => {
   const g = Datos.todo("paquetes");
-  return (g.length ? g : PAQUETES_INICIALES).slice().sort((a,b) => (a.clases || 0) - (b.clases || 0));
+  return (g.length ? g : PAQUETES_INICIALES).slice()
+    .sort((a,b) => (a.unica ? 1 : 0) - (b.unica ? 1 : 0) || (a.clases || 0) - (b.clases || 0));
 };
 const paquete = id => paquetes().find(p => p.id === id);
 
@@ -1494,6 +1501,7 @@ function inicioDireccion() {
   <div class="acciones-rapidas">
     <button class="btn btn-2 btn-mini" data-programa>Hoja para la cuadra</button>
     <button class="btn btn-2 btn-mini" data-ir="registro">Registro de faltas</button>
+    <button class="btn btn-2 btn-mini" data-reporte>Reporte del mes</button>
     <button class="btn btn-2 btn-mini" data-nueva-persona>Nueva persona</button>
     <button class="btn btn-2 btn-mini" data-nuevo-anuncio>Nuevo anuncio</button>
   </div>
@@ -1628,7 +1636,8 @@ function panelPaquetes() {
       const cuantos = personas().filter(x => x.paqueteId === p.id).length;
       return `<div class="persona">
         <span>${esc(p.nombre)}</span>
-        <span class="rolp">${p.clases} clases${p.vigencia ? `<br>vigencia ${esc(p.vigencia)}` : ""}${
+        <span class="rolp">${p.precio ? `<b>${esc(pesos(p.precio))}</b>${p.unica ? "" : " al mes"}<br>` : ""}${
+          p.clases ? `${p.clases} clases` : "sin clases"}${p.vecesSemana ? ` · ${p.vecesSemana}/semana` : ""}${
           cuantos ? `<br>${cuantos} ${cuantos === 1 ? "jinete" : "jinetes"}` : ""}</span>
         <button class="btn btn-oro btn-mini" data-editar-paquete="${esc(p.id)}">Editar</button>
       </div>`;
@@ -1644,10 +1653,19 @@ function editarPaquete(id) {
     <form id="form-paquete" style="display:grid; gap:.7rem">
       <label class="campo">Nombre<input type="text" name="nombre" required value="${esc(p.nombre)}"
         placeholder="8 clases"></label>
-      <label class="campo">Número de clases
+      <div class="dos-campos">
+        <label class="campo">Veces por semana
+          <input type="text" inputmode="numeric" name="vecesSemana" value="${p.vecesSemana || 0}"></label>
+        <label class="campo">Costo mensual
+          <input type="text" inputmode="numeric" name="precio" value="${p.precio || 0}"></label>
+      </div>
+      <label class="campo">Clases que se le cargan
         <input type="text" inputmode="numeric" name="clases" required value="${p.clases}"></label>
-      <label class="campo">Vigencia (opcional)
-        <input type="text" name="vigencia" value="${esc(p.vigencia || "")}" placeholder="2 meses"></label>
+      <label class="campo">Vigencia
+        <input type="text" name="vigencia" value="${esc(p.vigencia || "")}" placeholder="mensual"></label>
+      <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
+        <input type="checkbox" name="unica" ${p.unica ? "checked" : ""} style="width:auto">
+        <span>Es un pago único, no un plan mensual (la inscripción)</span></label>
       <p style="font-size:.76rem; color:var(--oro-tinta)">
         Cambiar el número de clases no toca los saldos ya cargados: solo afecta a quien lo
         recibe de aquí en adelante.</p>
@@ -1666,7 +1684,10 @@ function editarPaquete(id) {
         const nombre = String(f.get("nombre")).trim();
         try {
           await Datos.poner("paquetes", id || "pq-" + Date.now().toString(36), {
-            nombre, clases:Math.max(1, parseInt(f.get("clases"), 10) || 1),
+            nombre, clases:Math.max(0, parseInt(f.get("clases"), 10) || 0),
+            vecesSemana:Math.max(0, parseInt(f.get("vecesSemana"), 10) || 0),
+            precio:Math.max(0, parseInt(String(f.get("precio")).replace(/[^0-9]/g, ""), 10) || 0),
+            unica:f.get("unica") === "on",
             vigencia:String(f.get("vigencia") || ""),
           });
           avisar(id ? "Paquete actualizado." : "Paquete creado."); cerrar(); pintar();
@@ -2656,6 +2677,144 @@ function elegirCaballoPara(per, s) {
     });
 }
 
+/* ------------------------------------------------------------------ REPORTE
+   Lo que administración necesita para cobrar: por mes y por persona, qué plan
+   tiene, cuántas clases se le dieron, cuántas se le cobraron sin darse y con
+   cuántas se queda. Sale a un archivo que Excel abre directo. */
+let mesReporte = "";      /* "2026-09"; vacío = el mes en curso */
+
+const mesActual = () => { const p = partesClub(ahora());
+  return `${p.anio}-${String(p.mes).padStart(2, "0")}`; };
+const mesElegido = () => mesReporte || mesActual();
+const nombreMes = m => { const [a, x] = m.split("-").map(Number);
+  return `${MESES[x - 1]} de ${a}`; };
+const mesDe = fecha => String(fecha || "").slice(0, 7);
+const correrMes = (m, n) => { const [a, x] = m.split("-").map(Number);
+  const d = new Date(Date.UTC(a, x - 1 + n, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`; };
+
+/* Una fila por persona. «Dadas» son las que de verdad montó: las reservas del
+   mes cuya hora ya pasó. «Cobradas sin darse» son las faltas y las
+   cancelaciones tardías, que también gastan clase. */
+function filasDelMes(mes) {
+  const reservas  = Datos.todo("reservas").filter(r => mesDe(r.fecha) === mes);
+  const historial = Datos.todo("historial").filter(h => mesDe(h.fecha) === mes);
+  return personas()
+    .filter(x => ["jinete","propietario"].includes(x.rol))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    .map(per => {
+      const mias  = reservas.filter(r => r.personaId === per.id);
+      const cerr  = historial.filter(h => h.personaId === per.id);
+      const dadas = mias.filter(r => deYmd(r.fecha, r.hora) <= ahora()).length;
+      const porVenir = mias.length - dadas;
+      const faltas  = cerr.filter(h => h.estado === "no_show").length;
+      const tardias = cerr.filter(h => h.estado === "cancelada_tarde").length;
+      const aTiempo = cerr.filter(h => h.estado === "cancelada_a_tiempo").length;
+      const porClub = cerr.filter(h => h.estado === "cancelada_por_club").length;
+      const q = paquete(per.paqueteId) || {};
+      return { per, plan:q, dadas, porVenir, faltas, tardias, aTiempo, porClub,
+        cobradas: dadas + faltas + tardias, saldo: saldo(per) };
+    });
+}
+
+const COLUMNAS_REPORTE = [
+  ["Mes",                (f, mes) => nombreMes(mes)],
+  ["Jinete",             f => f.per.nombre],
+  ["Perfil",             f => ROL_NOMBRE[f.per.rol] || f.per.rol],
+  ["Nivel",              f => nivelNombre(f.per.nivel)],
+  ["Maestro",            f => f.per.maestroId ? entrenador(f.per.maestroId) : "sin asignar"],
+  ["Plan",               f => f.plan.nombre || f.per.paquete || "sin plan"],
+  ["Veces por semana",   f => f.plan.vecesSemana || ""],
+  ["Costo mensual",      f => f.plan.precio || 0],
+  ["Clases cargadas",    f => f.per.clasesCargadas || 0],
+  ["Clases dadas",       f => f.dadas],
+  ["Clases por venir",   f => f.porVenir],
+  ["No se presentó",     f => f.faltas],
+  ["Canceló tarde",      f => f.tardias],
+  ["Canceló a tiempo",   f => f.aTiempo],
+  ["Canceló el club",    f => f.porClub],
+  ["Clases cobradas",    f => f.cobradas],
+  ["Clases que le quedan", f => f.saldo],
+];
+
+/* Excel en español espera punto y coma, y el BOM para que los acentos no
+   salgan rotos. La primera línea se lo dice de una vez. */
+function aExcel(filas, mes) {
+  const limpia = v => {
+    const t = String(v == null ? "" : v);
+    return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  const lineas = [COLUMNAS_REPORTE.map(c => limpia(c[0])).join(";")];
+  for (const f of filas) lineas.push(COLUMNAS_REPORTE.map(c => limpia(c[1](f, mes))).join(";"));
+  const total = filas.reduce((n, f) => n + (f.plan.precio || 0), 0);
+  lineas.push("");
+  lineas.push(["TOTAL", filas.length + " jinetes", "", "", "", "", "", total].map(limpia).join(";"));
+  return "\ufeff" + "sep=;\r\n" + lineas.join("\r\n") + "\r\n";
+}
+
+function bajarArchivo(nombre, contenido, tipo) {
+  const url = URL.createObjectURL(new Blob([contenido], { type: tipo }));
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+function verReporte() {
+  const mes = mesElegido();
+  const filas = filasDelMes(mes);
+  const conPlan = filas.filter(f => f.plan.precio);
+  const total = conPlan.reduce((n, f) => n + f.plan.precio, 0);
+  const insc = paquetes().find(q => q.unica);
+
+  abrirHoja("Reporte del mes", `
+    <div class="semana-nav">
+      <button class="btn btn-2 btn-mini" data-mes="-1">‹</button>
+      <span style="text-transform:capitalize">${esc(nombreMes(mes))}</span>
+      <button class="btn btn-2 btn-mini" data-mes="1"
+        ${mes >= mesActual() ? "disabled" : ""}>›</button>
+    </div>
+    <div class="resumen compacta">
+      <div class="dato"><div class="n">${filas.reduce((n, f) => n + f.dadas, 0)}</div>
+        <div class="t">clases dadas</div></div>
+      <div class="dato"><div class="n">${filas.reduce((n, f) => n + f.faltas + f.tardias, 0)}</div>
+        <div class="t">cobradas sin darse</div></div>
+      <div class="dato"><div class="n">${conPlan.length}</div><div class="t">con plan</div></div>
+      <div class="dato"><div class="n chico">${esc(pesos(total))}</div><div class="t">del mes</div></div>
+    </div>
+    ${filas.length ? `<div class="dia-bloque">${filas.map(f => `
+      <div class="reg">
+        <span class="reg-dia"><b>${f.dadas}</b>dadas</span>
+        <span class="reg-cuerpo">
+          <span class="reg-n">${esc(f.per.nombre)}</span>
+          <span class="reg-m">${esc(f.plan.nombre || f.per.paquete || "sin plan")}${
+            f.plan.precio ? " · " + esc(pesos(f.plan.precio)) : ""}</span></span>
+        <span class="reg-lado">
+          ${f.faltas || f.tardias ? `<span class="pastilla p-alerta">${f.faltas + f.tardias} cobradas</span>` : ""}
+          <span class="reg-cobro">le quedan ${f.saldo}</span></span>
+      </div>`).join("")}</div>`
+      : '<div class="vacio">Nadie tiene movimiento este mes.</div>'}
+    ${insc ? `<p style="font-size:.78rem; color:var(--ink-3)">
+      La inscripción (${esc(pesos(insc.precio))}) es aparte y de una sola vez; no está en ese total.</p>` : ""}
+    <button class="btn btn-oro btn-bloque" data-bajar-reporte>Bajar para Excel</button>
+    <p style="font-size:.76rem; color:var(--ink-3)">
+      Se baja un archivo que Excel abre directo, con una línea por jinete.</p>`,
+    cerrar => {
+      $("#hoja-cuerpo").addEventListener("click", e => {
+        const m = e.target.closest("[data-mes]");
+        if (m) { mesReporte = correrMes(mesElegido(), Number(m.dataset.mes));
+          if (mesReporte > mesActual()) mesReporte = mesActual();
+          cerrar(); return verReporte(); }
+        if (e.target.closest("[data-bajar-reporte]")) {
+          const m2 = mesElegido();
+          bajarArchivo(`Equus ${m2} paquetes y asistencia.csv`,
+            aExcel(filasDelMes(m2), m2), "text/csv;charset=utf-8");
+          avisar("Archivo generado. Ábrelo con Excel.");
+        }
+      });
+    });
+}
+
 /* Le crea la cuenta a quien ya tiene ficha pero todavía no puede entrar. Pasa
    una sola vez, al mudar los datos del club a la base. */
 function crearCuentasQueFaltan() {
@@ -3209,7 +3368,7 @@ function editarPersona(id) {
         <label class="campo">Clases cargadas
           <input type="text" inputmode="numeric" name="clasesCargadas" value="${p.clasesCargadas || 0}"></label>
         <label class="campo">Paquete<select name="paqueteId" id="sel-paquete">
-          <option value="">— sin paquete —</option>${paquetes().map(q =>
+          <option value="">— sin paquete —</option>${paquetes().filter(q => !q.unica).map(q =>
             `<option value="${q.id}" data-clases="${q.clases}" ${p.paqueteId === q.id ? "selected" : ""}>${
               esc(q.nombre)}</option>`).join("")}</select></label>
       </div>
@@ -3370,6 +3529,7 @@ document.addEventListener("click", async e => {
   const ran = e.target.closest("[data-ranura]");          if (ran) return editarRanura(ran.dataset.ranura);
   const edReg = e.target.closest("[data-editar-registro]"); if (edReg) return editarRegistro(edReg.dataset.editarRegistro);
   if (e.target.closest("[data-crear-cuentas]")) return crearCuentasQueFaltan();
+  if (e.target.closest("[data-reporte]")) return verReporte();
   if (e.target.closest("[data-nuevo-registro]")) return nuevoRegistro();
   if (e.target.closest("[data-registro-pdf]")) return registroEnPapel();
   const sreg = e.target.closest("[data-semana-reg]");
@@ -3530,8 +3690,10 @@ async function cancelar(reservaId) {
     <p style="font-size:.9rem">${esc(fechaLarga(r.fecha))} · ${esc(horaTexto(inicio))} ·
       ${esc(caballo(r.caballoId) ? caballo(r.caballoId).nombre : "—")}</p>
     <div class="nota ${aTiempo ? "" : "alerta"}">${aTiempo
-      ? "Se devuelve la clase al saldo."
-      : "Pasó el límite de 10 horas: la clase se cobra igual y no vuelve al saldo."}</div>
+      ? `Estás a tiempo: <b>no se te cobra</b> y la clase vuelve a tu saldo.
+         Pasarías de ${saldo()} a <b>${saldo() + (r.consume || 1)}</b>.`
+      : `Pasó el límite de 10 horas: <b>la clase se cobra igual</b> y no vuelve al saldo.
+         Te seguirían quedando <b>${saldo()}</b>.`}</div>
     <button class="btn btn-bloque ${aTiempo ? "" : "btn-peligro"}" id="ok-cancelar">
       ${aTiempo ? "Cancelar y recuperar la clase" : "Cancelar de todos modos"}</button>
     <button class="btn btn-2 btn-bloque" id="no-cancelar">Mejor no</button>`,
@@ -3544,7 +3706,14 @@ async function cancelar(reservaId) {
           consume:r.consume || 1, estado:aTiempo ? "cancelada_a_tiempo" : "cancelada_tarde",
           cobrada:!aTiempo, cuando:new Date().toISOString() });
         await Datos.quitar("reservas", r.id);
-        avisar(aTiempo ? "Clase cancelada y devuelta al saldo." : "Clase cancelada. Se cobra.");
+        /* Lo que de verdad quiere saber quien cancela: si llegó a tiempo y con
+           cuántas clases se queda. */
+        const quedan = saldo();
+        avisar(aTiempo
+          ? `Cancelada a tiempo, no se te cobró. Te ${quedan === 1 ? "queda" : "quedan"} ${quedan} ${
+              quedan === 1 ? "clase" : "clases"}.`
+          : `Cancelada fuera de tiempo, se te cobró. Te ${quedan === 1 ? "queda" : "quedan"} ${quedan} ${
+              quedan === 1 ? "clase" : "clases"}.`);
         cerrar(); pintar();
       };
     });
@@ -3591,7 +3760,17 @@ $("#form-entrar").addEventListener("submit", async e => {
   btn.disabled = true; btn.textContent = "Entrando…";
   const ok = await entrar(f.get("usuario"), f.get("clave"));
   btn.disabled = false; btn.textContent = "Entrar";
-  $("#acceso-error").hidden = ok;
+  const aviso = $("#acceso-error");
+  aviso.hidden = ok;
+  /* Decir qué falló de verdad. "Usuario o contraseña incorrectos" cuando el
+     problema es un ajuste del servidor deja a cualquiera dando vueltas. */
+  if (!ok) aviso.textContent = {
+    confirmacion: "La base del club está pidiendo confirmar por correo. Dirección tiene que " +
+                  "apagar «Confirm email» en Supabase → Authentication → Sign In / Providers.",
+    "sin-ficha":  "No hay ninguna ficha con ese usuario. Pídesela a dirección.",
+    rpc:          "No se pudo enganchar tu cuenta con tu ficha. Avísale a dirección.",
+    alta:         "No se pudo crear tu cuenta. Avísale a dirección.",
+  }[(window.Nube || {}).ultimoMotivo] || "Usuario o contraseña incorrectos.";
   if (ok) { e.target.reset(); refrescarSesion(); vista = vistaInicial(); pintar(); }
 });
 

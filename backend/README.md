@@ -27,41 +27,40 @@ después a borrar la falta que se le cobró: eso es de dirección.
 
 ## Cómo se pone
 
-En Supabase, en **SQL Editor**, correr en este orden:
+Son **dos cosas**, y ninguna toma más de un minuto.
 
-1. `almacen.sql` — la tabla y las reglas. Se puede repetir cuantas veces haga falta.
-2. `datos-del-club.sql` — los datos que ya había en la app, para no empezar de cero.
+**1. Pegar el SQL.** En Supabase → **SQL Editor** → pegar entero
+`backend/instalar.sql` → **Run**. Deja la tabla, las reglas y los datos que ya
+había en la app. Se puede repetir cuantas veces haga falta.
 
-### Antes hace falta un dominio del club
+**2. Apagar la confirmación por correo.** En **Authentication → Sign In /
+Providers**, apagar *Confirm email*. Las cuentas del club no llevan correo de
+verdad; si queda encendida, Supabase espera que confirmen algo que no existe y
+nadie entra. Si se olvida, la app lo dice en la pantalla de acceso con todas
+sus letras, no con un "usuario o contraseña incorrectos".
 
-Se entra con usuario, no con correo. Pero la base necesita algo con forma de
-correo, así que la app le pega un dominio por detrás. **Ese dominio tiene que
-existir y ser del club.**
+Ya está. **No hay tercer paso**: cada quien se registra solo la primera vez que
+entra, con su usuario y su contraseña de siempre.
 
-Está comprobado contra el proyecto: Supabase **rechaza** un dominio inventado
-(`cuentas.equus.mx` → *"Email address is invalid"*). Y poner uno ajeno es peor:
-le manda correos de confirmación a un desconocido. `equus.mx`, por ejemplo, ya
-es de alguien más.
+### Cómo puede ser eso seguro
 
-Cuando esté comprado, se pone en `assets/js/supabase-config.js`:
+Al entrar por primera vez la app crea la cuenta y le pide al servidor que la
+enganche con la ficha que dirección ya había hecho. **El servidor comprueba la
+contraseña contra la huella guardada en la ficha** antes de enganchar nada, y
+solo engancha fichas libres.
 
-```js
-dominioCuentas: "equusmty.com",
-```
+Así que registrarse con el nombre de otra persona no sirve: sin su contraseña
+el enganche se rechaza, y si esa ficha ya está enganchada, tampoco. Probado
+contra PostgreSQL:
 
-Mientras esté vacío, la app funciona guardando en cada aparato y lo avisa en
-pantalla. No falla en silencio.
-
-### Y apagar la confirmación por correo
-
-En **Authentication → Sign In / Providers**, apagar *Confirm email*. Si queda
-encendida, Supabase intenta mandarle un correo a cada cuenta nueva, choca con
-su propio límite de envíos, y nadie puede entrar hasta confirmar un correo que
-no existe.
-
-Por último, entrar a la app como dirección: sale un aviso con el botón
-**«Crear las cuentas que faltan»**. Ese botón le crea la cuenta a cada persona
-que ya tiene ficha. Es una sola vez.
+| Intento | Resultado |
+|---|---|
+| Romina, con su contraseña | enganchada |
+| La misma cuenta otra vez | ya estaba, no pasa nada |
+| Un desconocido se registra como "romina" | **rechazado** |
+| Con la contraseña buena, pero la ficha ya tomada | **rechazado** |
+| Katia con la contraseña equivocada | **rechazado** |
+| Alguien sin sesión llama a la función | **rechazado** |
 
 ## Una advertencia que conviene no saltarse
 

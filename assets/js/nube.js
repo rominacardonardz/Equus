@@ -92,14 +92,57 @@ window.Nube = {
     this.listo = true;
   },
 
+  /* Motivo del último intento fallido, para poder decirlo en pantalla en vez
+     de un "usuario o contraseña incorrectos" que no explica nada. */
+  ultimoMotivo: null,
+
   async entrar(usuario, clave) {
     if (!this.cliente) return false;
-    const { data, error } = await this.cliente.auth.signInWithPassword({
-      email: this.correoDe(usuario), password: String(clave),
-    });
-    if (error || !data.session) return false;
+    this.ultimoMotivo = null;
+    const correo = this.correoDe(usuario);
+    const clv = String(clave);
+
+    let { data, error } = await this.cliente.auth.signInWithPassword({ email: correo, password: clv });
+
+    /* La primera vez que alguien entra todavía no tiene cuenta: se le crea al
+       vuelo y se engancha con la ficha que dirección ya le había hecho. El
+       enganche lo autoriza el servidor comprobando la contraseña, así que
+       registrarse con el nombre de otro no sirve de nada. */
+    if (error || !data.session) {
+      const alta = await this.cliente.auth.signUp({ email: correo, password: clv });
+      if (alta.error) {
+        /* Ya existía: entonces la contraseña estaba mal, sin más. */
+        this.ultimoMotivo = /already/i.test(alta.error.message || "") ? "clave" : "alta";
+        return false;
+      }
+      if (!alta.data.session) {
+        /* Cuenta creada pero sin sesión: Supabase está esperando que confirmen
+           un correo que no existe. */
+        this.ultimoMotivo = "confirmacion";
+        return false;
+      }
+      data = alta.data;
+    }
+
+    const enganche = await this.engancharFicha(data.session, usuario, clv);
+    if (enganche !== true) {
+      await this.cliente.auth.signOut().catch(() => {});
+      this.ultimoMotivo = enganche;
+      return false;
+    }
     await this.tomarSesion(data.session);
     return true;
+  },
+
+  /* Deja la cuenta unida a su ficha. Si ya lo estaba, no hace nada. */
+  async engancharFicha(sesion, usuario, clave) {
+    const { data, error } = await this.cliente
+      .rpc("reclamar_ficha", { p_usuario: String(usuario), p_clave: String(clave) });
+    if (error) return "rpc";
+    if (data === "listo" || data === "ya") return true;
+    if (data === "clave") return "clave";
+    if (data === "sin ficha") return "sin-ficha";
+    return "rpc";
   },
 
   async salir() {

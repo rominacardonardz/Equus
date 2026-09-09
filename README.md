@@ -160,6 +160,14 @@ en línea en **https://rominacardonardz.github.io/Equus/**
 La app es instalable: al abrir el sitio en el celular, «Agregar a pantalla de
 inicio» la deja con su icono, a pantalla completa, y abre aunque no haya señal.
 
+## Conectar el club
+
+Mientras la base no esté montada, cada teléfono guarda lo suyo y la app lo dice
+arriba de todo. Para conectarlo son dos cosas, en `backend/README.md`: pegar
+`backend/instalar.sql` en el SQL Editor de Supabase, y apagar *Confirm email*
+en Authentication. Nada más: cada quien se registra solo la primera vez que
+entra, y el servidor comprueba su contraseña antes de darle su ficha.
+
 ## El dominio del club
 
 El club tiene **hipicoequus.com**. Sirve para dos cosas a la vez: es la
