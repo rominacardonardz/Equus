@@ -30,8 +30,14 @@ después a borrar la falta que se le cobró: eso es de dirección.
 Son **dos cosas**, y ninguna toma más de un minuto.
 
 **1. Pegar el SQL.** En Supabase → **SQL Editor** → pegar entero
-`backend/instalar.sql` → **Run**. Deja la tabla, las reglas y los datos que ya
-había en la app. Se puede repetir cuantas veces haga falta.
+`backend/instalar.sql` → **Run**.
+
+Supabase avisa que la consulta «incluye operaciones destructivas». Es verdad a
+medias y conviene entender por qué: el archivo **retira y vuelve a crear las
+reglas de acceso y una vista**, y eso es lo que dispara el aviso. **A la tabla
+de datos no le borra nada.** Está probado corriéndolo tres veces seguidas con
+actividad de por medio: las reservas, el registro, las personas nuevas y las
+fichas editadas siguen ahí igual.
 
 **2. Apagar la confirmación por correo.** En **Authentication → Sign In /
 Providers**, apagar *Confirm email*. Las cuentas del club no llevan correo de

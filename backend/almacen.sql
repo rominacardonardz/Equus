@@ -9,9 +9,9 @@
 -- ===========================================================================
 
 -- ------------------------------------------------------------------ tabla
-drop table if exists almacen cascade;
-
-create table almacen (
+-- Nunca se borra: este archivo se corre otra vez para actualizar las reglas,
+-- y si borrara la tabla se llevaría por delante las reservas del club.
+create table if not exists almacen (
   coleccion   text        not null,
   doc_id      text        not null,
   datos       jsonb       not null,
@@ -19,10 +19,10 @@ create table almacen (
   primary key (coleccion, doc_id)
 );
 
-create index almacen_coleccion on almacen (coleccion);
+create index if not exists almacen_coleccion on almacen (coleccion);
 -- Las reglas preguntan por estos dos campos en casi cada fila.
-create index almacen_persona on almacen ((datos->>'personaId'));
-create index almacen_auth    on almacen ((datos->>'authId'));
+create index if not exists almacen_persona on almacen ((datos->>'personaId'));
+create index if not exists almacen_auth    on almacen ((datos->>'authId'));
 
 alter table almacen enable row level security;
 
@@ -83,9 +83,11 @@ grant execute on all functions in schema cq_priv to authenticated;
 -- --------------------------------------------------------------- catálogos
 -- Caballos, paquetes, competencias, horarios, documentos y anuncios los ve
 -- todo el que entró; solo dirección los escribe.
+drop policy if exists catalogo_lectura on almacen;
 create policy catalogo_lectura on almacen for select to authenticated
   using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios'));
 
+drop policy if exists catalogo_escritura on almacen;
 create policy catalogo_escritura on almacen for all to authenticated
   using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios')
          and cq_priv.es_admin())
@@ -95,6 +97,7 @@ create policy catalogo_escritura on almacen for all to authenticated
 -- ---------------------------------------------------------------- personas
 -- Un jinete se ve a sí mismo, al menor que maneja y a los maestros (necesita
 -- sus nombres). Dirección y los maestros ven a todos.
+drop policy if exists personas_lectura on almacen;
 create policy personas_lectura on almacen for select to authenticated
   using (coleccion = 'personas' and (
        cq_priv.es_admin()
@@ -105,18 +108,21 @@ create policy personas_lectura on almacen for select to authenticated
   ));
 
 -- Solo dirección da de alta, edita o da de baja personas.
+drop policy if exists personas_escritura on almacen;
 create policy personas_escritura on almacen for all to authenticated
   using (coleccion = 'personas' and cq_priv.es_admin())
   with check (coleccion = 'personas' and cq_priv.es_admin());
 
 -- ------------------------------------------------------------------ montas
 -- Cada quien ve lo suyo; el maestro, lo de sus clases; dirección, todo.
+drop policy if exists montas_lectura on almacen;
 create policy montas_lectura on almacen for select to authenticated
   using (coleccion in ('reservas','historial') and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)));
 
 -- Reservas: un jinete se apunta, se cambia y se cancela a sí mismo. Dirección
 -- y el maestro de esa clase pueden con cualquiera.
+drop policy if exists reservas_escritura on almacen;
 create policy reservas_escritura on almacen for all to authenticated
   using (coleccion = 'reservas' and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)))
@@ -126,23 +132,28 @@ create policy reservas_escritura on almacen for all to authenticated
 -- Registro: es de dinero. Un jinete puede dejar constancia de que canceló,
 -- pero no puede volver después a borrar la falta que se le cobró: corregirlo
 -- es de dirección y del maestro de esa clase.
+drop policy if exists registro_alta on almacen;
 create policy registro_alta on almacen for insert to authenticated
   with check (coleccion = 'historial' and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)));
 
+drop policy if exists registro_correccion on almacen;
 create policy registro_correccion on almacen for update to authenticated
   using (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)))
   with check (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)));
 
+drop policy if exists registro_baja on almacen;
 create policy registro_baja on almacen for delete to authenticated
   using (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)));
 
 -- ------------------------------------------------------------------ suyo
 -- Firmas, inscripciones y recordatorios: de cada quien, y de dirección.
+drop policy if exists propio_lectura on almacen;
 create policy propio_lectura on almacen for select to authenticated
   using (coleccion in ('aceptaciones','inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)));
 
+drop policy if exists propio_escritura on almacen;
 create policy propio_escritura on almacen for all to authenticated
   using (coleccion in ('aceptaciones','inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)))
@@ -226,4 +237,8 @@ create trigger almacen_hora before insert or update on almacen
 
 -- ------------------------------------------------------------ en vivo
 -- Para que a todos se les actualice la pantalla sin recargar.
-alter publication supabase_realtime add table almacen;
+do $$
+begin
+  alter publication supabase_realtime add table almacen;
+exception when duplicate_object then null;   -- ya estaba, y está bien
+end $$;

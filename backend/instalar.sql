@@ -2,10 +2,16 @@
 -- Equus · INSTALAR
 --
 -- Un solo pegado. Copiar todo este archivo en Supabase → SQL Editor → Run.
--- Se puede volver a correr cuantas veces haga falta.
 --
--- Deja montada la base del club, sus reglas de acceso y los datos que ya
--- había en la app. Después falta una sola cosa, y es un interruptor:
+-- SE PUEDE VOLVER A CORRER SIN MIEDO. No borra ninguna tabla ni ningún dato:
+-- crea lo que falte, actualiza las reglas de acceso y deja intacto todo lo que
+-- el club haya hecho mientras tanto.
+--
+-- Supabase avisa que hay operaciones destructivas porque el archivo retira y
+-- vuelve a crear las reglas y una vista. Eso no guarda datos: los datos viven
+-- en la tabla almacen, y a esa tabla no se le borra nada.
+--
+-- Después de correrlo falta una sola cosa, y es un interruptor:
 -- Authentication → Sign In / Providers → apagar «Confirm email».
 --
 -- Es la unión de almacen.sql y datos-del-club.sql, para no pegar dos veces.
@@ -22,9 +28,9 @@
 -- ===========================================================================
 
 -- ------------------------------------------------------------------ tabla
-drop table if exists almacen cascade;
-
-create table almacen (
+-- Nunca se borra: este archivo se corre otra vez para actualizar las reglas,
+-- y si borrara la tabla se llevaría por delante las reservas del club.
+create table if not exists almacen (
   coleccion   text        not null,
   doc_id      text        not null,
   datos       jsonb       not null,
@@ -32,10 +38,10 @@ create table almacen (
   primary key (coleccion, doc_id)
 );
 
-create index almacen_coleccion on almacen (coleccion);
+create index if not exists almacen_coleccion on almacen (coleccion);
 -- Las reglas preguntan por estos dos campos en casi cada fila.
-create index almacen_persona on almacen ((datos->>'personaId'));
-create index almacen_auth    on almacen ((datos->>'authId'));
+create index if not exists almacen_persona on almacen ((datos->>'personaId'));
+create index if not exists almacen_auth    on almacen ((datos->>'authId'));
 
 alter table almacen enable row level security;
 
@@ -96,9 +102,11 @@ grant execute on all functions in schema cq_priv to authenticated;
 -- --------------------------------------------------------------- catálogos
 -- Caballos, paquetes, competencias, horarios, documentos y anuncios los ve
 -- todo el que entró; solo dirección los escribe.
+drop policy if exists catalogo_lectura on almacen;
 create policy catalogo_lectura on almacen for select to authenticated
   using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios'));
 
+drop policy if exists catalogo_escritura on almacen;
 create policy catalogo_escritura on almacen for all to authenticated
   using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios')
          and cq_priv.es_admin())
@@ -108,6 +116,7 @@ create policy catalogo_escritura on almacen for all to authenticated
 -- ---------------------------------------------------------------- personas
 -- Un jinete se ve a sí mismo, al menor que maneja y a los maestros (necesita
 -- sus nombres). Dirección y los maestros ven a todos.
+drop policy if exists personas_lectura on almacen;
 create policy personas_lectura on almacen for select to authenticated
   using (coleccion = 'personas' and (
        cq_priv.es_admin()
@@ -118,18 +127,21 @@ create policy personas_lectura on almacen for select to authenticated
   ));
 
 -- Solo dirección da de alta, edita o da de baja personas.
+drop policy if exists personas_escritura on almacen;
 create policy personas_escritura on almacen for all to authenticated
   using (coleccion = 'personas' and cq_priv.es_admin())
   with check (coleccion = 'personas' and cq_priv.es_admin());
 
 -- ------------------------------------------------------------------ montas
 -- Cada quien ve lo suyo; el maestro, lo de sus clases; dirección, todo.
+drop policy if exists montas_lectura on almacen;
 create policy montas_lectura on almacen for select to authenticated
   using (coleccion in ('reservas','historial') and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)));
 
 -- Reservas: un jinete se apunta, se cambia y se cancela a sí mismo. Dirección
 -- y el maestro de esa clase pueden con cualquiera.
+drop policy if exists reservas_escritura on almacen;
 create policy reservas_escritura on almacen for all to authenticated
   using (coleccion = 'reservas' and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)))
@@ -139,23 +151,28 @@ create policy reservas_escritura on almacen for all to authenticated
 -- Registro: es de dinero. Un jinete puede dejar constancia de que canceló,
 -- pero no puede volver después a borrar la falta que se le cobró: corregirlo
 -- es de dirección y del maestro de esa clase.
+drop policy if exists registro_alta on almacen;
 create policy registro_alta on almacen for insert to authenticated
   with check (coleccion = 'historial' and (
        cq_priv.es_admin() or cq_priv.doy_esa_clase(datos) or cq_priv.es_mio(datos)));
 
+drop policy if exists registro_correccion on almacen;
 create policy registro_correccion on almacen for update to authenticated
   using (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)))
   with check (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)));
 
+drop policy if exists registro_baja on almacen;
 create policy registro_baja on almacen for delete to authenticated
   using (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)));
 
 -- ------------------------------------------------------------------ suyo
 -- Firmas, inscripciones y recordatorios: de cada quien, y de dirección.
+drop policy if exists propio_lectura on almacen;
 create policy propio_lectura on almacen for select to authenticated
   using (coleccion in ('aceptaciones','inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)));
 
+drop policy if exists propio_escritura on almacen;
 create policy propio_escritura on almacen for all to authenticated
   using (coleccion in ('aceptaciones','inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)))
@@ -239,7 +256,11 @@ create trigger almacen_hora before insert or update on almacen
 
 -- ------------------------------------------------------------ en vivo
 -- Para que a todos se les actualice la pantalla sin recargar.
-alter publication supabase_realtime add table almacen;
+do $$
+begin
+  alter publication supabase_realtime add table almacen;
+exception when duplicate_object then null;   -- ya estaba, y está bien
+end $$;
 -- ===========================================================================
 -- Equus · los datos del club
 --
@@ -263,14 +284,14 @@ insert into almacen (coleccion, doc_id, datos) values
   ('personas', 'romina', '{"clasesCargadas": 8, "clave": "04ff2c93496abb8ca0978928a00bd08d4e062e92f499791edf61df9d2e7ad619", "habilitados": [], "imparte": false, "maestroId": "", "menor": false, "nivel": "avanzado", "nombre": "Romina Cardona", "paquete": "", "paqueteId": "", "propios": ["norte"], "rol": "admin", "sinCuenta": false, "tutorDe": "", "usuario": "romina"}'::jsonb),
   ('personas', 'tania', '{"clasesCargadas": 0, "clave": "04ff2c93496abb8ca0978928a00bd08d4e062e92f499791edf61df9d2e7ad619", "habilitados": [], "imparte": true, "maestroId": "", "menor": false, "nivel": "avanzado", "nombre": "Tania", "paquete": "", "paqueteId": "", "propios": [], "rol": "admin", "sinCuenta": false, "tutorDe": "", "usuario": "tania"}'::jsonb),
   ('personas', 'vale', '{"clasesCargadas": 4, "clave": "04ff2c93496abb8ca0978928a00bd08d4e062e92f499791edf61df9d2e7ad619", "habilitados": ["duende", "nube"], "imparte": false, "maestroId": "edwin", "menor": false, "nivel": "cuerdita", "nombre": "Vale", "paquete": "4 clases", "paqueteId": "p4", "propios": [], "rol": "jinete", "sinCuenta": false, "tutorDe": "", "usuario": "vale"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- caballos (3)
 insert into almacen (coleccion, doc_id, datos) values
   ('caballos', 'allegra', '{"autorizaEscuela": false, "capa": "", "edad": "", "estatus": "activo", "max": "avanzado", "maxDia": 1, "min": "avanzado", "nombre": "Allegra", "origen": "Paola", "uso": "propietario"}'::jsonb),
   ('caballos', 'guero', '{"autorizaEscuela": false, "capa": "palomino", "edad": "7", "estatus": "activo", "max": "intermedio", "maxDia": 2, "min": "principiantes", "nombre": "Güero", "origen": "", "uso": "escuelita"}'::jsonb),
   ('caballos', 'norte', '{"autorizaEscuela": false, "capa": "alazan", "edad": "8", "estatus": "activo", "max": "intermedio", "maxDia": 2, "min": "principiantes", "nombre": "Norte", "origen": "Romina Cardona", "uso": "propietario"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- paquetes (4)
 insert into almacen (coleccion, doc_id, datos) values
@@ -278,7 +299,7 @@ insert into almacen (coleccion, doc_id, datos) values
   ('paquetes', 'p15', '{"clases": 15, "nombre": "15 clases", "vigencia": ""}'::jsonb),
   ('paquetes', 'p4', '{"clases": 4, "nombre": "4 clases", "vigencia": ""}'::jsonb),
   ('paquetes', 'p8', '{"clases": 8, "nombre": "8 clases", "vigencia": ""}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- competencias (5)
 insert into almacen (coleccion, doc_id, datos) values
@@ -287,12 +308,12 @@ insert into almacen (coleccion, doc_id, datos) values
   ('competencias', 'la-silla', '{"categorias": [], "cierre": "", "disciplina": "Salto", "fin": "2026-11-15", "horarios": [], "inicio": "2026-11-02", "nombre": "Hípico La Silla", "nota": "", "sede": "Club Hípico La Silla"}'::jsonb),
   ('competencias', 'paloma-blanca', '{"categorias": [], "cierre": "", "disciplina": "Salto", "fin": "2026-10-04", "horarios": [], "inicio": "2026-10-01", "nombre": "Paloma Blanca", "nota": "", "sede": "Paloma Blanca"}'::jsonb),
   ('competencias', 'san-pedro', '{"categorias": [], "cierre": "", "disciplina": "Salto", "fin": "2026-09-20", "horarios": [], "inicio": "2026-09-17", "nombre": "San Pedro", "nota": "", "sede": "San Pedro"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- horarios (1)
 insert into almacen (coleccion, doc_id, datos) values
   ('horarios', 'd2-0900', '{"activo": true, "cupo": 6, "ent": "tania", "esp": "mty"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- documentos (4)
 insert into almacen (coleccion, doc_id, datos) values
@@ -300,7 +321,7 @@ insert into almacen (coleccion, doc_id, datos) values
   ('documentos', 'contrato-pupilaje', '{"audiencia": "propietario", "cuerpo": [{"h": "Servicio incluido", "l": ["Caballeriza individual, cama, alimentación y agua limpia.", "Salida diaria al padock y revisión del equipo de cuadra."]}, {"h": "A cargo del propietario", "l": ["Herrador, veterinario, desparasitaciones y vacunas al corriente.", "Suplementos y electrolitos, entregados en la fecha del mes que marque el calendario.", "Equipo completo del caballo, identificado con su nombre."]}, {"h": "Uso del caballo", "l": ["El caballo no entra al pool de escuela salvo autorización expresa del propietario, revocable en cualquier momento.", "El club no monta ni trabaja al caballo sin acuerdo previo."]}, {"h": "Salida del club", "l": ["Avisar con 30 días de anticipación para dar de baja el pupilaje."]}], "obligatorio": true, "orden": 2, "resumen": "Condiciones del servicio de pensión para caballos en el club.", "titulo": "Contrato de pupilaje", "version": "1.2", "vigente": "1 de julio de 2026"}'::jsonb),
   ('documentos', 'reglamento', '{"audiencia": "todos", "cuerpo": [{"h": "Equipo obligatorio", "l": ["Casco homologado en todo momento sobre el caballo, sin excepción.", "Botas de montar y pantalón adecuado.", "Chaleco protector obligatorio en salto para menores de edad."]}, {"h": "Uso de instalaciones", "l": ["El acceso a caballerizas es solo con autorización del equipo de cuadra.", "La pista se libera puntualmente al terminar cada clase.", "Prohibido dar alimento a caballos que no sean propios."]}, {"h": "Horarios", "l": ["El lunes no hay clases: es el día en que se abre la agenda de la semana.", "Jinetes de escuela: de martes a sábado.", "Propietarios: de martes a domingo.", "Todos los horarios están abiertos para cualquier nivel.", "Presentarse 15 minutos antes de la clase para ensillar."]}, {"h": "Convivencia", "l": ["Trato respetuoso con personal, jinetes y caballos.", "El incumplimiento del reglamento puede derivar en suspensión temporal."]}], "obligatorio": true, "orden": 0, "resumen": "Normas de convivencia, uso de instalaciones, equipo obligatorio y horarios.", "titulo": "Reglamento del club", "version": "2.1", "vigente": "1 de julio de 2026"}'::jsonb),
   ('documentos', 'responsiva-menor', '{"audiencia": "menor", "cuerpo": [{"h": "Quién responde", "l": ["El tutor que firma responde por el menor dentro de las instalaciones.", "El tutor acepta el reglamento y el contrato de jinete en nombre del menor."]}, {"h": "Autorización médica", "l": ["El tutor autoriza la atención médica de urgencia si hiciera falta.", "Datos de contacto y alergias del menor entregados a dirección y actualizados."]}, {"h": "Acompañamiento", "l": ["El menor no permanece solo en las instalaciones.", "Chaleco protector obligatorio en salto."]}], "obligatorio": true, "orden": 3, "resumen": "La firma el padre, madre o tutor que responde por el jinete menor de edad.", "titulo": "Carta responsiva de menor", "version": "1.1", "vigente": "1 de julio de 2026"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
 
 -- reservas (7)
 insert into almacen (coleccion, doc_id, datos) values
@@ -311,4 +332,4 @@ insert into almacen (coleccion, doc_id, datos) values
   ('reservas', '2026-09-10__d4-0800-edwin__guero', '{"caballoId": "guero", "consume": 1, "creada": "2026-09-07T19:35:03.913Z", "ent": "edwin", "esp": "equus", "fecha": "2026-09-10", "hora": "08:00", "override": false, "personaId": "carllos", "plantillaId": "d4-0800-edwin", "reservadaPor": "carllos", "tipoId": "escuela"}'::jsonb),
   ('reservas', '2026-09-10__d4-0800-tania__allegra', '{"caballoId": "allegra", "consume": 1, "creada": "2026-09-08T19:56:09.869Z", "ent": "tania", "esp": "mty", "fecha": "2026-09-10", "hora": "08:00", "personaId": "paola", "plantillaId": "d4-0800-tania", "reservadaPor": "tania", "tipoId": "escuela"}'::jsonb),
   ('reservas', '2026-09-11__d5-0900-tania__allegra', '{"caballoId": "allegra", "consume": 1, "creada": "2026-09-08T19:56:16.373Z", "ent": "tania", "esp": "mty", "fecha": "2026-09-11", "hora": "09:00", "personaId": "paola", "plantillaId": "d5-0900-tania", "reservadaPor": "tania", "tipoId": "escuela"}'::jsonb)
-on conflict (coleccion, doc_id) do update set datos = excluded.datos;
+on conflict (coleccion, doc_id) do nothing;   -- lo que ya está, no se toca
