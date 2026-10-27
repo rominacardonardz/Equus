@@ -3304,21 +3304,8 @@ document.addEventListener("click", async e => {
   const ediQ = e.target.closest("[data-editar-paquete]"); if (ediQ) return editarPaquete(ediQ.dataset.editarPaquete);
   const nuevoC = e.target.closest("[data-nuevo-caballo]"); if (nuevoC) return editarCaballo(null);
   const ediCab = e.target.closest("[data-editar-caballo]"); if (ediCab) return editarCaballo(ediCab.dataset.editarCaballo);
-  const nuevoD = e.target.closest("[data-nuevo-doc]");    if (nuevoD) return editarDocumento(null);
-  const ediD = e.target.closest("[data-editar-doc]");     if (ediD) return editarDocumento(ediD.dataset.editarDoc);
   const nuevoA = e.target.closest("[data-nuevo-anuncio]"); if (nuevoA) return editarAnuncio(null);
   const ediA = e.target.closest("[data-editar-anuncio]"); if (ediA) return editarAnuncio(ediA.dataset.editarAnuncio);
-  const bd = e.target.closest("[data-borrar-doc]");
-  if (bd) {
-    const d = documento(bd.dataset.borrarDoc);
-    return abrirHoja("Borrar documento", `
-      <p style="font-size:.9rem">Se quita <b>${esc(d.titulo)}</b> y las firmas que ya tiene dejan de contar.</p>
-      <button class="btn btn-peligro btn-bloque" id="ok-bd">Borrar</button>`,
-      cerrar => { $("#ok-bd").onclick = async () => {
-        try { await Datos.quitar("documentos", d.id); avisar("Documento borrado."); }
-        catch (err) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
-        cerrar(); pintar(); }; });
-  }
   const sres = e.target.closest("[data-semana-res]");
   if (sres) { semanaReserva = Math.max(0, Math.min(3, semanaReserva + Number(sres.dataset.semanaRes))); return pintar(); }
   const alt = e.target.closest("[data-alternar-mias]");
@@ -3389,17 +3376,6 @@ document.addEventListener("submit", async e => {
     await Datos.poner("recordatorios", "r-" + Date.now().toString(36) + "-" + sujeto.id,
       { personaId:sujeto.id, texto, fecha:f.get("fecha") || "", hecho:false });
     avisar("Recordatorio agregado."); return pintar();
-  }
-  const firmar = e.target.dataset.firmar;
-  if (firmar) {
-    const d = documento(firmar);
-    const nombre = String(new FormData(e.target).get("nombre") || "").trim();
-    if (nombre.length < 4) return avisar("Escribe el nombre completo.");
-    const cuando = ahora();
-    await Datos.poner("aceptaciones", `${sujeto.id}__${d.id}__${d.version}`, {
-      personaId:sujeto.id, firmadaPor:cuenta.id, documentoId:d.id, version:d.version,
-      nombreFirma:nombre, fecha:ymd(cuando), horaTexto:horaTexto(cuando), sello:cuando.toISOString() });
-    avisar(`${d.titulo} aceptado.`); return pintar();
   }
 });
 

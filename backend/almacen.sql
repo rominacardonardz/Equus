@@ -80,18 +80,23 @@ $$;
 revoke all on all functions in schema cq_priv from public, anon;
 grant execute on all functions in schema cq_priv to authenticated;
 
+-- Supabase le da estos permisos sola a las tablas nuevas de public, pero
+-- dejarlo escrito cuesta una línea y evita un "permission denied" opaco si esa
+-- configuración cambia. Quién ve qué lo siguen decidiendo las reglas de abajo.
+grant select, insert, update, delete on almacen to authenticated;
+
 -- --------------------------------------------------------------- catálogos
--- Caballos, paquetes, competencias, horarios, documentos y anuncios los ve
+-- Caballos, paquetes, competencias, horarios y anuncios los ve
 -- todo el que entró; solo dirección los escribe.
 drop policy if exists catalogo_lectura on almacen;
 create policy catalogo_lectura on almacen for select to authenticated
-  using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios'));
+  using (coleccion in ('caballos','paquetes','competencias','horarios','anuncios'));
 
 drop policy if exists catalogo_escritura on almacen;
 create policy catalogo_escritura on almacen for all to authenticated
-  using (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios')
+  using (coleccion in ('caballos','paquetes','competencias','horarios','anuncios')
          and cq_priv.es_admin())
-  with check (coleccion in ('caballos','paquetes','competencias','horarios','documentos','anuncios')
+  with check (coleccion in ('caballos','paquetes','competencias','horarios','anuncios')
          and cq_priv.es_admin());
 
 -- ---------------------------------------------------------------- personas
@@ -147,17 +152,17 @@ create policy registro_baja on almacen for delete to authenticated
   using (coleccion = 'historial' and (cq_priv.es_admin() or cq_priv.doy_esa_clase(datos)));
 
 -- ------------------------------------------------------------------ suyo
--- Firmas, inscripciones y recordatorios: de cada quien, y de dirección.
+-- Inscripciones y recordatorios: de cada quien, y de dirección.
 drop policy if exists propio_lectura on almacen;
 create policy propio_lectura on almacen for select to authenticated
-  using (coleccion in ('aceptaciones','inscripciones','recordatorios')
+  using (coleccion in ('inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)));
 
 drop policy if exists propio_escritura on almacen;
 create policy propio_escritura on almacen for all to authenticated
-  using (coleccion in ('aceptaciones','inscripciones','recordatorios')
+  using (coleccion in ('inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)))
-  with check (coleccion in ('aceptaciones','inscripciones','recordatorios')
+  with check (coleccion in ('inscripciones','recordatorios')
          and (cq_priv.es_admin() or cq_priv.es_mio(datos)));
 
 -- -------------------------------------------------------------- ocupación
