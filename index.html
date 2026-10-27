@@ -443,10 +443,9 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 
 <main>
   <section class="vista" id="v-inicio"></section>
-  <section class="vista" id="v-reservar" hidden></section>
   <section class="vista" id="v-semana" hidden></section>
+  <section class="vista" id="v-clientes" hidden></section>
   <section class="vista" id="v-registro" hidden></section>
-  <section class="vista" id="v-documentos" hidden></section>
   <section class="vista" id="v-competencias" hidden></section>
   <section class="vista" id="v-recordatorios" hidden></section>
 
@@ -492,7 +491,8 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .casillas input{width:auto}
 
 .semana-nav{display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-  font-size:.82rem; color:var(--ink-2)}
+  font-size:.82rem; color:var(--ink-2); text-align:center}
+.semana-nav > span{flex:1; min-width:0}
 .dia-bloque{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
 .dia-cab{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem;
   padding:.6rem .9rem; background:var(--surface-2); border-bottom:1px solid var(--line)}
@@ -513,10 +513,15 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .td-n{font-size:.62rem; color:var(--ink-3); font-variant-numeric:tabular-nums}
 .ranura-lado{display:grid; justify-items:end; gap:.25rem}
 .ranura-cupo{font-size:.72rem; color:var(--ink-3); font-variant-numeric:tabular-nums}
-.ranura{display:grid; grid-template-columns:4.3rem 1fr auto; gap:.2rem .6rem; align-items:start;
-  padding:.6rem .9rem; border-top:1px solid var(--line)}
+.ranura{display:grid; grid-template-columns:4.3rem 1fr auto; gap:.2rem .6rem; align-items:center;
+  padding:.5rem .9rem; border-top:1px solid var(--line)}
 .ranura:first-of-type{border-top:0}
-.ranura.libre{opacity:.62}
+.ranura.libre{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.ranura.libre .ranura-hora{color:var(--ink-3); font-size:.95rem}
+.ajusta-hora{font-size:.68rem; color:var(--ink-3); text-decoration:underline;
+  text-underline-offset:2px; padding:.15rem}
+.ajusta-hora:hover{color:var(--accent)}
+.ranura-cupo.lleno{color:var(--alerta); font-weight:600}
 .ranura-hora{font-family:var(--serif); font-size:1.05rem; font-variant-numeric:tabular-nums; padding-top:.1rem}
 .ranura-meta{font-size:.74rem; color:var(--ink-3)}
 .jinetes{display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.3rem}
@@ -532,6 +537,17 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .jinete-chip.cerrada{cursor:pointer; background:var(--alerta-bg); border-color:transparent;
   color:var(--alerta); text-decoration:line-through; text-decoration-thickness:1px}
 .jinete-chip.cerrada:hover{text-decoration:none}
+/* La tira de horas libres: una línea discreta al pie de cada maestro. */
+.horas-libres{display:flex; flex-wrap:wrap; align-items:center; gap:.35rem;
+  padding:.55rem .9rem; border-top:1px solid var(--line);
+  background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.hl-rotulo{font-size:.68rem; color:var(--ink-3); text-transform:uppercase;
+  letter-spacing:.05em; margin-right:.15rem}
+.hora-libre{font-size:.74rem; font-variant-numeric:tabular-nums; padding:.2rem .5rem;
+  border-radius:6px; color:var(--oro-tinta); background:var(--oro-fondo);
+  border:1px dashed var(--oro-borde)}
+button.hora-libre{cursor:pointer}
+button.hora-libre:hover{border-style:solid; border-color:var(--accent); color:var(--accent)}
 .bloque-maestro{display:flex; align-items:center; justify-content:space-between; gap:.5rem;
   padding:.5rem .9rem; background:var(--surface-2); border-top:1px solid var(--line);
   font-size:.74rem; color:var(--ink-3)}
@@ -641,6 +657,27 @@ label.campo{display:grid; gap:.3rem; font-size:.78rem; color:var(--ink-2)}
 .opcion-radio > span:nth-of-type(1){flex:1; min-width:0}
 .opcion-radio .pastilla{flex:none}
 
+/* ---- clientes ---- */
+.cliente{background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:.85rem 1rem; display:grid; gap:.6rem}
+.cliente-cab{display:flex; align-items:center; gap:.7rem}
+.cliente-cab .ini{display:grid; place-items:center; width:2.4rem; height:2.4rem; flex:none;
+  border-radius:50%; background:var(--azul); color:var(--oro);
+  font-family:var(--serif); font-size:1.1rem}
+.cliente-id{flex:1; min-width:0}
+.cliente-id b{display:block; font-size:.95rem}
+.cliente-id span{display:block; font-size:.74rem; color:var(--ink-3)}
+.cliente-plan{font-size:.78rem; color:var(--ink-2); border-top:1px solid var(--line); padding-top:.5rem}
+.cliente-semana{display:flex; flex-wrap:wrap; gap:.35rem}
+.cliente-semana.vacia{font-size:.78rem; color:var(--ink-3); font-style:italic}
+.monta{display:inline-flex; align-items:baseline; gap:.35rem; cursor:pointer;
+  font-size:.75rem; padding:.3rem .55rem; border-radius:8px;
+  background:var(--surface-2); border:1px solid var(--line)}
+.monta:hover{border-color:var(--accent); background:var(--oro-fondo)}
+.monta b{font-family:var(--serif); font-size:.85rem; text-transform:capitalize}
+.monta span{color:var(--accent-2); font-weight:600}
+.cliente-pie{display:flex; justify-content:flex-end}
+
 /* ---- rediseño por perfil ---- */
 .btn-grande{padding:.85rem 1rem; font-size:1rem}
 .pie-accion{font-size:.76rem; color:var(--ink-3); text-align:center; margin-top:-.5rem}
@@ -674,7 +711,7 @@ const claseMaestro = id => {
   const i = maestros().findIndex(m => m.id === id);
   return "p-m" + ((i < 0 ? 0 : i) % 4 + 1);
 };
-const claseAudiencia = a => ({ todos:"p-oro", jinete:"p-n2", propietario:"p-n4", tutor:"p-n1" })[a] || "p-neutro";
+const claseAudiencia = a => ({ todos:"p-oro", jinete:"p-n2", propietario:"p-n4" })[a] || "p-neutro";
 
 const CABALLOS_INICIALES = [
   { id:"jazmin",  nombre:"Jazmín",  uso:"escuelita",   min:"principiantes", max:"intermedio",    maxDia:3, estatus:"activo",   edad:11, origen:"KWPN", capa:"alazana" },
@@ -706,10 +743,8 @@ const entrenador = id => {
   return p ? p.nombre : "por asignar";
 };
 
-/* Las dos pistas donde monta el club ahora mismo. */
-const ESPACIOS = [
-  { id:"mty", nombre:"Hípico Mty", cap:6 }, { id:"equus", nombre:"Equus", cap:6 },
-];
+/* Las clases son todas en Equus. */
+const ESPACIOS = [{ id:"equus", nombre:"Equus", cap:6 }];
 const espacio = id => (ESPACIOS.find(e => e.id === id) || {}).nombre || "—";
 
 const TIPOS = [{ id:"escuela", nombre:"Clase", min:60, cupo:6, consume:1 }];
@@ -724,9 +759,10 @@ const HORAS_SEMANA  = ["07:00","08:00","09:00","16:00","17:00","18:00"]; /* mart
 const HORAS_SABADO  = ["07:00","08:00","09:00","10:00"];
 const HORAS_DOMINGO = ["07:00","08:00","09:00"];                        /* solo propietarios */
 
-/* Quién da clase y en qué pista. Dirección lo cambia hora por hora desde La semana. */
+/* A cada hora hay dos clases, una por maestro, las dos en Equus. Dirección lo
+   cambia hora por hora desde La semana. */
 const TURNOS = [
-  { maestro:"tania", esp:"mty" },
+  { maestro:"tania", esp:"equus" },
   { maestro:"edwin", esp:"equus" },
 ];
 
@@ -752,14 +788,14 @@ const PLANTILLA = (() => {
    puede cambiarle la contraseña a cada quien desde su ficha. */
 const CLAVE_CLUB  = "04ff2c93496abb8ca0978928a00bd08d4e062e92f499791edf61df9d2e7ad619";   /* equus */
 const CLAVE_ADMIN = CLAVE_CLUB;
-const CLAVE_DEMO  = CLAVE_CLUB;
 
 /* --------------------------------------------------------------- personas
    Una persona es un registro que crea dirección: nombre, perfil, nivel,
    caballos y clases cargadas. Nadie se da de alta solo.
 
-   rol:  admin | propietario | jinete | tutor
-   Un menor no entra a la app: su cuenta la maneja el tutor (RN-18). */
+   rol:  admin | maestro | propietario | jinete
+   Nadie fuera del personal entra a la página: un cliente es una ficha, no una
+   cuenta. Si es menor, su ficha lleva a quién llamar. */
 const PERSONAS_INICIALES = [
   { id:"romina",    nombre:"Romina Cardona",    rol:"admin", usuario:"romina", clave:CLAVE_ADMIN,
     nivel:"avanzado", propios:["camelot"], habilitados:[], clasesCargadas:8, paquete:"Dirección" },
@@ -775,36 +811,36 @@ const PERSONAS_INICIALES = [
   { id:"otro",      nombre:"Otro maestro",      rol:"maestro", sinCuenta:true, imparte:true,
     nivel:"avanzado", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
 
-  { id:"diego",     nombre:"Diego Arellano",    rol:"propietario", usuario:"diego", clave:CLAVE_DEMO,
+  { id:"diego",     nombre:"Diego Arellano",    rol:"propietario",
     nivel:"intermedio", propios:["tornado"], habilitados:[], clasesCargadas:6,
     paquete:"Propietario · pupilaje y clases" },
-  { id:"paola",  nombre:"Paola",  rol:"jinete", usuario:"paola",  clave:CLAVE_DEMO, maestroId:"tania",
+  { id:"paola",  nombre:"Paola",  rol:"jinete", maestroId:"tania",
     nivel:"intermedio",    propios:[], habilitados:["jazmin","picaro","alazan"], clasesCargadas:8,
     paqueteId:"p8",  paquete:"8 clases" },
-  { id:"melisa", nombre:"Melisa", rol:"jinete", usuario:"melisa", clave:CLAVE_DEMO, maestroId:"edwin",
+  { id:"melisa", nombre:"Melisa", rol:"jinete", maestroId:"edwin",
     nivel:"principiantes", propios:[], habilitados:["jazmin","duende","picaro"], clasesCargadas:10,
     paqueteId:"p10", paquete:"10 clases" },
-  { id:"katia",  nombre:"Katia",  rol:"jinete", usuario:"katia",  clave:CLAVE_DEMO, maestroId:"tania",
+  { id:"katia",  nombre:"Katia",  rol:"jinete", maestroId:"tania",
     nivel:"avanzado",      propios:[], habilitados:["alazan"], clasesCargadas:15,
     paqueteId:"p15", paquete:"15 clases" },
-  { id:"vale",   nombre:"Vale",   rol:"jinete", usuario:"vale",   clave:CLAVE_DEMO, maestroId:"edwin",
+  { id:"vale",   nombre:"Vale",   rol:"jinete", maestroId:"edwin",
     nivel:"cuerdita",      propios:[], habilitados:["duende","nube"], clasesCargadas:4,
     paqueteId:"p4",  paquete:"4 clases" },
-  { id:"mateo",  nombre:"Mateo Sandoval", rol:"jinete", nivel:"principiantes", menor:true, sinCuenta:true,
+  { id:"mateo",  nombre:"Mateo Sandoval", rol:"jinete", nivel:"principiantes", menor:true,
     maestroId:"edwin", propios:[], habilitados:["jazmin","duende"], clasesCargadas:4,
-    paqueteId:"p4", paquete:"4 clases" },
-  { id:"claudia", nombre:"Claudia Sandoval", rol:"tutor", usuario:"claudia", clave:CLAVE_DEMO,
-    tutorDe:"mateo", propios:[], habilitados:[], clasesCargadas:0, paquete:"" },
+    paqueteId:"p4", paquete:"4 clases", contacto:"Claudia Sandoval" },
 ];
 
+/* Esto lo usan los maestros, no los jinetes. Un jinete es un cliente: tiene
+   ficha, clases y caballo, pero no entra a la página. */
 const SECCIONES = {
-  maestro:     ["jinete"],
-  admin:       ["jinete","propietario","admin"],
-  propietario: ["jinete","propietario"],
-  jinete:      ["jinete"],
-  tutor:       ["jinete"],
+  maestro: ["jinete","propietario","admin"],
+  admin:   ["jinete","propietario","admin"],
 };
-const ROL_NOMBRE = { admin:"Dirección", maestro:"Maestro", propietario:"Propietario", jinete:"Jinete", tutor:"Tutor" };
+const ROL_NOMBRE = { admin:"Dirección", maestro:"Maestro",
+  propietario:"Propietario", jinete:"Jinete" };
+const ES_PERSONAL = ["maestro","admin"];
+const esCliente = p => !ES_PERSONAL.includes(p.rol);
 
 /* -------------------------------------------------- tiempo en zona del club */
 const TZ = "America/Mexico_City";
@@ -859,73 +895,6 @@ const listar = xs => xs.length < 2 ? (xs[0] || "") : xs.slice(0,-1).join(", ") +
 
 <script>
 "use strict";
-/* --------------------------------------------------------- documentos (M7)
-   Cada perfil firma lo suyo y nada más:
-     jinete                → reglamento del club + contrato de jinete
-     propietario y jinete  → esos dos + contrato de pupilaje
-     menor de edad         → además, la carta responsiva que firma el tutor
-   Texto de muestra: dirección lo sustituye por el documento oficial. */
-const DOCUMENTOS_INICIALES = [
-  { id:"reglamento", titulo:"Reglamento del club", version:"2.1", vigente:"1 de julio de 2026",
-    audiencia:"todos", obligatorio:true,
-    resumen:"Normas de convivencia, uso de instalaciones, equipo obligatorio y horarios.",
-    cuerpo:[
-      { h:"Equipo obligatorio", l:["Casco homologado en todo momento sobre el caballo, sin excepción.",
-        "Botas de montar y pantalón adecuado.","Chaleco protector obligatorio en salto para menores de edad."] },
-      { h:"Uso de instalaciones", l:["El acceso a caballerizas es solo con autorización del equipo de cuadra.",
-        "La pista se libera puntualmente al terminar cada clase.","Prohibido dar alimento a caballos que no sean propios."] },
-      { h:"Horarios", l:["El lunes no hay clases: es el día recomendado para armar la semana.",
-        "Jinetes de escuela: de martes a sábado.","Propietarios: de martes a domingo.",
-        "Todos los horarios están abiertos para cualquier nivel.",
-        "Presentarse 15 minutos antes de la clase para ensillar."] },
-      { h:"Convivencia", l:["Trato respetuoso con personal, jinetes y caballos.",
-        "El incumplimiento del reglamento puede derivar en suspensión temporal."] },
-    ] },
-  { id:"contrato-jinete", titulo:"Contrato de jinete", version:"1.4", vigente:"1 de julio de 2026",
-    audiencia:"jinete", obligatorio:true,
-    resumen:"Deslinde de responsabilidad y condiciones de las clases.",
-    cuerpo:[
-      { h:"Riesgo de la actividad", l:["La equitación es una actividad de riesgo. El jinete la practica por voluntad propia.",
-        "El club no se hace responsable de incidentes derivados del incumplimiento del reglamento."] },
-      { h:"Clases y saldo", l:["Las clases se pagan en las oficinas del club; no hay cobro en línea.",
-        "El saldo lo carga dirección una vez recibido el pago.",
-        "La vigencia del paquete la define dirección al cargarlo."] },
-      { h:"Cancelaciones", l:["Cancelación sin costo hasta 10 horas antes del inicio de la clase.",
-        "Después de ese límite la clase se cobra.","No presentarse cuesta la clase igual que cancelar tarde."] },
-    ] },
-  { id:"contrato-pupilaje", titulo:"Contrato de pupilaje", version:"1.2", vigente:"1 de julio de 2026",
-    audiencia:"propietario", obligatorio:true,
-    resumen:"Condiciones del servicio de pensión para caballos en el club.",
-    cuerpo:[
-      { h:"Servicio incluido", l:["Caballeriza individual, cama, alimentación y agua limpia.",
-        "Salida diaria al padock y revisión del equipo de cuadra."] },
-      { h:"A cargo del propietario", l:["Herrador, veterinario, desparasitaciones y vacunas al corriente.",
-        "Suplementos y electrolitos, entregados en la fecha del mes que marque el calendario.",
-        "Equipo completo del caballo, identificado con su nombre."] },
-      { h:"Uso del caballo", l:["El caballo no entra al pool de escuela salvo autorización expresa del propietario, revocable en cualquier momento.",
-        "El club no monta ni trabaja al caballo sin acuerdo previo."] },
-      { h:"Salida del club", l:["Avisar con 30 días de anticipación para dar de baja el pupilaje."] },
-    ] },
-  { id:"responsiva-menor", titulo:"Carta responsiva de menor", version:"1.1", vigente:"1 de julio de 2026",
-    audiencia:"menor", obligatorio:true,
-    resumen:"La firma el padre, madre o tutor que responde por el jinete menor de edad.",
-    cuerpo:[
-      { h:"Quién responde", l:["El tutor que firma responde por el menor dentro de las instalaciones.",
-        "El tutor acepta el reglamento y el contrato de jinete en nombre del menor."] },
-      { h:"Autorización médica", l:["El tutor autoriza la atención médica de urgencia si hiciera falta.",
-        "Datos de contacto y alergias del menor entregados a dirección y actualizados."] },
-      { h:"Acompañamiento", l:["El menor no permanece solo en las instalaciones.",
-        "Chaleco protector obligatorio en salto."] },
-    ] },
-];
-/* Los documentos los edita dirección; la página solo trae los de arranque. */
-const documentos = () => {
-  const guardados = Datos.todo("documentos");
-  return (guardados.length ? guardados : DOCUMENTOS_INICIALES).slice()
-    .sort((a,b) => (a.orden || 0) - (b.orden || 0));
-};
-const documento = id => documentos().find(d => d.id === id);
-
 /* ------------------------------------------------------------------ paquetes
    Lo que se le carga a un jinete cuando paga. Dirección los edita. */
 /* Los planes del club son mensuales y por veces por semana, no por número de
@@ -969,9 +938,9 @@ const COMPETENCIAS_INICIALES = [
 /* ------------------------------------------------------------ almacenamiento
    Publicada como Artifact, el almacén aplica dos reglas que el navegador no
    puede saltarse: personas y competencias solo las escribe dirección. */
-const COLECCIONES = ["personas","caballos","paquetes","competencias","horarios","documentos","anuncios",
-  "reservas","historial","recordatorios","aceptaciones","inscripciones"];
-const SOLO_DIRECCION = ["personas","caballos","paquetes","competencias","horarios","documentos","anuncios"];
+const COLECCIONES = ["personas","caballos","paquetes","competencias","horarios","anuncios",
+  "reservas","historial","recordatorios","inscripciones"];
+const SOLO_DIRECCION = ["personas","caballos","paquetes","competencias","horarios","anuncios"];
 
 const Datos = {
   db:null, esEditor:true, listo:false,
@@ -1033,10 +1002,6 @@ const Datos = {
     if (!Object.keys(this.cache.competencias).length) {
       for (const c of COMPETENCIAS_INICIALES) { const { id, ...r } = c; this.cache.competencias[id] = r; }
       this.guardarLocal("competencias");
-    }
-    if (!Object.keys(this.cache.documentos).length) {
-      DOCUMENTOS_INICIALES.forEach((d, i) => { const { id, ...r } = d; this.cache.documentos[id] = { ...r, orden:i }; });
-      this.guardarLocal("documentos");
     }
   },
 
@@ -1138,7 +1103,7 @@ function refrescarSesion() {
   cuenta = Datos.enNube
     ? (personas().find(p => p.authId === Nube.authId) || null)
     : (persona(recuerdo.leer("cq:sesion")) || null);
-  sujeto = cuenta ? (cuenta.tutorDe ? (persona(cuenta.tutorDe) || cuenta) : cuenta) : null;
+  sujeto = cuenta;
 }
 const haySesion = () => cuenta !== null;
 
@@ -1154,7 +1119,9 @@ async function entrar(usuario, clave) {
      con llave y no una caja fuerte. */
   if (window.Nube && Nube.disponible && Nube.cliente) return Nube.entrar(usuario, clave);
   const u = String(usuario).trim().toLowerCase();
-  const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !x.sinCuenta);
+  /* Solo el personal entra. Un cliente tiene ficha, clases y caballo, pero no
+     cuenta: su semana se la maneja su maestro. */
+  const p = personas().find(x => (x.usuario || "").toLowerCase() === u && !esCliente(x));
   if (!p || !p.clave) return false;
   if (await huella(clave) !== p.clave) return false;
   recuerdo.poner("cq:sesion", p.id);
@@ -1179,8 +1146,7 @@ const daClases = () => !!(cuenta && cuenta.imparte);
 /* A cada jinete se le asigna un maestro: en la semana solo ve las clases de ese
    maestro, para que el calendario no salga duplicado. */
 const miMaestro = () => (sujeto && sujeto.maestroId) ? persona(sujeto.maestroId) : null;
-/* Los caballos de quien monta —para una tutora, los del menor a su cargo—.
-   Tener uno a tu nombre basta: el perfil no decide de quién es un caballo. */
+/* Tener un caballo a tu nombre basta: el perfil no decide de quién es. */
 const misCaballos = () => (sujeto.propios || []).map(caballo).filter(Boolean);
 const montaPropios = () => misCaballos().length > 0;
 
@@ -1222,33 +1188,6 @@ function usadas(p = sujeto) {
   return activas + cobradas;
 }
 function saldo(p = sujeto) { return (p.clasesCargadas || 0) - usadas(p); }
-
-/* Cada perfil ve solo sus documentos (RN-16), y el menor suma su responsiva. */
-function docsDeCuenta() {
-  return documentos().filter(d =>
-    d.audiencia === "todos" ? true :
-    d.audiencia === "menor" ? !!sujeto.menor :
-    ve(d.audiencia));
-}
-const aceptado = d => Datos.todo("aceptaciones")
-  .some(a => a.personaId === sujeto.id && a.documentoId === d.id && a.version === d.version);
-/* Dirección no firma: entra a esa pantalla a editar los documentos, no a aceptarlos. */
-const pendientesDeFirma = () => esAdmin() ? []
-  : docsDeCuenta().filter(d => d.obligatorio && !aceptado(d));
-/* Los documentos que le tocan a una persona, mire quien mire. */
-/* El personal del club no firma: dirección redacta los documentos y un maestro
-   trabaja aquí, no es alumno. Firman jinetes, propietarios y tutores. */
-const esPersonal = p => p.rol === "admin" || p.rol === "maestro";
-const docsDe = p => esPersonal(p) ? [] : documentos().filter(d =>
-  d.audiencia === "todos" ? true :
-  d.audiencia === "menor" ? !!p.menor :
-  (SECCIONES[p.rol] || []).includes(d.audiencia));
-const faltanDocs = p => esPersonal(p) ? [] : documentos().filter(d => {
-  if (d.audiencia === "menor") return !!p.menor;
-  if (d.audiencia === "todos") return true;
-  return SECCIONES[p.rol] && SECCIONES[p.rol].includes(d.audiencia);
-}).filter(d => d.obligatorio && !Datos.todo("aceptaciones")
-  .some(a => a.personaId === p.id && a.documentoId === d.id && a.version === d.version));
 
 /* Se puede reservar cualquier día. El lunes no es un candado, es la
    recomendación: dejar la semana armada desde el principio. */
@@ -1329,7 +1268,6 @@ function motivoBloqueo(sesion) {
     const [i,f] = intervaloReserva(r); return traslapa(sesion.inicio, sesion.fin, i, f);
   })) return "Otra clase a esa hora";                                          // RN-10
   if (saldo() < tipo(sesion.tipoId).consume) return "Sin clases disponibles";   // RN-03
-  if (pendientesDeFirma().length) return "Falta firmar";                        // RN-15
   if (!caballosPara(sesion).length) return porQueSinCaballo(sujeto, sesion);
   return null;
 }
@@ -1367,179 +1305,52 @@ const misRecordatorios = () => soloMio("recordatorios");
 <script>
 "use strict";
 /* ------------------------------------------------------------------ INICIO */
-function verInicio() {
-  return esAdmin() ? inicioDireccion() : daClases() ? inicioMaestro() : inicioJinete();
-}
+function verInicio() { return verHoy(); }
 
-/* Sin almacén compartido esta copia guarda solo en el teléfono de quien la abre:
-   nadie más ve lo que hace. Decirlo en el pie no basta —alguien reserva creyendo
-   que dirección lo ve—, así que se avisa arriba de todo. */
+/* Sin almacén compartido esta copia guarda solo en el aparato de quien la abre:
+   nadie más ve lo que hace. Decirlo en el pie no basta, así que se avisa arriba. */
 const avisoSinCompartir = () => (Datos.listo && !Datos.compartido) ? `<div class="nota alerta">
   <b>Esta copia no está conectada al club.</b>
-  Lo que hagas aquí se guarda solo en este dispositivo: dirección no lo ve, y no se
-  actualiza con lo que hagan los demás. Pídele a dirección el enlace compartido.</div>` : "";
+  Lo que hagas aquí se guarda solo en este dispositivo: no lo ve nadie más, y no
+  se actualiza con lo que hagan los demás.</div>` : "";
 
-const saludo = extra => `
-  <div class="vista-titulo">
-    <h2>Hola, ${esc(cuenta.nombre.split(" ")[0])}</h2>
-    <span class="sub">${esc(ROL_NOMBRE[rolEfectivo()])}${cuenta.tutorDe
-      ? ` de ${esc(sujeto.nombre)}` : ""}${extra || ""}</span>
-  </div>`;
-
-/* ------------------------------------------------------------ inicio: jinete
-   Lo que hace nueve de cada diez veces es reservar y mirar su próxima clase.
-   Eso va arriba; el saldo, el paquete y el historial, debajo. */
-function inicioJinete() {
-  const proximas = misReservas().filter(r => deYmd(r.fecha, r.hora) > ahora());
-  const pasadas  = historialDe();
-  const firmas   = pendientesDeFirma();
-  const sigComp  = competencias().filter(c => deYmd(c.fin || c.inicio, "23:59") > ahora())[0];
-  const puede    = !firmas.length && saldo() > 0;
-
-  return `
-  ${saludo(sujeto.nivel ? ` <span class="pastilla ${claseNivel(sujeto.nivel)}">${
-    esc(nivelNombre(sujeto.nivel))}</span>` : "")}
-  ${avisoSinCompartir()}
-
-  ${cuenta.tutorDe ? `<div class="nota">Manejas la cuenta de <b>${esc(sujeto.nombre)}</b>, menor de edad:
-    reservas, cancelas y firmas en su nombre, y los avisos te llegan a ti.</div>` : ""}
-
-  ${firmas.length ? `<div class="nota alerta">
-    <b>Falta firmar ${firmas.length === 1 ? "un documento" : firmas.length + " documentos"}.</b>
-    No se puede reservar hasta aceptar ${esc(listar(firmas.map(d => d.titulo)))}.
-    <span><button class="btn btn-mini" data-ir="documentos" style="margin-top:.35rem">Ir a Documentos</button></span>
-  </div>` : ""}
-
-  ${proximas.length ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Tu próxima clase</p>
-    ${tarjetaClase(proximas[0], false)}
-  </div>` : ""}
-
-  <button class="btn btn-bloque btn-grande" data-ir="reservar" ${puede ? "" : "disabled"}>
-    ${proximas.length ? "Reservar otra clase" : "Reservar una clase"}</button>
-  ${puede ? "" : `<p class="pie-accion">${firmas.length
-    ? "Primero firma tus documentos." : "Dirección te carga el paquete cuando pagas en el club."}</p>`}
-
-  <div class="resumen compacta">
-    <div class="dato"><div class="n">${saldo()}</div><div class="t">clases te quedan</div></div>
-    <div class="dato"><div class="n">${proximas.length}</div><div class="t">reservadas</div></div>
-    <div class="dato"><div class="n chico">${proximas[1]
-      ? esc(fechaLarga(proximas[1].fecha).split(" ").slice(0,2).join(" ")) : "—"}</div>
-      <div class="t">la de después</div></div>
-    <div class="dato"><div class="n chico">${sigComp
-      ? esc(rangoFechas(sigComp.inicio, sigComp.fin)) : "—"}</div><div class="t">próximo concurso</div></div>
-  </div>
-
-  ${proximas.length > 1 ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Después</p>
-    <div class="vista">${proximas.slice(1).map(r => tarjetaClase(r, false)).join("")}</div>
-  </div>` : ""}
-
-  ${misCaballos().length ? bloquesCaballos() : ""}
-  ${(sujeto.clasesCargadas || sujeto.paquete) ? bloquePaquete(sujeto) : ""}
-
-  ${pasadas.length ? `<details class="tarjeta plana">
-    <summary>Historial (${pasadas.length})</summary>
-    <div class="vista" style="margin-top:.75rem">${pasadas.slice(0,8).map(r => tarjetaClase(r, true)).join("")}</div>
-  </details>` : ""}`;
-}
-
-/* ----------------------------------------------------------- inicio: maestro
-   Un maestro abre la app para saber a quién le toca hoy. */
-function inicioMaestro() {
+/* --------------------------------------------------------------------- HOY
+   Lo primero que quiere ver un maestro al abrir: a quién le toca hoy, a qué
+   hora y en qué caballo. Nada más. */
+function verHoy() {
   const hoy = ymd(ahora());
-  const mias = sesionesDe(hoy).filter(x => x.ent === cuenta.id);
+  const todas = sesionesDe(hoy);
+  const mias = daClases() ? todas.filter(x => x.ent === cuenta.id) : todas;
+  const conGente = mias.filter(x => reservasDeSesion(x).length);
   const montas = mias.reduce((n, x) => n + reservasDeSesion(x).length, 0);
   const siguen = mias.filter(x => x.inicio > ahora());
+  const sigConGente = siguen.filter(x => reservasDeSesion(x).length)[0];
+  const caballos_ = new Set(mias.flatMap(x => reservasDeSesion(x).map(r => r.caballoId)));
+
   return `
-  ${saludo()}
-  ${avisoSinCompartir()}
-  <div class="resumen compacta">
-    <div class="dato"><div class="n">${montas}</div><div class="t">montas hoy</div></div>
-    <div class="dato"><div class="n">${siguen.length}</div><div class="t">clases por delante</div></div>
-    <div class="dato"><div class="n chico">${siguen[0]
-      ? esc(horaTexto(siguen[0].inicio)) : "—"}</div><div class="t">la siguiente</div></div>
-    <div class="dato"><div class="n">${new Set(sesionesDe(hoy).filter(x => x.ent === cuenta.id)
-      .flatMap(x => reservasDeSesion(x).map(r => r.caballoId))).size}</div><div class="t">caballos</div></div>
+  <div class="vista-titulo">
+    <h2>Hoy</h2>
+    <span class="sub" style="text-transform:capitalize">${esc(fechaLarga(hoy))}</span>
   </div>
-  <button class="btn btn-bloque btn-grande" data-ir="semana">Ver mi semana</button>
-  ${montas ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Hoy, ${esc(fechaLarga(hoy))}</p>
-    <div class="dia-bloque">${mias.filter(x => reservasDeSesion(x).length).map(filaAgenda).join("")}</div>
-  </div>` : `<div class="vacio">No tienes montas hoy.</div>`}
+  ${avisoSinCompartir()}
+
+  <div class="resumen compacta">
+    <div class="dato"><div class="n">${montas}</div><div class="t">montas</div></div>
+    <div class="dato"><div class="n">${siguen.length}</div><div class="t">clases por delante</div></div>
+    <div class="dato"><div class="n chico">${sigConGente
+      ? esc(horaTexto(sigConGente.inicio)) : "—"}</div><div class="t">la siguiente</div></div>
+    <div class="dato"><div class="n">${caballos_.size}</div><div class="t">caballos</div></div>
+  </div>
+
+  <button class="btn btn-bloque btn-grande" data-ir="semana">Ver la semana</button>
+
+  ${conGente.length ? `<div class="dia-bloque">${conGente.map(filaAgenda).join("")}</div>`
+    : `<div class="vacio">${todas.length
+        ? "No hay nadie anotado hoy." : "Hoy no se dan clases."}</div>`}
+
   ${bloqueAnuncios()}`;
 }
 
-/* --------------------------------------------------------- inicio: dirección
-   Dirección vive en La semana. Aquí solo va el pulso del día y los accesos
-   directos; los catálogos quedan plegados para que esto no sea un muro. */
-function inicioDireccion() {
-  const hoy = ymd(ahora());
-  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunesDeLaSemana(ahora()), i)));
-  const deHoy = reservasDe(hoy);
-  const deLaSemana = Datos.todo("reservas").filter(r => dias.includes(r.fecha));
-  const sinSaldo = personas().filter(p => ["jinete","propietario"].includes(p.rol) && saldo(p) <= 0);
-  const sinFirmar = personas().filter(p => faltanDocs(p).length);
-  const regSemana = registroDe(dias);
-
-  return `
-  ${saludo()}
-  ${avisoSinCompartir()}
-  ${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
-    <b>Solo lectura.</b> Esta página no te ha dado permiso de edición, así que los cambios
-    al catálogo se van a rechazar. Pide que te la compartan con permiso de edición.</div>` : ""}
-
-  <div class="resumen compacta">
-    <div class="dato"><div class="n">${deHoy.length}</div><div class="t">montas hoy</div></div>
-    <div class="dato"><div class="n">${deLaSemana.length}</div><div class="t">esta semana</div></div>
-    <div class="dato"><div class="n">${new Set(deLaSemana.map(r => r.personaId)).size}</div><div class="t">jinetes</div></div>
-    <div class="dato"><div class="n">${regSemana.filter(h => h.cobrada).length}</div><div class="t">cobradas sin darse</div></div>
-  </div>
-
-  <button class="btn btn-bloque btn-grande" data-ir="semana">Ver la semana del club</button>
-  ${(() => {
-    /* Al pasar los datos del club a la base, las fichas llegan sin cuenta:
-       existen, pero nadie puede entrar con ellas hasta crearlas. */
-    if (!Datos.enNube) return "";
-    const faltan = personas().filter(x => x.usuario && !x.authId && !x.sinCuenta);
-    if (!faltan.length) return "";
-    return `<div class="nota alerta">
-      <b>${faltan.length} ${faltan.length === 1 ? "persona no puede entrar todavía"
-        : "personas no pueden entrar todavía"}.</b>
-      Tienen ficha pero les falta su cuenta: ${esc(listar(faltan.map(x => x.nombre.split(" ")[0])))}.
-      <span><button class="btn btn-mini" data-crear-cuentas style="margin-top:.35rem">
-        Crear las cuentas que faltan</button></span></div>`;
-  })()}
-
-  <div class="acciones-rapidas">
-    <button class="btn btn-2 btn-mini" data-programa>Hoja para la cuadra</button>
-    <button class="btn btn-2 btn-mini" data-ir="registro">Registro de faltas</button>
-    <button class="btn btn-2 btn-mini" data-reporte>Reporte del mes</button>
-    <button class="btn btn-2 btn-mini" data-nueva-persona>Nueva persona</button>
-    <button class="btn btn-2 btn-mini" data-nuevo-anuncio>Nuevo anuncio</button>
-  </div>
-
-  ${deHoy.length ? `<div>
-    <p class="etiqueta" style="margin-bottom:.4rem">Hoy, ${esc(fechaLarga(hoy))}</p>
-    <div class="dia-bloque">${sesionesDe(hoy).filter(x => reservasDeSesion(x).length)
-      .map(filaAgenda).join("")}</div>
-  </div>` : `<div class="vacio">Nadie montó hoy todavía.</div>`}
-
-  ${sinFirmar.length || sinSaldo.length ? `<div class="nota oro">
-    ${sinFirmar.length ? `<b>${sinFirmar.length}</b> ${sinFirmar.length === 1
-      ? "persona tiene documentos" : "personas tienen documentos"} sin firmar: ${
-      esc(listar(sinFirmar.map(p => p.nombre.split(" ")[0])))}.` : ""}
-    ${sinSaldo.length ? `${sinFirmar.length ? "<br>" : ""}<b>${sinSaldo.length}</b> sin clases en el paquete: ${
-      esc(listar(sinSaldo.map(p => p.nombre.split(" ")[0])))}.` : ""}
-  </div>` : ""}
-
-  <details class="tarjeta plana"><summary>Personal y socios del club (${personas().length})</summary>
-    <div style="margin-top:.75rem">${panelPersonas()}</div></details>
-  <details class="tarjeta plana"><summary>Caballos (${caballos().length})</summary>
-    <div style="margin-top:.75rem">${panelCaballos()}</div></details>
-  <details class="tarjeta plana"><summary>Paquetes (${paquetes().length})</summary>
-    <div style="margin-top:.75rem">${panelPaquetes()}</div></details>`;
-}
 
 function bloquesCaballos() {
   const mios = misCaballos();
@@ -1580,16 +1391,14 @@ function panelPersonas() {
       para entrar, le pones perfil y nivel, le cargas las clases y le desbloqueas caballos.
       De ahí sale qué documentos tiene que firmar.</p>
     <div>${lista.map(p => {
-      const faltan = faltanDocs(p).length;
       return `<div class="persona">
         <span>${esc(p.nombre)}${p.menor ? " · menor" : ""}</span>
         <span class="rolp">${p.maestroId && persona(p.maestroId)
           ? `<span class="pastilla ${claseMaestro(p.maestroId)}">${esc(persona(p.maestroId).nombre)}</span><br>` : ""}${
-          esc(ROL_NOMBRE[p.rol] || p.rol)}${p.tutorDe
-          ? " de " + esc((persona(p.tutorDe) || {}).nombre || "—")
-          : p.nivel && p.rol !== "admin" ? ` · <span class="pastilla ${claseNivel(p.nivel)}">${
+          esc(ROL_NOMBRE[p.rol] || p.rol)}${p.nivel && esCliente(p)
+          ? ` · <span class="pastilla ${claseNivel(p.nivel)}">${
             esc(nivelNombre(p.nivel))}</span>` : ""}<br>
-          ${p.rol === "tutor" ? "" : `${saldo(p)} clases · ${faltan ? faltan + " sin firmar" : "todo firmado"}`}</span>
+          ${esCliente(p) ? `${saldo(p)} clases` : "personal del club"}</span>
         <button class="btn btn-oro btn-mini" data-editar-persona="${esc(p.id)}">Editar</button>
       </div>`;
     }).join("")}</div>
@@ -1832,249 +1641,13 @@ function tarjetaClase(r, pasada) {
 }
 
 /* ---------------------------------------------------------------- RESERVAR */
-function verReservar() {
-  const v = recomendacionSemanal();
-  const lunes = sumarDias(lunesDeLaSemana(ahora()), semanaReserva * 7);
-  const dias = Array.from({ length:7 }, (_, i) => ymd(sumarDias(lunes, i)));
-  /* Al cambiar de semana, abre en el primer día que sí tenga clases. */
-  if (!dias.includes(diaSel)) diaSel = dias.find(d => deYmd(d, "23:59") > ahora() && sesionesDe(d).length)
-    || dias.find(d => deYmd(d, "23:59") > ahora()) || dias[0];
-  const visibles = sesionesDe(diaSel).filter(s => motivoBloqueo(s) !== "oculta");
-  const firmas = pendientesDeFirma();
-  const esLunes = partesClub(deYmd(diaSel, "12:00")).diaSemana === 1;
-
-  return `
-  <div class="vista-titulo"><h2>Reservar</h2>
-    <span class="sub">${miMaestro()
-      ? `<span class="pastilla ${claseMaestro(miMaestro().id)}">${esc(miMaestro().nombre)}</span>` : ""}</span></div>
-
-  <div class="semana-nav">
-    <button class="btn btn-2 btn-mini" data-semana-res="-1" ${semanaReserva <= 0 ? "disabled" : ""}>‹</button>
-    <span>${semanaReserva === 0 ? "Esta semana" : semanaReserva === 1 ? "La siguiente"
-      : `En ${semanaReserva} semanas`} · ${esc(fechaLarga(dias[0]))}</span>
-    <button class="btn btn-2 btn-mini" data-semana-res="1" ${semanaReserva >= 3 ? "disabled" : ""}>›</button>
-  </div>
-
-  <div class="ventana abierta">
-    <div class="titulo">${v.esLunes ? "Hoy es lunes: arma tu semana" : "Puedes reservar cualquier día"}</div>
-    <div class="detalle">${v.esLunes
-      ? "Es el día recomendado para dejar apartadas todas tus clases de la semana, cuando hay más lugares y más caballos libres."
-      : `Te recomendamos dejar la semana armada los lunes —el próximo es el ${esc(fechaLarga(v.proximoLunes))}—,
-         pero puedes reservar hoy mismo lo que quede libre.`}</div>
-  </div>
-
-  ${firmas.length ? `<div class="nota alerta"><b>Primero firma los documentos.</b>
-    ${esc(listar(firmas.map(d => d.titulo)))} ${firmas.length === 1 ? "sigue pendiente" : "siguen pendientes"}.
-    <span><button class="btn btn-mini" data-ir="documentos" style="margin-top:.35rem">Ir a Documentos</button></span></div>` : ""}
-
-  ${saldo() <= 0 ? `<div class="nota alerta"><b>No quedan clases.</b>
-    Dirección carga el saldo en el club una vez que se paga.</div>` : ""}
-
-  <div class="dias">
-    ${dias.map(d => {
-      const p = partesClub(deYmd(d, "12:00"));
-      const hay = sesionesDe(d).some(s => motivoBloqueo(s) !== "oculta");
-      const pasado = deYmd(d, "23:59") < ahora();
-      return `<button class="dia" data-dia="${d}" aria-pressed="${d === diaSel}" ${pasado ? "disabled style=opacity:.4" : ""}>
-        <span>${DIAS[p.diaSemana].slice(0,2)}</span><span class="d">${p.dia}</span>
-        ${hay && !pasado ? '<span class="punto"></span>' : '<span style="height:4px"></span>'}</button>`;
-    }).join("")}
-  </div>
-
-  <div class="vista">${visibles.length ? visibles.map(filaSesion).join("")
-    : `<div class="vacio">${esLunes
-      ? "El lunes no se dan clases: es el día en que se abre la agenda de la semana."
-      : partesClub(deYmd(diaSel, "12:00")).diaSemana === 0
-        ? "El domingo es solo para propietarios."
-        : `No hay clases el ${esc(fechaLarga(diaSel))}.`}</div>`}</div>
-
-  <p style="font-size:.75rem; color:var(--ink-3)">
-    ${miMaestro() ? `Ves las clases de <b>${esc(miMaestro().nombre)}</b>, tu maestro asignado.`
-      : "Ves las clases de todos los maestros: dirección todavía no te asigna uno."}
-    Clases de martes a sábado; el domingo, solo propietarios. El lunes no se monta.
-    Todos los horarios están abiertos para cualquier nivel: el nivel decide qué caballo montas.</p>`;
-}
-
-function filaSesion(s) {
-  const motivo = motivoBloqueo(s);
-  const libres = lugaresLibres(s);
-  const anotados = reservasDeSesion(s);
-  return `<article class="sesion ${clasePista(s.esp)} ${motivo ? "llena" : ""}">
-    <div class="hora">${esc(horaTexto(s.inicio))}</div>
-    <div class="nom">${miMaestro()
-      ? `<span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${esc(espacio(s.esp))}</span>`
-      : `<span class="pastilla ${claseMaestro(s.ent)}">${esc(entrenador(s.ent))}</span>
-         <span class="pastilla ${clasePista(s.esp) === "pista2" ? "p-pista2" : "p-pista1"}">${esc(espacio(s.esp))}</span>`}</div>
-    <div class="det">${libres > 0 ? `${libres} ${libres === 1 ? "lugar" : "lugares"}` : "lleno"}${
-      s.soloPropietarios ? " · solo propietarios" : ""}</div>
-    <div class="accion">${motivo ? `<span class="pastilla p-neutro">${esc(motivo)}</span>`
-      : `<button class="btn btn-mini" data-reservar="${esc(s.id)}">Reservar</button>`}</div>
-    ${esAdmin() ? `<div class="admin-linea">${anotados.length
-      ? `${anotados.length} ${anotados.length === 1 ? "anotado" : "anotados"}: ${esc(anotados.map(r => {
-          const p = persona(r.personaId); const c = caballo(r.caballoId);
-          return `${p ? p.nombre.split(" ")[0] : r.personaId} (${c ? c.nombre : "—"})`;
-        }).join(", "))}`
-      : "Nadie anotado todavía"}</div>` : ""}
-  </article>`;
-}
 </script>
 
 <script>
 "use strict";
-/* -------------------------------------------------------------- DOCUMENTOS */
-function verDocumentos() {
-  if (esAdmin()) return verDocumentosAdmin();
-  const mios = docsDeCuenta();
-  const razon = cuenta.tutorDe
-    ? `Firmas por ${esc(sujeto.nombre)}, menor de edad.`
-    : ve("propietario") ? "Como propietario y jinete firmas el reglamento, tu contrato de jinete y el de pupilaje."
-    : "Como jinete firmas el reglamento del club y tu contrato de jinete.";
-  return `
-  <div class="vista-titulo"><h2>Documentos</h2>
-    <span class="sub">${mios.length} para tu perfil</span></div>
-  <p style="font-size:.8rem; color:var(--ink-3)">${razon}
-    El perfil lo asigna dirección al darte de alta; de ahí sale esta lista (RN-16).</p>
-  ${mios.map(bloqueDoc).join("")}
-  <p style="font-size:.75rem; color:var(--ink-3)">
-    Texto de muestra. Dirección lo sustituye por el documento oficial del club.</p>`;
-}
-
-function bloqueDoc(d) {
-  const firma = Datos.todo("aceptaciones")
-    .find(a => a.personaId === sujeto.id && a.documentoId === d.id && a.version === d.version);
-  const previa = Datos.todo("aceptaciones")
-    .some(a => a.personaId === sujeto.id && a.documentoId === d.id && a.version !== d.version);
-  return `<article class="doc">
-    <div class="doc-cab">
-      <div><h3>${esc(d.titulo)}</h3>
-        <p class="doc-ver">Versión ${esc(d.version)} · vigente desde el ${esc(d.vigente)}</p></div>
-      ${firma ? '<span class="pastilla p-ok">Aceptado</span>' : '<span class="pastilla p-alerta">Por firmar</span>'}
-    </div>
-    <p style="font-size:.85rem; color:var(--ink-2)">${esc(d.resumen)}</p>
-    ${previa && !firma ? `<div class="nota alerta">
-      Se aceptó una versión anterior. Esta es nueva y hay que volver a firmarla (RN-15).</div>` : ""}
-    <details><summary style="cursor:pointer; font-size:.82rem; color:var(--accent); font-weight:500">
-      Leer el documento</summary>
-      <div class="doc-cuerpo" style="margin-top:.6rem">${d.cuerpo.map(x =>
-        `<h4>${esc(x.h)}</h4><ul>${x.l.map(y => `<li>${esc(y)}</li>`).join("")}</ul>`).join("")}</div></details>
-    ${firma ? `<p class="firmado">Firmado por ${esc(firma.nombreFirma)} · ${esc(fechaLarga(firma.fecha))}, ${esc(firma.horaTexto)}</p>`
-      : `<form class="firma" data-firmar="${esc(d.id)}">
-          <label class="campo">${cuenta.tutorDe
-            ? `Nombre completo del tutor que acepta por ${esc(sujeto.nombre)}`
-            : "Nombre completo como firma"}
-            <input type="text" name="nombre" required autocomplete="name" placeholder="${esc(cuenta.nombre)}"></label>
-          <button class="btn" type="submit">Acepto ${esc(d.titulo.toLowerCase())}</button></form>`}
-  </article>`;
-}
-
-/* Dirección no firma nada: redacta y versiona los documentos del club. */
-function verDocumentosAdmin() {
-  const lista = documentos();
-  const AUD = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", menor:"Menores de edad" };
-  return `
-  <div class="vista-titulo"><h2>Documentos</h2>
-    <span class="sub">${lista.length} en el club</span></div>
-  ${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
-    <b>Solo lectura.</b> Esta página no te ha dado permiso de edición, así que los cambios
-    al catálogo se van a rechazar. Pide que te la compartan con permiso de edición.</div>` : ""}
-  <div class="admin-caja">
-    <p class="etiqueta">Dirección</p>
-    <p style="font-size:.82rem; color:var(--oro-tinta)">
-      Aquí redactas el reglamento y los contratos, y eliges a qué perfil le toca cada uno.
-      Al subir la versión de un documento, a todos los que ya lo habían aceptado se les
-      vuelve a pedir la firma. Tú no firmas nada.</p>
-    <div class="acciones-admin"><button class="btn btn-oro btn-mini" data-nuevo-doc>Nuevo documento</button></div>
-  </div>
-  ${lista.map(d => {
-    const firmas = Datos.todo("aceptaciones").filter(a => a.documentoId === d.id && a.version === d.version);
-    const deben = personas().filter(p => !esPersonal(p) && faltanDocs(p).some(x => x.id === d.id));
-    return `<article class="doc">
-      <div class="doc-cab">
-        <div><h3>${esc(d.titulo)}</h3>
-          <p class="doc-ver">Versión ${esc(d.version)} · desde el ${esc(d.vigente)}</p></div>
-        <span class="pastilla p-oro">${esc(AUD[d.audiencia] || d.audiencia)}</span>
-      </div>
-      <p style="font-size:.85rem; color:var(--ink-2)">${esc(d.resumen)}</p>
-      <div class="comp-bloque" style="border-top:1px solid var(--line)">
-        <p style="font-size:.8rem; color:var(--ink-2)">
-          ${d.obligatorio ? "Obligatorio para reservar." : "Informativo, no bloquea la reserva."}
-          ${firmas.length} ${firmas.length === 1 ? "firma" : "firmas"} de esta versión.</p>
-        ${deben.length ? `<p style="font-size:.78rem; color:var(--alerta)">
-          Falta: ${esc(listar(deben.map(p => p.nombre.split(" ")[0])))}</p>` : ""}
-      </div>
-      <details><summary style="cursor:pointer; font-size:.82rem; color:var(--accent); font-weight:500">
-        Leer el documento</summary>
-        <div class="doc-cuerpo" style="margin-top:.6rem">${(d.cuerpo || []).map(x =>
-          `<h4>${esc(x.h)}</h4><ul>${(x.l || []).map(y => `<li>${esc(y)}</li>`).join("")}</ul>`).join("")}</div></details>
-      <div class="acciones-admin">
-        <button class="btn btn-oro btn-mini" data-editar-doc="${esc(d.id)}">Editar</button>
-        <button class="btn btn-2 btn-mini" data-borrar-doc="${esc(d.id)}">Borrar</button></div>
-    </article>`;
-  }).join("")}`;
-}
-
-/* El cuerpo se escribe en texto: "# Título" abre una sección, lo demás son puntos. */
-const cuerpoATexto = cuerpo => (cuerpo || [])
-  .map(s => `# ${s.h}\n` + (s.l || []).join("\n")).join("\n\n");
-function textoACuerpo(texto) {
-  const secciones = [];
-  for (const linea of String(texto).split("\n").map(x => x.trim())) {
-    if (!linea) continue;
-    if (linea.startsWith("#")) secciones.push({ h: linea.replace(/^#+\s*/, ""), l: [] });
-    else { if (!secciones.length) secciones.push({ h: "", l: [] }); secciones[secciones.length - 1].l.push(linea); }
-  }
-  return secciones;
-}
-
-function editarDocumento(id) {
-  const d = id ? documento(id) : { titulo:"", version:"1.0", vigente:"", audiencia:"todos",
-    obligatorio:true, resumen:"", cuerpo:[] };
-  if (!d) return;
-  const AUD = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", menor:"Menores de edad" };
-  abrirHoja(id ? "Editar documento" : "Nuevo documento", `
-    <form id="form-doc" style="display:grid; gap:.7rem">
-      <label class="campo">Título<input type="text" name="titulo" required value="${esc(d.titulo)}"></label>
-      <div class="dos-campos">
-        <label class="campo">Versión<input type="text" name="version" required value="${esc(d.version)}"></label>
-        <label class="campo">Vigente desde<input type="text" name="vigente" value="${esc(d.vigente || "")}"
-          placeholder="1 de julio de 2026"></label></div>
-      <label class="campo">¿A quién le toca?<select name="audiencia">${
-        Object.entries(AUD).map(([k, v]) =>
-          `<option value="${k}" ${d.audiencia === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
-      <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
-        <input type="checkbox" name="obligatorio" ${d.obligatorio ? "checked" : ""} style="width:auto">
-        <span>Hay que firmarlo antes de poder reservar</span></label>
-      <label class="campo">Resumen de una línea
-        <input type="text" name="resumen" value="${esc(d.resumen || "")}"></label>
-      <label class="campo">Texto del documento — una línea que empiece con # abre una sección
-        <textarea name="cuerpo" style="min-height:11rem">${esc(cuerpoATexto(d.cuerpo))}</textarea></label>
-      <p style="font-size:.76rem; color:var(--oro-tinta)">
-        Si subes la versión, a quienes ya lo firmaron se les vuelve a pedir la firma.</p>
-      <button class="btn btn-oro btn-bloque" type="submit">${id ? "Guardar" : "Crear documento"}</button>
-    </form>`,
-    cerrar => {
-      $("#form-doc").addEventListener("submit", async ev => {
-        ev.preventDefault();
-        const f = new FormData(ev.target);
-        const titulo = String(f.get("titulo")).trim();
-        const nuevoId = id || titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "doc-" + Date.now();
-        try {
-          await Datos.poner("documentos", nuevoId, {
-            titulo, version:String(f.get("version")).trim(), vigente:String(f.get("vigente") || ""),
-            audiencia:String(f.get("audiencia")), obligatorio:f.get("obligatorio") === "on",
-            resumen:String(f.get("resumen") || ""), cuerpo:textoACuerpo(f.get("cuerpo") || ""),
-            orden: id ? (documento(id).orden || 0) : documentos().length,
-          });
-          avisar(id ? "Documento actualizado." : "Documento creado."); cerrar(); pintar();
-        } catch (e) { avisar("El almacén lo rechazó: no tienes permiso de edición."); }
-      });
-    });
-}
-
 /* ---------------------------------------------------------------- ANUNCIOS
    Los escribe dirección y le salen a los perfiles que elija (M10). */
-const PERFILES_ANUNCIO = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios", tutor:"Tutores" };
+const PERFILES_ANUNCIO = { todos:"Todos", jinete:"Jinetes", propietario:"Propietarios" };
 
 function anunciosParaMi() {
   const hoy = ymd(ahora());
@@ -2084,8 +1657,7 @@ function anunciosParaMi() {
       if (esAdmin()) return true;
       const aud = a.audiencia || ["todos"];
       if (aud.includes("todos")) return true;
-      if (aud.includes(cuenta.rol)) return true;
-      return cuenta.rol === "tutor" && aud.includes("jinete");
+      return aud.includes(cuenta.rol);
     })
     .sort((a,b) => (b.fijado ? 1 : 0) - (a.fijado ? 1 : 0) ||
       (b.publicado || "").localeCompare(a.publicado || ""));
@@ -2319,8 +1891,9 @@ function verSemana() {
       Ver ${mias ? "todas" : "solo las mías"}</button>` : ""}
   </div>` : ""}
 
-  <div class="acciones-admin" style="justify-content:flex-end">
+  <div class="acciones-rapidas">
     <button class="btn btn-oro btn-mini" data-programa>Programa para la cuadra</button>
+    <button class="btn btn-2 btn-mini" data-semana-cliente>La semana por cliente</button>
   </div>
 
   <div class="semana-nav">
@@ -2355,10 +1928,15 @@ function verSemana() {
   <div class="dia-bloque">
     <div class="dia-cab">
       <h3>${DIAS[pSel.diaSemana]} ${pSel.dia}</h3>
-      <span>${sesiones.length
-        ? `${sesiones.reduce((n, x) => n + reservasDeSesion(x).length, 0)} de ${
-            sesiones.reduce((n, x) => n + x.cupo, 0)} lugares`
-        : "sin clases"}</span>
+      <span>${(() => {
+        if (!sesiones.length) return "sin clases";
+        const montas = sesiones.reduce((n, x) => n + reservasDeSesion(x).length, 0);
+        const sueltas = sesiones.filter(x => !reservasDeSesion(x).length).length;
+        /* Lo que se lee de un día es cuánta gente viene y cuántas horas quedan
+           sueltas, no la suma de los cupos. */
+        return `${montas} ${montas === 1 ? "monta" : "montas"}` +
+          (sueltas ? ` · ${sueltas} ${sueltas === 1 ? "hora libre" : "horas libres"}` : "");
+      })()}</span>
     </div>
     ${sesiones.length ? (() => {
       /* Separadas por maestro: las de cada quien juntas, que es como se leen. */
@@ -2373,7 +1951,7 @@ function verSemana() {
         return `${claves.length > 1 ? `<div class="bloque-maestro">
           <span class="pastilla ${claseMaestro(k)}">${esc(entrenador(k))}</span>
           <span>${anotados} de ${cupo} lugares</span></div>` : ""}
-          ${grupo.map(filaAgenda).join("")}`;
+          ${bloqueDeHoras(grupo)}`;
       }).join("");
     })()
       : `<div class="ranura libre"><div class="ranura-cuerpo" style="grid-column:1/-1">
@@ -2384,8 +1962,8 @@ function verSemana() {
 
   <p style="font-size:.75rem; color:var(--ink-3)">
     ${esAdmin() || daClases()
-      ? "Toca el nombre de un jinete para quitarlo de la clase o marcarle falta. "
-      : ""}«Ajustar» cambia la pista, el maestro o el cupo de esa hora, o la quita del horario.</p>`;
+      ? "Toca el nombre de un jinete para moverlo, quitarlo o marcarle falta. "
+      : ""}«ajustar» cambia el maestro o el cupo de esa hora, o la quita del horario.</p>`;
 }
 
 /* Dirección o el maestro sacan a alguien de una clase. Las tres salidas que
@@ -2555,42 +2133,59 @@ function conteoFaltas(id) {
 
 /* Una hora de la agenda: quién está anotado, con qué caballo, y qué puede hacer
    dirección con ella. */
+/* Un maestro abre la semana para ver a quién tiene, no para contemplar los
+   huecos. Las horas con gente van completas; las vacías se juntan abajo en una
+   tira de pastillas, que siguen llevando a anotar y a ajustar la hora. */
+function bloqueDeHoras(grupo) {
+  const conGente = grupo.filter(x => reservasDeSesion(x).length || registroDeSesion(x).length);
+  const vacias   = grupo.filter(x => !conGente.includes(x));
+  const puede = esAdmin() || daClases();
+  return conGente.map(filaAgenda).join("") +
+    (vacias.length ? `<div class="horas-libres">
+      <span class="hl-rotulo">${vacias.length === 1 ? "Hora libre" : "Horas libres"}</span>
+      ${vacias.map(x => puede
+        ? `<button class="hora-libre" data-agregar="${esc(x.fecha)}|${esc(x.plantillaId)}"
+            title="Anotar a alguien o ajustar esta hora">${esc(horaTexto(x.inicio))}</button>`
+        : `<span class="hora-libre">${esc(horaTexto(x.inicio))}</span>`).join("")}
+    </div>` : "");
+}
+
 function filaAgenda(x) {
   const rs = reservasDeSesion(x);
-  const libres = Math.min(x.cupo, (ESPACIOS.find(e => e.id === x.esp) || {}).cap || x.cupo) - rs.length;
-  return `<div class="ranura ${clasePista(x.esp)} ${rs.length ? "" : "libre"}">
+  const cap = Math.min(x.cupo, (ESPACIOS.find(e => e.id === x.esp) || {}).cap || x.cupo);
+  const libres = cap - rs.length;
+  const cerradas = registroDeSesion(x);
+  const puede = esAdmin() || x.ent === cuenta.id;
+  /* Todo es en Equus, así que el nombre de la pista ya no dice nada y se va. Lo
+     que un maestro necesita leer de un vistazo es la hora, quién viene y en qué
+     caballo. Una hora vacía se encoge para no estorbar a las que sí tienen. */
+  return `<div class="ranura ${rs.length ? "" : "libre"}">
     <div class="ranura-hora">${esc(horaTexto(x.inicio))}</div>
     <div class="ranura-cuerpo">
-      <div class="ranura-meta"><span class="pastilla ${clasePista(x.esp) === "pista2"
-        ? "p-pista2" : "p-pista1"}">${esc(espacio(x.esp))}</span>${
-        x.soloPropietarios ? " · solo propietarios" : ""}</div>
       ${rs.length ? `<div class="jinetes">${rs.map(r => {
         const per = persona(r.personaId), cab = caballo(r.caballoId);
         const texto = `${esc(per ? per.nombre.split(" ")[0] : r.personaId)}
           <b>${esc(cab ? cab.nombre : "—")}</b>`;
-        return (esAdmin() || x.ent === cuenta.id)
+        return puede
           ? `<button class="jinete-chip accionable" data-ajustar="${esc(r.id)}"
               title="Ajustar esta reserva">${texto}</button>`
           : `<span class="jinete-chip">${texto}</span>`;
-      }).join("")}</div>` : '<div class="jinetes vacia">Nadie anotado</div>'}
-      ${esAdmin() && libres > 0 ? `<button class="jinete-chip agregar"
-        data-agregar="${esc(x.fecha)}|${esc(x.plantillaId)}">+ anotar a alguien</button>` : ""}
-      ${(() => {
-        /* Lo que se cerró en esta hora. Sin esto la agenda dice "Nadie anotado" y
-           dirección no se entera de que alguien salió por falta. */
-        const cerradas = registroDeSesion(x);
-        if (!cerradas.length) return "";
-        return `<div class="reg-en-agenda">${cerradas.map(h => {
-          const per = persona(h.personaId);
-          return `<button class="jinete-chip cerrada" data-editar-registro="${esc(h.id)}"
-            title="Ver en el registro">${esc(per ? per.nombre.split(" ")[0] : h.personaId)}
-            · ${esc(estadoTexto(h.estado))}${h.cobrada ? " · se cobró" : ""}</button>`;
-        }).join("")}</div>`;
-      })()}
+      }).join("")}</div>` : ""}
+      ${cerradas.length ? `<div class="reg-en-agenda">${cerradas.map(h => {
+        const per = persona(h.personaId);
+        return `<button class="jinete-chip cerrada" data-editar-registro="${esc(h.id)}"
+          title="Ver en el registro">${esc(per ? per.nombre.split(" ")[0] : h.personaId)}
+          · ${esc(estadoTexto(h.estado))}${h.cobrada ? " · se cobró" : ""}</button>`;
+      }).join("")}</div>` : ""}
+      ${puede && libres > 0 ? `<button class="jinete-chip agregar"
+        data-agregar="${esc(x.fecha)}|${esc(x.plantillaId)}">${rs.length
+          ? "+ anotar" : "+ anotar a alguien"}</button>` : ""}
+      ${x.soloPropietarios ? '<div class="ranura-meta">solo propietarios</div>' : ""}
     </div>
     <div class="ranura-lado">
-      <span class="ranura-cupo">${rs.length}/${x.cupo}</span>
-      <button class="btn btn-2 btn-mini" data-ranura="${esc(x.plantillaId)}">Ajustar</button>
+      <span class="ranura-cupo ${rs.length === cap ? "lleno" : ""}">${rs.length}/${cap}</span>
+      ${puede ? `<button class="ajusta-hora" data-ranura="${esc(x.plantillaId)}"
+        title="Cambiar maestro, cupo o quitar la hora">ajustar</button>` : ""}
     </div>
   </div>`;
 }
@@ -2612,10 +2207,7 @@ function agregarAClase(clave) {
         traslapa(s.inicio, s.fin, ...intervaloReserva(r)))) razones.push("ya tiene clase a esa hora");
       const cab = caballosParaPersona(per, s);
       if (!cab.length) razones.push(porQueSinCaballo(per, s));
-      /* Firmar no es un candado para dirección —la firma puede estar en papel—
-         pero sí tiene que verse: es el deslinde de responsabilidad (RN-15). */
-      const sinFirmar = faltanDocs(per);
-      return { per, cab, razones, sinFirmar };
+      return { per, cab, razones };
     })
     .sort((a, b) => a.razones.length - b.razones.length || a.per.nombre.localeCompare(b.per.nombre));
 
@@ -2627,20 +2219,21 @@ function agregarAClase(clave) {
         <div><dt>Lugares</dt><dd>${lugaresLibres(s)} libres de ${s.cupo}</dd></div>
       </dl>
     </div>
+    ${esAdmin() || s.ent === cuenta.id ? `<button class="btn btn-2 btn-bloque btn-mini"
+      id="ir-ranura">Ajustar esta hora: maestro, cupo o quitarla</button>` : ""}
     <p class="etiqueta">¿A quién anotas?</p>
     <div class="vista" id="candidatos">${candidatos.map(c => `
       <button class="opcion" data-anotar="${esc(c.per.id)}" ${c.razones.length ? "disabled" : ""}
         style="${c.razones.length ? "opacity:.5" : ""}">
         <span class="ini" aria-hidden="true">${esc(c.per.nombre[0])}</span>
-        <span><span class="n">${esc(c.per.nombre)}${c.sinFirmar.length && !c.razones.length
-            ? ` <span class="pastilla p-alerta">${c.sinFirmar.length} sin firmar</span>` : ""}</span>
+        <span><span class="n">${esc(c.per.nombre)}</span>
           <span class="m">${c.razones.length ? esc(c.razones[0])
             : `${saldo(c.per)} clases · ${c.cab.length} ${c.cab.length === 1 ? "caballo" : "caballos"}`}</span></span>
       </button>`).join("")}</div>
-    ${candidatos.some(c => c.sinFirmar.length && !c.razones.length) ? `<div class="nota alerta">
-      A quien sale marcado le faltan documentos por firmar. Ellos no pueden reservarse
-      solos hasta firmarlos; tú sí los puedes anotar, por si la firma la tienes en papel.</div>` : ""}`,
+`,
     cerrar => {
+      const irR = $("#ir-ranura");
+      if (irR) irR.addEventListener("click", () => { cerrar(); editarRanura(s.plantillaId); });
       $("#candidatos").addEventListener("click", e => {
         const b = e.target.closest("[data-anotar]"); if (!b || b.disabled) return;
         const per = persona(b.dataset.anotar);
@@ -2662,9 +2255,6 @@ function elegirCaballoPara(per, s) {
         <span><span class="n">${esc(c.nombre)}</span>
           <span class="m">${c.propio ? "su caballo" : `${esc(nivelNombre(c.min))} a ${esc(nivelNombre(c.max))}`}</span></span>
         <span class="carga">${c.trabajadas}/${c.maxDia}<br>hoy</span></button>`).join("")}</div>
-    ${faltanDocs(per).length ? `<div class="nota alerta">
-      A ${esc(per.nombre.split(" ")[0])} le faltan por firmar:
-      <b>${esc(listar(faltanDocs(per).map(d => d.titulo)))}</b>.</div>` : ""}
     <div class="nota">Se le descuenta <b>1</b> clase del saldo. Le quedan ${saldo(per)}.</div>
     <button class="btn btn-bloque" id="ok-anotar-cab" ${unico ? "" : "disabled"}>Anotar</button>`,
     cerrar => {
@@ -2686,6 +2276,167 @@ function elegirCaballoPara(per, s) {
         if (!gano) { btn.disabled = false; btn.textContent = "Anotar"; return avisar("Ese caballo ya lo tomaron."); }
         avisar(`${per.nombre.split(" ")[0]} queda anotada.`);
         cerrar(); pintar();
+      };
+    });
+}
+
+/* ---------------------------------------------------------------- CLIENTES
+   La gente del club: quién es, qué plan trae, cuántas clases le quedan y qué
+   tiene esta semana. Antes vivía plegada dentro de Inicio; para un maestro es
+   media jornada de trabajo, así que tiene su propia pantalla. */
+let buscaCliente = "";
+
+const clientes = () => personas().filter(esCliente)
+  .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+function semanaDe(per) {
+  const dias = semanaDeRegistro();
+  return Datos.todo("reservas")
+    .filter(r => r.personaId === per.id && dias.includes(r.fecha))
+    .sort((a, b) => deYmd(a.fecha, a.hora) - deYmd(b.fecha, b.hora));
+}
+
+function verClientes() {
+  const q = buscaCliente.trim().toLowerCase();
+  /* El mismo interruptor que la semana: si Tania está viendo lo suyo, aquí ve a
+     sus jinetes, no a los de Edwin. Un jinete es "suyo" si lo tiene asignado o
+     si esta semana monta con ella. */
+  const mias = daClases() && soloMisClases;
+  const mio = c => !mias || c.maestroId === cuenta.id ||
+    semanaDe(c).some(r => r.ent === cuenta.id);
+  const lista = clientes().filter(mio)
+    .filter(c => !q || c.nombre.toLowerCase().includes(q));
+  const dias = semanaDeRegistro();
+  const conClase = lista.filter(c => semanaDe(c).length).length;
+
+  return `
+  <div class="vista-titulo"><h2>Clientes</h2>
+    <span class="sub">${mias ? `${lista.length} ${lista.length === 1 ? "tuyo" : "tuyos"}`
+      : `${clientes().length} en el club`}</span></div>
+
+  ${daClases() ? `<div class="filtro-maestro">
+    <span>${mias ? `Solo los jinetes de ${esc(cuenta.nombre.split(" ")[0])}`
+      : "Todos los jinetes del club"}</span>
+    ${esAdmin() ? `<button class="btn btn-2 btn-mini" data-alternar-mias>
+      Ver ${mias ? "todos" : "solo los míos"}</button>` : ""}
+  </div>` : ""}
+
+  <div class="semana-nav">
+    <button class="btn btn-2 btn-mini" data-semana="-1">‹</button>
+    <span><b>${textoSemana()}</b><br><span style="font-size:.74rem; color:var(--ink-3)">${
+      esc(rangoFechas(dias[0], dias[6]))}</span></span>
+    <button class="btn btn-2 btn-mini" data-semana="1">›</button>
+  </div>
+  <p style="font-size:.8rem; color:var(--ink-3)">
+    ${conClase} ${conClase === 1 ? "cliente monta" : "clientes montan"} esta semana.</p>
+
+  <label class="campo">Buscar
+    <input type="text" id="busca-cliente" value="${esc(buscaCliente)}"
+      placeholder="nombre del cliente" autocomplete="off"></label>
+
+  <div class="acciones-rapidas">
+    <button class="btn btn-2 btn-mini" data-nueva-persona>Nuevo cliente</button>
+    <button class="btn btn-oro btn-mini" data-semana-cliente>La semana por cliente</button>
+    <button class="btn btn-2 btn-mini" data-reporte>Reporte del mes</button>
+  </div>
+
+  ${lista.length ? `<div class="vista">${lista.map(c => {
+    const suyas = semanaDe(c);
+    const q2 = paquete(c.paqueteId) || {};
+    const s2 = saldo(c);
+    return `<article class="cliente">
+      <div class="cliente-cab">
+        <span class="ini" aria-hidden="true">${esc(c.nombre[0])}</span>
+        <div class="cliente-id">
+          <b>${esc(c.nombre)}</b>
+          <span>${esc(ROL_NOMBRE[c.rol] || c.rol)}${c.nivel
+            ? " · " + esc(nivelNombre(c.nivel)) : ""}${c.maestroId && persona(c.maestroId)
+            ? " · " + esc(persona(c.maestroId).nombre) : ""}</span>
+        </div>
+        <span class="pastilla ${s2 > 0 ? "p-ok" : "p-alerta"}"
+          title="Clases que le quedan">le ${s2 === 1 ? "queda" : "quedan"} ${s2}</span>
+      </div>
+      <div class="cliente-plan">Plan · ${esc(q2.nombre || c.paquete || "sin plan")}${
+        q2.precio ? ` · ${esc(pesos(q2.precio))}` : ""}</div>
+      ${suyas.length ? `<div class="cliente-semana">${suyas.map(r => {
+        const cab = caballo(r.caballoId);
+        return `<button class="monta" data-ajustar="${esc(r.id)}">
+          <b>${esc((fechaLarga(r.fecha).split(" ")[0] || "").slice(0,3))}</b>
+          ${esc(horaTexto(deYmd(r.fecha, r.hora)))}
+          <span>${esc(cab ? cab.nombre : "—")}</span></button>`;
+      }).join("")}</div>` : `<div class="cliente-semana vacia">Sin clases esta semana</div>`}
+      <div class="cliente-pie">
+        <button class="btn btn-2 btn-mini" data-editar-persona="${esc(c.id)}">Editar ficha</button>
+      </div>
+    </article>`;
+  }).join("")}</div>`
+    : `<div class="vacio">${q ? "Nadie se llama así." : "Todavía no hay clientes."}</div>`}`;
+}
+
+/* La semana de cada cliente, en papel. Es lo que se le manda a quien pregunta
+   "¿cuándo me toca?" y lo que se revisa al cobrar. */
+function semanaPorCliente(aExcelTambien) {
+  const dias = semanaDeRegistro();
+  /* Si Tania está viendo solo sus clases, lo que se lleva impreso es lo suyo:
+     exportar de pronto la semana de Edwin sería una sorpresa desagradable. */
+  const soloMias = daClases() && soloMisClases;
+  const filas = clientes()
+    .map(c => ({ c, montas: semanaDe(c).filter(r => !soloMias || r.ent === cuenta.id) }))
+    .filter(x => x.montas.length);
+  const total = filas.reduce((n, x) => n + x.montas.length, 0);
+
+  document.getElementById("programa").innerHTML = `
+    <header class="pg-cab">
+      <img class="pg-logo" src="assets/marca.png" alt="" onerror="this.remove()">
+      <div><h1>Equus · La semana por cliente</h1>
+        <p>${esc(rangoFechas(dias[0], dias[6]))}${soloMias
+          ? " · clases de " + esc(cuenta.nombre.split(" ")[0]) : ""} · ${filas.length} ${
+          filas.length === 1 ? "cliente" : "clientes"} · ${total} ${
+          total === 1 ? "monta" : "montas"}</p></div>
+      <p class="pg-sello">Impreso el ${esc(fechaLarga(ymd(ahora())))}, ${esc(horaTexto(ahora()))}</p>
+    </header>
+    ${filas.length ? filas.map(({ c, montas }) => `
+      <section class="pg-dia">
+        <h2>${esc(c.nombre)} · ${montas.length} ${montas.length === 1 ? "monta" : "montas"}</h2>
+        <table><thead><tr>
+          <th>Día</th><th>Hora</th><th>Caballo</th><th>Maestro</th><th class="pg-notas">Notas</th>
+        </tr></thead><tbody>${montas.map(r => {
+          const cab = caballo(r.caballoId);
+          return `<tr>
+            <td>${esc(fechaLarga(r.fecha).replace(/ de .*/, ""))}</td>
+            <td class="pg-hora">${esc(horaTexto(deYmd(r.fecha, r.hora)))}</td>
+            <td><b>${esc(cab ? cab.nombre : "—")}</b></td>
+            <td>${esc(entrenador(r.ent))}</td><td></td></tr>`;
+        }).join("")}</tbody></table>
+      </section>`).join("")
+      : '<p class="pg-vacio">Nadie tiene clases esta semana.</p>'}`;
+
+  abrirHoja("La semana por cliente", `
+    <p style="font-size:.85rem; color:var(--ink-2)">
+      ${total} ${total === 1 ? "monta" : "montas"} de ${filas.length} ${
+      filas.length === 1 ? "cliente" : "clientes"}, del ${esc(rangoFechas(dias[0], dias[6]))}.
+      Una tabla por persona, con su día, su hora y su caballo.${soloMias
+        ? ` Solo tus clases; para sacar las del club entero, cambia arriba a «ver todas».` : ""}</p>
+    <button class="btn btn-bloque" id="ok-imprimir">Imprimir o guardar como PDF</button>
+    <button class="btn btn-2 btn-bloque" id="ok-excel">Bajar para Excel</button>`,
+    cerrar => {
+      $("#ok-imprimir").onclick = () => { cerrar(); imprimirHoja(); };
+      $("#ok-excel").onclick = () => {
+        const cols = ["Semana","Cliente","Plan","Día","Hora","Caballo","Maestro","Clases que le quedan"];
+        const limpia = v => { const t = String(v == null ? "" : v);
+          return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+        const lineas = [cols.join(";")];
+        for (const { c, montas } of filas) for (const r of montas) {
+          const cab = caballo(r.caballoId);
+          lineas.push([rangoFechas(dias[0], dias[6]), c.nombre,
+            (paquete(c.paqueteId) || {}).nombre || c.paquete || "sin plan",
+            fechaLarga(r.fecha).replace(/ de .*/, ""), horaTexto(deYmd(r.fecha, r.hora)),
+            cab ? cab.nombre : "—", entrenador(r.ent), saldo(c)].map(limpia).join(";"));
+        }
+        bajarArchivo(`Equus semana por cliente ${dias[0]}.csv`,
+          "\ufeff" + "sep=;\r\n" + lineas.join("\r\n") + "\r\n", "text/csv;charset=utf-8");
+        avisar("Archivo generado. Ábrelo con Excel.");
+        cerrar();
       };
     });
 }
@@ -3251,36 +3002,28 @@ function editarRanura(id) {
 <script>
 "use strict";
 /* ------------------------------------------------------------------ pintado */
-const VISTAS = { inicio:verInicio, reservar:verReservar, semana:verSemana, registro:verRegistro,
-  documentos:verDocumentos, competencias:verCompetencias, recordatorios:verRecordatorios };
+const VISTAS = { inicio:verHoy, semana:verSemana, clientes:verClientes,
+  registro:verRegistro, competencias:verCompetencias, recordatorios:verRecordatorios };
 /* Cada perfil abre en lo que más usa, y las pestañas van en ese orden. Quien da
    clases quiere ver a quién le toca hoy; un jinete, reservar; dirección, la
    semana del club. La agenda completa y el registro son solo de dirección. */
-const ORDEN_VISTAS = {
-  direccion: ["inicio","semana","registro","reservar","competencias","recordatorios","documentos"],
-  maestro:   ["semana","inicio","competencias","recordatorios","documentos"],
-  jinete:    ["inicio","reservar","documentos","competencias","recordatorios"],
-};
-const perfilDeVistas = () => esAdmin() ? "direccion" : daClases() ? "maestro" : "jinete";
-const vistasVisibles = () => ORDEN_VISTAS[perfilDeVistas()];
-/* Tania y Edwin son dirección y además dan clases: para ellos lo primero es su
-   agenda, no el panel del club. */
-const vistaInicial = () => {
-  const v = vistasVisibles();
-  return daClases() && v.includes("semana") ? "semana" : v[0];
-};
+/* Esto lo usan Tania y Edwin. La semana es el centro del trabajo, así que ahí
+   abre y ahí va primero. */
+const ORDEN_VISTAS = ["semana","inicio","clientes","registro","competencias","recordatorios"];
+const vistasVisibles = () => ORDEN_VISTAS;
+const vistaInicial = () => "semana";
 const ICONOS = {
   inicio:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>',
   reservar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>',
-  documentos:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  clientes:'<path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 11a3 3 0 1 0 0-6"/><path d="M17.5 20a6 6 0 0 0-2-4.5"/>',
   competencias:'<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3M9 20h6M10 17h4l1 3H9z"/>',
   recordatorios:'<path d="M6 9a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
   semana:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M7 13h3M7 17h3M14 13h3M14 17h3"/>',
   registro:'<path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h3"/>',
 };
 /* Cortos a propósito: con siete pestañas, "Competencias" no cabe en un teléfono. */
-const ROTULOS = { inicio:"Inicio", reservar:"Reservar", semana:"Semana", registro:"Registro",
-  documentos:"Documentos", competencias:"Concursos", recordatorios:"Avisos" };
+const ROTULOS = { inicio:"Hoy", semana:"Semana", clientes:"Clientes",
+  registro:"Registro", competencias:"Concursos", recordatorios:"Avisos" };
 
 function avisar(t) {
   const b = $("#brindis"); b.textContent = t; b.hidden = false;
@@ -3313,13 +3056,15 @@ function pintar() {
   $("#quien-nombre").textContent = cuenta.nombre.split(" ")[0];
   $("#quien-ini").textContent = cuenta.nombre.split(" ").map(p => p[0]).slice(0,2).join("");
   $("#quien-ini").classList.toggle("admin", esAdmin());
-  $("#sello").hidden = !esAdmin();
+  /* El sello es para quien dirige y no da clases. A Tania y a Edwin, que
+     sí dan, decirles "Dirección" en la cabecera no les dice nada. */
+  $("#sello").hidden = !esAdmin() || !!cuenta.imparte;
 
   const visibles = vistasVisibles();
   if (!visibles.includes(vista)) vista = vistaInicial();
   $("#tabs").innerHTML = visibles.map(n => `<button class="tab" role="tab" data-vista="${n}"
     aria-selected="${n === vista}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICONOS[n]}</svg>${ROTULOS[n]}
-    ${n === "documentos" && pendientesDeFirma().length ? '<span class="pip"></span>' : ""}</button>`).join("");
+  </button>`).join("");
   $("#v-" + vista).innerHTML = VISTAS[vista]();
   /* Las vistas que no se ven se vacían: si no, queda su HTML viejo con botones e
      identificadores repetidos escondidos detrás. */
@@ -3341,9 +3086,8 @@ function irA(n) { vista = n; pintar(); window.scrollTo({ top:0, behavior:"instan
 /* ------------------------------------------------- editor de personas (admin) */
 function editarPersona(id) {
   const p = id ? persona(id) : { nombre:"", rol:"jinete", nivel:"principiantes", menor:false,
-    tutorDe:"", propios:[], habilitados:[], clasesCargadas:0, paquete:"" };
+    contacto:"", propios:[], habilitados:[], clasesCargadas:0, paquete:"" };
   if (!p) return;
-  const menores = personas().filter(x => x.menor && x.id !== id);
   const casillas = (campo, fuente) => fuente.map(c => `<label><input type="checkbox" name="${campo}"
     value="${c.id}" ${(p[campo] || []).includes(c.id) ? "checked" : ""}>${esc(c.nombre)}</label>`).join("");
   abrirHoja(id ? "Editar persona" : "Nueva persona", `
@@ -3351,8 +3095,8 @@ function editarPersona(id) {
       <label class="campo">Nombre completo
         <input type="text" name="nombre" required value="${esc(p.nombre)}"></label>
       <div class="dos-campos">
-        <label class="campo">Perfil<select name="rol">${
-          ["jinete","propietario","tutor","maestro","admin"].map(r =>
+        <label class="campo">Perfil<select name="rol" id="sel-rol">${
+          ["jinete","propietario","maestro","admin"].map(r =>
             `<option value="${r}" ${p.rol === r ? "selected" : ""}>${ROL_NOMBRE[r]}</option>`).join("")}</select></label>
         <label class="campo">Nivel<select name="nivel">${
           NIVELES.map(n => `<option value="${n.id}" ${p.nivel === n.id ? "selected" : ""}>${n.nombre}</option>`).join("")}</select></label>
@@ -3362,7 +3106,7 @@ function editarPersona(id) {
         decide qué caballos puede montar.</p>
       <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
         <input type="checkbox" name="menor" ${p.menor ? "checked" : ""} style="width:auto">
-        <span>Es menor de edad — firma su tutor y suma la carta responsiva</span></label>
+        <span>Es menor de edad</span></label>
       <label style="display:flex; gap:.5rem; align-items:center; font-size:.82rem">
         <input type="checkbox" name="imparte" ${p.imparte ? "checked" : ""} style="width:auto">
         <span>Da clases — aparece como maestro al asignar horarios</span></label>
@@ -3372,9 +3116,9 @@ function editarPersona(id) {
             esc(m.nombre)}</option>`).join("")}</select></label>
       <p style="font-size:.76rem; color:var(--oro-tinta); margin-top:-.3rem">
         Solo verá las clases de ese maestro al reservar. Sin asignar, ve las de todos.</p>
-      <label class="campo">Si es tutor, ¿de quién?
-        <select name="tutorDe"><option value="">— no es tutor —</option>${
-          menores.map(m => `<option value="${m.id}" ${p.tutorDe === m.id ? "selected" : ""}>${esc(m.nombre)}</option>`).join("")}</select></label>
+      <label class="campo">A quién llamar
+        <input type="text" name="contacto" value="${esc(p.contacto || "")}"
+          placeholder="nombre y teléfono de quien responde"></label>
       <div class="dos-campos">
         <label class="campo">Clases cargadas
           <input type="text" inputmode="numeric" name="clasesCargadas" value="${p.clasesCargadas || 0}"></label>
@@ -3383,7 +3127,7 @@ function editarPersona(id) {
             `<option value="${q.id}" data-clases="${q.clases}" ${p.paqueteId === q.id ? "selected" : ""}>${
               esc(q.nombre)}</option>`).join("")}</select></label>
       </div>
-      <div class="dos-campos">
+      <div class="dos-campos acceso-personal" ${esCliente(p) && p.rol ? "hidden" : ""}>
         <label class="campo">Usuario para entrar
           <input type="text" name="usuario" autocapitalize="none" spellcheck="false"
             value="${esc(p.usuario || "")}" placeholder="sin usuario, no entra"></label>
@@ -3402,6 +3146,12 @@ function editarPersona(id) {
       ${id ? '<button class="btn btn-2 btn-bloque" type="button" id="borrar-persona">Dar de baja</button>' : ""}
     </form>`,
     cerrar => {
+      /* El acceso es cosa del personal: al elegir perfil, los campos de usuario
+         y contraseña aparecen o se van. */
+      const rol = $("#form-persona [name=rol]"), caja = $("#form-persona .acceso-personal");
+      const acomodar = () => { if (caja) caja.hidden = !ES_PERSONAL.includes(rol.value); };
+      if (rol) { rol.addEventListener("change", acomodar); acomodar(); }
+
       /* Elegir paquete rellena las clases cargadas; el número sigue siendo editable. */
       const sel = $("#sel-paquete");
       if (sel) sel.addEventListener("change", () => {
@@ -3423,11 +3173,12 @@ function editarPersona(id) {
         const claveNueva = String(f.get("clave") || "").trim();
         const datos = {
           nombre, rol:String(f.get("rol")), nivel:String(f.get("nivel")),
-          menor, sinCuenta:menor, tutorDe:String(f.get("tutorDe") || ""),
+          menor, contacto:String(f.get("contacto") || ""),
           clasesCargadas:Math.max(0, parseInt(f.get("clasesCargadas"), 10) || 0),
           paqueteId:String(f.get("paqueteId") || ""),
           paquete:(paquete(String(f.get("paqueteId") || "")) || {}).nombre || "",
-          usuario:menor ? "" : String(f.get("usuario") || "").trim().toLowerCase(),
+          usuario:ES_PERSONAL.includes(String(f.get("rol")))
+            ? String(f.get("usuario") || "").trim().toLowerCase() : "",
           imparte:f.get("imparte") === "on",
           maestroId:String(f.get("maestroId") || ""),
           clave:claveNueva ? await huella(claveNueva) : (p.clave || ""),
@@ -3545,6 +3296,7 @@ document.addEventListener("click", async e => {
   const edReg = e.target.closest("[data-editar-registro]"); if (edReg) return editarRegistro(edReg.dataset.editarRegistro);
   if (e.target.closest("[data-crear-cuentas]")) return crearCuentasQueFaltan();
   if (e.target.closest("[data-reporte]")) return verReporte();
+  if (e.target.closest("[data-semana-cliente]")) return semanaPorCliente();
   if (e.target.closest("[data-nuevo-registro]")) return nuevoRegistro();
   if (e.target.closest("[data-registro-pdf]")) return registroEnPapel();
   const sreg = e.target.closest("[data-semana-reg]");
@@ -3607,6 +3359,16 @@ document.addEventListener("click", async e => {
   }
   const brec = e.target.closest("[data-borrar-rec]");
   if (brec) { await Datos.quitar("recordatorios", brec.dataset.borrarRec); return pintar(); }
+});
+
+document.addEventListener("input", e => {
+  if (e.target.id === "busca-cliente") {
+    buscaCliente = e.target.value;
+    const foco = document.activeElement === e.target;
+    pintar();
+    if (foco) { const i = $("#busca-cliente");
+      if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }
+  }
 });
 
 document.addEventListener("change", e => {
@@ -3736,31 +3498,27 @@ async function cancelar(reservaId) {
 
 /* -------------------------------------------------------------------- cuenta */
 $("#btn-quien").addEventListener("click", () => {
-  const menor = cuenta.tutorDe ? persona(cuenta.tutorDe) : null;
-  const mios = docsDe(menor || cuenta);
+  const mias = daClases()
+    ? Datos.todo("reservas").filter(r => r.ent === cuenta.id).length : null;
   abrirHoja("Tu cuenta", `
     <div class="tarjeta plana" style="display:grid; gap:.35rem">
       <p style="font-family:var(--serif); font-size:1.35rem">${esc(cuenta.nombre)}</p>
       <p style="font-size:.82rem; color:var(--ink-2)">${esc(ROL_NOMBRE[cuenta.rol])}${
-        menor ? ` · manejas la cuenta de ${esc(menor.nombre)}` : ""}</p>
+        daClases() ? " · da clases" : ""}</p>
       <p style="font-size:.78rem; color:var(--ink-3)">Usuario: ${esc(cuenta.usuario || "—")}</p>
-      ${esAdmin() ? '<p style="font-size:.78rem; color:var(--ink-3)">Acceso total. No firmas documentos.</p>'
-        : `<p style="font-size:.78rem; color:var(--ink-3)">
-            ${saldo()} clases disponibles · ${mios.length} documentos que firmar</p>`}
+      ${mias !== null ? `<p style="font-size:.78rem; color:var(--ink-3)">
+        ${mias} ${mias === 1 ? "monta tuya" : "montas tuyas"} en la agenda</p>` : ""}
     </div>
-    ${esAdmin() && !Datos.esEditor ? `<div class="nota alerta">
-      Entraste como dirección, pero esta página no te ha dado permiso de edición: puedes
-      ver todo y los cambios al catálogo se van a rechazar. Pide que te compartan la
-      página con permiso de edición.</div>` : ""}
-    <div class="nota">Solo ves tu información${esAdmin() ? "" : " y la de nadie más"}.
-      Para cambiar tu contraseña, pídeselo a dirección.</div>
+    <div class="nota">Esta página es para el personal del club. Los clientes no entran
+      aquí: su ficha, sus clases y su caballo los manejas tú.</div>
+    <div class="nota">Para cambiar tu contraseña, pídeselo a dirección.</div>
     <button class="btn btn-2 btn-bloque" id="btn-salir">Cerrar sesión</button>`,
     cerrar => { $("#btn-salir").onclick = () => { cerrar(); salir(); }; });
 });
 
 $("#btn-reiniciar").addEventListener("click", () => {
   abrirHoja("Borrar datos de prueba", `
-    <p style="font-size:.88rem">Se borran reservas, firmas, recordatorios e inscripciones
+    <p style="font-size:.88rem">Se borran reservas, recordatorios e inscripciones
       guardadas en este navegador.${Datos.compartido ? " Lo del almacén compartido no se toca." : ""}</p>
     <button class="btn btn-peligro btn-bloque" id="ok-borrar">Borrar</button>`,
     cerrar => { $("#ok-borrar").onclick = async () => {
