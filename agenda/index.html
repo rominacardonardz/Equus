@@ -412,6 +412,40 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .aviso-fila .acc{grid-column:1 / -1; display:flex; gap:.3rem; flex-wrap:wrap}
 .sub-av{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin:.5rem 0 .1rem}
 .sec-avisos{--sec:var(--aviso)}
+.sec-maestros{--sec:var(--perfil)} .sec-pruebas{--sec:var(--ok)} .sec-salud{--sec:#8A6A15} .sec-altas{--sec:var(--info)}
+/* Hoy */
+.hoy-cab h2{font-size:1.9rem}
+.hoy-grid{display:grid; gap:.7rem}
+@media (min-width:48rem){.hoy-grid{grid-template-columns:repeat(2,1fr)}}
+.hoy-card{display:grid; gap:.5rem; padding:.95rem 1rem; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--sec, var(--perfil)); border-radius:var(--r)}
+.hoy-card > header{display:flex; align-items:baseline; justify-content:space-between; gap:.5rem}
+.hoy-card h3{font-size:1.1rem}
+.hoy-card .big{font-family:var(--serif); font-size:1.8rem; line-height:1; font-weight:600}
+.hoy-card .renglon{display:flex; gap:.6rem; align-items:baseline; width:100%; background:none; border:0; padding:.3rem 0; font:inherit; color:var(--ink); text-align:left; cursor:pointer; border-top:1px solid var(--line)}
+.hoy-card .renglon:first-of-type{border-top:0}
+.hoy-card .renglon .h{flex:none; width:4.2rem; font-size:.78rem; color:var(--ink-3)}
+.hoy-card .renglon .t{flex:1; min-width:0; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.hoy-card .renglon .x{flex:none; font-size:.74rem; color:var(--ink-3)}
+.hoy-card .ver{justify-self:start; background:none; border:0; padding:.2rem 0; font:inherit; font-size:.82rem; font-weight:600; color:var(--sec, var(--perfil)); cursor:pointer}
+.hc-clases{--sec:var(--perfil)} .hc-pend{--sec:#8A6A15} .hc-cobros{--sec:var(--alerta)} .hc-cab{--sec:var(--ok)}
+/* Reporte */
+.kpis-rep{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem}
+@media (min-width:48rem){.kpis-rep{grid-template-columns:repeat(4,1fr)}}
+.kpi{padding:.85rem .9rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); display:grid; gap:.15rem}
+.kpi b{font-family:var(--serif); font-size:1.6rem; line-height:1.05}
+.kpi span{font-size:.75rem; color:var(--ink-3)}
+.tabla-rep{width:100%; border-collapse:collapse; font-size:.85rem}
+.tabla-rep th{font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); font-weight:600; text-align:right; padding:.35rem .3rem}
+.tabla-rep th:first-child, .tabla-rep td:first-child{text-align:left}
+.tabla-rep td{padding:.45rem .3rem; border-top:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums}
+.tabla-rep tr.total td{font-weight:700}
+.salud-fila{display:grid; grid-template-columns:1fr auto; gap:.2rem .6rem; align-items:center; padding:.55rem 0; border-top:1px solid var(--line)}
+.salud-fila:first-child{border-top:0}
+.salud-fila b{font-size:.92rem}
+.salud-fila .sub{font-size:.76rem}
+.p-vencido{background:var(--alerta-bg); color:var(--alerta)} .p-pronto{background:var(--aviso-bg); color:var(--aviso)} .p-okk{background:var(--ok-bg); color:var(--ok)}
+.salud-campos{display:grid; grid-template-columns:1fr 1fr; gap:.5rem .7rem; padding:.7rem; border:1px solid var(--line); border-radius:var(--r-sm)}
+.salud-campos legend{font-size:.8rem; font-weight:600; padding:0 .3rem}
 .sec-deben{--sec:var(--alerta)} .sec-pagaron{--sec:var(--ok)} .sec-sin{--sec:var(--ink-3)} .sec-hoja{--sec:var(--info)}
 /* Pagos: resumen corto arriba y lista por grupos */
 .resumen-pago{display:grid; gap:.6rem; padding:1rem; background:var(--surface); border:1px solid var(--line); border-radius:var(--r)}
@@ -506,7 +540,7 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
   .logo img{height:1.9rem}
   .yo{padding:.2rem .55rem .2rem .25rem; font-size:.8rem}
   .yo .cambiar{display:none}
-  .pestanas{display:grid; grid-template-columns:repeat(3, 1fr); gap:0; -webkit-mask-image:none; mask-image:none; padding-bottom:.15rem}
+  .pestanas{display:grid; grid-template-columns:repeat(4, 1fr); gap:0; -webkit-mask-image:none; mask-image:none; padding-bottom:.15rem}
   .pestanas::after{display:none}
   .pestana{padding:.45rem .2rem .4rem; font-size:.8rem; text-align:center; border-bottom-width:2px}
   .cab-fila{padding-block:.45rem .2rem}
@@ -748,7 +782,7 @@ const linkWa = (tel, texto) => `https://wa.me/${telWa(tel)}?text=${encodeURIComp
    Guardado. Cada maestro tiene su carpeta: maestros/<id>/alumnos y
    maestros/<id>/semanas. Los caballos son de los dos: caballos/<id>.
    ========================================================================== */
-const S = { alumnos:{}, semanas:{}, otras:{}, caballos:{}, historial:{}, pendientes:{}, cargado:false,
+const S = { alumnos:{}, semanas:{}, otras:{}, otrosAlumnos:{}, caballos:{}, historial:{}, pendientes:{}, cargado:false,
   crudos:{}, papelera:{}, caballosCrudos:{}, caballosPapelera:{} };
 /* Lo que se manda a la papelera lleva "borrado" (fecha); aquí se separa de lo vigente. */
 function repartir() {
@@ -783,10 +817,10 @@ const Store = {
     try { const L = this.local(); L[p] = { alumnos:S.crudos, semanas:S.semanas, chat:Chat.mensajes.slice(-60), historial:S.historial }; L.caballos = S.caballosCrudos; L.pendientes = S.pendientes; localStorage.setItem("equus-agenda-v1", JSON.stringify(L)); } catch (e) {}
   },
   abrir(p) {
-    this.cerrar(); S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
+    this.cerrar(); S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
     if (!this.db) {
       const T = this.local(); const L = T[p] || {}; S.crudos = L.alumnos || {}; S.semanas = L.semanas || {}; Chat.mensajes = L.chat || []; S.historial = L.historial || {};
-      S.otras = (T[otro(p)] || {}).semanas || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; repartir(); S.cargado = true; render(); return;
+      S.otras = (T[otro(p)] || {}).semanas || {}; S.otrosAlumnos = (T[otro(p)] || {}).alumnos || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; repartir(); S.cargado = true; render(); return;
     }
     let listos = 0; const listo = () => { if (++listos >= 2) S.cargado = true; };
     const err = e => { if (e && e.code === "revoked") brindis("Se perdió el acceso al guardado. Recarga la página."); };
@@ -797,6 +831,8 @@ const Store = {
     sub(`maestros/${p}/semanas`, o => { S.semanas = o; listo(); });
     /* La semana del otro maestro solo se lee para contar los caballos. */
     sub(`maestros/${otro(p)}/semanas`, o => { S.otras = o; });
+    /* Los alumnos del otro maestro solo se leen para el reporte del mes. */
+    sub(`maestros/${otro(p)}/alumnos`, o => { S.otrosAlumnos = o; });
     sub("caballos", o => { S.caballosCrudos = o; repartir(); });
     /* Los pendientes son de los dos: cada quien ve los suyos y los que el otro le comparte. */
     sub("pendientes", o => { S.pendientes = o; });
@@ -896,6 +932,23 @@ const alumnosActivos = () => Object.entries(S.alumnos).map(([id, a]) => ({ ...a,
    Un caballo cuenta como montado en las clases por dar o en las que el alumno
    asistió. Si el alumno faltó o se canceló, el caballo queda libre. */
 const ESTATUS_CABALLO = { activo:"Activo", descanso:"Descanso", lesionado:"Lesionado" };
+/* Cuidados con fecha. Los días entre uno y otro son sugerencias y se cambian
+   en cada caballo (lo decide el herrero o el veterinario). */
+const SALUD = [
+  { id:"herraje",         nombre:"Herraje",         cada:42 },
+  { id:"desparasitacion", nombre:"Desparasitación", cada:90 },
+  { id:"vacunas",         nombre:"Vacunas",         cada:180 },
+];
+function saludDe(c) {
+  const hoy = hoyIso(), en7 = iso(sumarDias(new Date(), 7));
+  return SALUD.map(x => {
+    const r = (c.salud || {})[x.id] || {}; const cada = Number(r.cada) || x.cada;
+    const proxima = r.ultima ? iso(sumarDias(deIso(r.ultima), cada)) : "";
+    const estado = !r.ultima ? "sin" : proxima < hoy ? "vencido" : proxima <= en7 ? "pronto" : "ok";
+    return { ...x, ultima:r.ultima || "", cada, proxima, estado };
+  });
+}
+const alertasSalud = () => caballosLista().filter(c => c.estatus !== "baja").flatMap(c => saludDe(c).filter(x => x.estado === "vencido" || x.estado === "pronto").map(x => ({ c, x })));
 const caballosLista = () => Object.entries(S.caballos).map(([id, c]) => ({ ...c, id }))
   .sort((a,b) => (a.nombre || "").localeCompare(b.nombre || ""));
 const nombreCaballo = c => c.caballoId ? ((S.caballos[c.caballoId] || {}).nombre || "Caballo borrado") : (c.caballo || "");
@@ -1003,7 +1056,7 @@ const papeleraAlumnosHtml = lista => `<p class="sub">Lo que mandas a la papelera
    ========================================================================== */
 let perfil = null;
 try { const g = localStorage.getItem("equus-agenda-perfil"); if (MAESTROS[g]) perfil = g; } catch (e) {}
-let vista = "semana";
+let vista = "hoy";
 let lunesVista = lunesHoy();
 let diaSel = diaHoy();
 let filtroPista = "todas";
@@ -1036,7 +1089,7 @@ function render() {
   const clases = todasLasClases();
   const pendientes = contarPendientes(clases);
   const m = MAESTROS[perfil];
-  const vistas = { semana:vistaSemana, alumnos:vistaAlumnos, pagos:vistaPagos, caballos:vistaCaballos, pendientes:vistaPendientes, historial:vistaHistorial };
+  const vistas = { hoy:vistaHoy, semana:vistaSemana, alumnos:vistaAlumnos, pagos:vistaPagos, caballos:vistaCaballos, pendientes:vistaPendientes, reporte:vistaReporte, historial:vistaHistorial };
   requestAnimationFrame(() => { const t = document.querySelector('.pestana[aria-selected="true"]'); if (t && t.scrollIntoView) t.scrollIntoView({ block:"nearest", inline:"nearest" }); });
   app.innerHTML = `
     <header class="cab wrap">
@@ -1045,9 +1098,9 @@ function render() {
         <button class="yo" data-act="cambiar" aria-label="Cambiar de maestro"><span class="ini">${m.nombre[0]}</span>${esc(m.nombre)}<span class="cambiar">Cambiar</span></button>
       </div>
       <nav class="pestanas" role="tablist">
-        ${[["semana","Calendario"],["alumnos","Alumnos"],["pagos","Pagos"],["caballos","Caballos"],["pendientes","Pendientes"],["historial","Historial"]].map(([id, t]) => `
+        ${[["hoy","Hoy"],["semana","Calendario"],["alumnos","Alumnos"],["pagos","Pagos"],["pendientes","Pendientes"],["caballos","Caballos"],["reporte","Reporte"],["historial","Historial"]].map(([id, t]) => `
           <button class="pestana" role="tab" data-act="vista" data-v="${id}" aria-selected="${vista === id}">${t}${
-            id === "pendientes" && pendientes ? `<span class="cuenta">${pendientes}</span>` : ""}</button>`).join("")}
+            id === "pendientes" && pendientes ? `<span class="cuenta">${pendientes}</span>` : id === "reporte" && alertasSalud().length ? `<span class="cuenta">${alertasSalud().length}</span>` : ""}</button>`).join("")}
       </nav>
     </header>
     <main class="wrap">
@@ -1250,6 +1303,135 @@ function tarjetaClase(c, hoy, clases) {
     <span class="linea"><span class="a">${esc(a ? a.nombre : "Alumno borrado")}</span>${estado}</span>
     ${det ? `<span class="m">${esc(det)}</span>` : ""}
   </button>`;
+}
+
+/* ---------------------------------------------------------------- hoy
+   Lo primero al abrir: clases, pendientes, cobros y caballos de hoy. */
+function vistaHoy(clases) {
+  const hoy = hoyIso(), m = MAESTROS[perfil];
+  const deHoy = clases.filter(c => c.fecha === hoy && (filtroPista === "todas" || c.pista === filtroPista));
+  const tareas = tareasDelDia(hoy).filter(t => !t.hecho);
+  const activos = alumnosActivos(); const mes = hoy.slice(0, 7);
+  const deben = activos.filter(a => { const dm = (a.paquetes || []).filter(p => (p.fecha || "").startsWith(mes)); return dm.length && !dm.every(p => p.pagado); });
+  const pocas = activos.map(a => ({ a, k:cuenta(a.id, clases) })).filter(({ a, k }) => !k.ilimitado && k.saldo <= 1 && !deben.includes(a));
+  const salud = alertasSalud();
+  const cabs = clasesDeCaballos().filter(c => c.fecha === hoy);
+  const llenos = caballosLista().filter(c => Number(c.maxDia) && cabs.filter(x => x.caballoId === c.id).length > Number(c.maxDia));
+  const tituloTarea = t => t.seccion === "caballos" ? `${(S.caballos[t.caballoId] || {}).nombre || "Caballo"}${t.monta && t.monta !== perfil ? ` · lo monta ${MAESTROS[t.monta].nombre}` : ""}`
+    : t.seccion === "prueba" ? `Prueba: ${t.nombre || t.texto}` : t.seccion === "cancelaciones" && S.alumnos[t.alumnoId] ? `Canceló ${S.alumnos[t.alumnoId].nombre}` : t.texto;
+  const saludo = new Date().getHours() < 12 ? "Buenos días" : new Date().getHours() < 19 ? "Buenas tardes" : "Buenas noches";
+  return `
+    <div class="titulo hoy-cab"><div><h2>${saludo}, ${esc(m.nombre)}</h2><p class="sub">${DIAS[diaHoy()]} ${fechaCorta(hoy)}</p></div></div>
+    <div class="hoy-grid">
+      <section class="hoy-card hc-clases"><header><h3>Clases de hoy</h3><span class="big">${deHoy.length}</span></header>
+        ${deHoy.length ? deHoy.map(c => { const a = S.alumnos[c.alumnoId];
+          return `<button class="renglon" data-act="clase" data-l="${c.lunes}" data-id="${c.id}"><span class="h">${fmtHora(c.hora)}</span><span class="t">${esc(a ? a.nombre : "—")}</span><span class="x">${esc(nombreCaballo(c) || (c.estado !== "programada" ? ESTADOS[c.estado].corto : ""))}</span></button>`; }).join("")
+          : `<p class="sub">${diaHoy() === 0 ? "Los lunes no hay clases." : "No hay clases hoy."}</p>`}
+        <button class="ver" data-act="ir" data-v="semana">Ver calendario ›</button></section>
+      <section class="hoy-card hc-pend"><header><h3>Pendientes</h3><span class="big">${tareas.length}</span></header>
+        ${tareas.length ? tareas.slice(0, 5).map(t => `<button class="renglon" data-act="ir" data-v="pendientes">${t.hora ? `<span class="h">${fmtHora(t.hora)}</span>` : ""}<span class="t">${esc(tituloTarea(t))}</span>${t.autor !== perfil ? `<span class="x">de ${esc(MAESTROS[t.autor].nombre)}</span>` : ""}</button>`).join("")
+          + (tareas.length > 5 ? `<p class="sub">y ${tareas.length - 5} más</p>` : "") : `<p class="sub">Nada pendiente hoy.</p>`}
+        <button class="ver" data-act="ir" data-v="pendientes">Ver pendientes ›</button></section>
+      <section class="hoy-card hc-cobros"><header><h3>Cobros</h3><span class="big">${deben.length + pocas.length}</span></header>
+        ${deben.length || pocas.length ? [...deben.map(a => `<button class="renglon" data-act="ficha" data-id="${a.id}"><span class="t">${esc(a.nombre)}</span><span class="x">debe su paquete</span></button>`),
+          ...pocas.map(({ a, k }) => `<button class="renglon" data-act="ficha" data-id="${a.id}"><span class="t">${esc(a.nombre)}</span><span class="x">${k.saldo <= 0 ? "sin clases" : "le queda 1"}</span></button>`)].slice(0, 6).join("")
+          : `<p class="sub">Nadie debe ni se está quedando sin clases.</p>`}
+        <button class="ver" data-act="ir" data-v="pagos">Ver pagos ›</button></section>
+      <section class="hoy-card hc-cab"><header><h3>Caballos</h3><span class="big">${salud.length + llenos.length}</span></header>
+        ${salud.length || llenos.length ? [...llenos.map(c => `<button class="renglon" data-act="ir" data-v="caballos"><span class="t">${esc(c.nombre)}</span><span class="x">pasa su máximo hoy</span></button>`),
+          ...salud.map(({ c, x }) => `<button class="renglon" data-act="ir" data-v="reporte"><span class="t">${esc(c.nombre)} · ${x.nombre}</span><span class="x">${x.estado === "vencido" ? "vencido" : `el ${fechaCorta(x.proxima)}`}</span></button>`)].slice(0, 6).join("")
+          : `<p class="sub">Sin avisos de herraje, vacunas ni desparasitación.</p>`}
+        <button class="ver" data-act="ir" data-v="caballos">Ver caballos ›</button></section>
+    </div>`;
+}
+
+/* ---------------------------------------------------------------- reporte
+   Para la dueña: el mes de los dos maestros, clases de prueba y salud de caballos. */
+let mesRep = hoyIso().slice(0, 7);
+function numerosMaestro(alumnos, semanas, mes) {
+  const cs = [];
+  for (const [lunes, sem] of Object.entries(semanas || {})) for (const c of Object.values((sem && sem.clases) || {})) {
+    const f = iso(sumarDias(deIso(lunes), c.dia)); if (f.startsWith(mes) && alumnos[c.alumnoId] && !alumnos[c.alumnoId].borrado) cs.push(c);
+  }
+  const n = e => cs.filter(c => c.estado === e).length;
+  const als = Object.values(alumnos || {}).filter(a => !a.borrado);
+  const paqs = als.flatMap(a => (a.paquetes || []).filter(p => (p.fecha || "").startsWith(mes)));
+  const suma = xs => xs.reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  const asistio = n("asistio"), aviso = n("aviso"), falta = n("falta");
+  return { clases:asistio, aviso, falta, cancelada:n("cancelada"), porDar:n("programada"),
+    asistencia: asistio + aviso + falta ? Math.round(asistio / (asistio + aviso + falta) * 100) : null,
+    cobrado:suma(paqs.filter(p => p.pagado)), porCobrar:suma(paqs.filter(p => !p.pagado)),
+    efectivo:suma(paqs.filter(p => p.pagado && p.metodo === "efectivo")), transferencia:suma(paqs.filter(p => p.pagado && p.metodo === "transferencia")),
+    paquetes:paqs.length, nuevos:als.filter(a => (a.alta || "").startsWith(mes)), bajas:als.filter(a => a.baja && (a.bajaEn || "").startsWith(mes)),
+    activos:als.filter(a => !a.baja).length };
+}
+function vistaReporte() {
+  const [y, mm] = mesRep.split("-").map(Number);
+  const mios = numerosMaestro(S.alumnos, S.semanas, mesRep), otros = numerosMaestro(S.otrosAlumnos, S.otras, mesRep);
+  const porM = { [perfil]:mios, [otro(perfil)]:otros };
+  const orden = ["tania", "edwin"];
+  const dinero = v => "$" + Math.round(v).toLocaleString("es-MX");
+  const tot = k => mios[k] + otros[k];
+  const asis = (() => { const a = mios.clases + otros.clases, b = a + mios.aviso + otros.aviso + mios.falta + otros.falta; return b ? Math.round(a / b * 100) : null; })();
+  const nuevos = [...mios.nuevos.map(a => ({ a, m:perfil })), ...otros.nuevos.map(a => ({ a, m:otro(perfil) }))];
+  const bajas = [...mios.bajas.map(a => ({ a, m:perfil })), ...otros.bajas.map(a => ({ a, m:otro(perfil) }))];
+  /* Clases de prueba del mes: las anotadas en Pendientes (de los dos) y las altas que vinieron de una. */
+  const pruebas = Object.values(S.pendientes || {}).filter(t => t.seccion === "prueba" && (t.fecha || "").startsWith(mesRep));
+  const todosAl = { ...S.otrosAlumnos, ...S.alumnos };
+  const convertida = t => t.convertidoA || Object.values(todosAl).some(a => a.pruebaId === t.id);
+  const conv = pruebas.filter(convertida).length;
+  const origenes = Object.entries(ORIGENES).map(([k, n]) => [n, nuevos.filter(x => x.a.origen === k).length]).filter(([, v]) => v);
+  const sinOrigen = nuevos.filter(x => !x.a.origen).length;
+  const fila = (t, f) => `<tr><td>${t}</td>${orden.map(m => `<td>${f(porM[m])}</td>`).join("")}<td>${f({ ...Object.fromEntries(Object.keys(mios).map(k => [k, typeof mios[k] === "number" ? tot(k) : null])), asistencia:asis })}</td></tr>`;
+  const caballos = caballosLista();
+  return `
+    <div class="titulo"><div><h2>Reporte</h2></div>
+      <div class="navsem"><button class="flecha" data-act="rep-mes" data-d="-1" aria-label="Mes anterior">‹</button>
+        <span class="mes">${MESES_LARGO[mm - 1]} ${y}</span>
+        <button class="flecha" data-act="rep-mes" data-d="1" aria-label="Mes siguiente">›</button></div></div>
+    <div class="kpis-rep">
+      <div class="kpi"><b>${dinero(tot("cobrado"))}</b><span>cobrado · ${dinero(tot("porCobrar"))} por cobrar</span></div>
+      <div class="kpi"><b>${tot("clases")}</b><span>clases dadas</span></div>
+      <div class="kpi"><b>${asis === null ? "—" : asis + "%"}</b><span>asistencia</span></div>
+      <div class="kpi"><b>${nuevos.length}</b><span>alumnos nuevos${bajas.length ? ` · ${bajas.length} bajas` : ""}</span></div>
+    </div>
+    <div>
+    ${acordeon("rep-maestros", "maestros", "Por maestro", 0, `<div class="tabla-wrap"><table class="tabla-rep">
+      <thead><tr><th></th>${orden.map(m => `<th>${MAESTROS[m].nombre}</th>`).join("")}<th>Total</th></tr></thead><tbody>
+      ${fila("Clases dadas", x => x.clases)}
+      ${fila("Faltó con aviso", x => x.aviso)}
+      ${fila("Faltó sin avisar", x => x.falta)}
+      ${fila("Canceladas", x => x.cancelada)}
+      ${fila("Asistencia", x => x.asistencia === null ? "—" : x.asistencia + "%")}
+      ${fila("Paquetes vendidos", x => x.paquetes)}
+      ${fila("Cobrado", x => dinero(x.cobrado))}
+      ${fila("· efectivo", x => dinero(x.efectivo))}
+      ${fila("· transferencia", x => dinero(x.transferencia))}
+      ${fila("Por cobrar", x => dinero(x.porCobrar))}
+      ${fila("Alumnos activos", x => x.activos)}
+      </tbody></table></div>
+      <p class="sub">Las clases cuentan por la fecha en que se dieron; el dinero, por la fecha en que se compró el paquete.</p>`, "rep-sec")}
+    ${acordeon("rep-pruebas", "pruebas", "Clases de prueba y nuevos", pruebas.length, `
+      <div class="kpis-rep" style="grid-template-columns:repeat(3,1fr)">
+        <div class="kpi"><b>${pruebas.length}</b><span>clases de prueba</span></div>
+        <div class="kpi"><b>${conv}</b><span>se quedaron</span></div>
+        <div class="kpi"><b>${pruebas.length ? Math.round(conv / pruebas.length * 100) + "%" : "—"}</b><span>se convierten</span></div></div>
+      ${pruebas.length ? pruebas.sort((a, b) => a.fecha.localeCompare(b.fecha)).map(t => { const al = t.convertidoA && todosAl[t.convertidoA];
+        return `<div class="salud-fila"><div><b>${esc(t.nombre || t.texto || "Sin nombre")}</b><br><span class="sub">${fechaLarga(t.fecha)} · ${esc(MAESTROS[t.autor] ? MAESTROS[t.autor].nombre : "")}</span></div>
+          <span class="pastilla ${convertida(t) ? "p-okk" : "p-pronto"}">${convertida(t) ? (al ? "Se quedó" : "Se quedó") : "No se ha quedado"}</span></div>`; }).join("")
+        : `<p class="sub">Las clases de prueba se anotan en Pendientes → Clases de prueba. Al tocar “Dar de alta” en una, cuenta como que se quedó.</p>`}
+      ${nuevos.length ? `<p class="sub-av">Cómo llegaron los alumnos nuevos</p>
+        <p class="sub">${origenes.map(([n, v]) => `${n}: <b>${v}</b>`).join(" · ")}${sinOrigen ? `${origenes.length ? " · " : ""}Sin anotar: ${sinOrigen}` : ""}</p>
+        <p class="sub">${nuevos.map(({ a, m }) => `${esc(a.nombre)} (${MAESTROS[m].nombre})`).join(", ")}</p>` : ""}
+      ${bajas.length ? `<p class="sub-av">Bajas del mes</p><p class="sub">${bajas.map(({ a, m }) => `${esc(a.nombre)} (${MAESTROS[m].nombre})`).join(", ")}</p>` : ""}`, "rep-sec")}
+    ${acordeon("rep-salud", "salud", "Salud de caballos", alertasSalud().length, caballos.length ? caballos.map(c => saludDe(c).map(x => `<div class="salud-fila">
+        <div><b>${esc(c.nombre)} · ${x.nombre}</b><br><span class="sub">${x.ultima ? `Última: ${fechaLarga(x.ultima)} · toca el ${fechaLarga(x.proxima)}` : "Sin fecha anotada"}</span></div>
+        <div style="display:flex; gap:.3rem; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+          ${x.estado === "vencido" ? `<span class="pastilla p-vencido">Vencido</span>` : x.estado === "pronto" ? `<span class="pastilla p-pronto">Esta semana</span>` : x.estado === "ok" ? `<span class="pastilla p-okk">Al día</span>` : ""}
+          <button class="btn btn-2 btn-mini" data-act="salud-hecho" data-id="${c.id}" data-t="${x.id}">Hecho hoy</button></div></div>`).join("")).join("")
+        + `<p class="sub">Para cambiar una fecha o cada cuántos días toca, abre el caballo en Caballos → Editar.</p>`
+        : `<p class="sub">Agrega caballos para llevar sus fechas de herraje, vacunas y desparasitación.</p>`, "rep-sec")}
+    </div>`;
 }
 
 /* ---------------------------------------------------------------- alumnos */
@@ -2307,6 +2489,9 @@ async function guardarLista() {
 }
 
 /* ---------- alumno: alta y edición ---------- */
+/* De dónde llegan los alumnos nuevos (para el reporte). */
+const ORIGENES = { prueba:"Clase de prueba", recomendacion:"Recomendación", redes:"Redes sociales", club:"Ya era del club", otro:"Otro" };
+let altaDesdePrueba = null;
 function hojaAlumno(id) {
   const a = id ? S.alumnos[id] : null;
   const filas = (a && a.horario && a.horario.length ? a.horario : [{ dia:1, hora:"17:00" }]);
@@ -2337,6 +2522,7 @@ function hojaAlumno(id) {
         <label class="campo">Forma de pago<select id="a-metodo"><option value="">Sin anotar</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></label>
       </div>`}
       <label class="campo">Notas (caballo preferido, alergias, objetivos)<textarea id="a-notas">${esc(a && a.notas)}</textarea></label>
+      <label class="campo">¿Cómo llegó?<select id="a-origen"><option value="">Sin anotar</option>${Object.entries(ORIGENES).map(([k, n]) => `<option value="${k}" ${(a ? a.origen : altaDesdePrueba ? "prueba" : "") === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
       <button class="btn btn-bloque" type="submit">${a ? "Guardar cambios" : "Dar de alta"}</button>
     </form>`);
   document.getElementById("f-alumno").addEventListener("submit", async e => {
@@ -2348,7 +2534,9 @@ function hojaAlumno(id) {
     nuevo.id = id || nuevo.id;
     const ps = document.getElementById("a-silla");
     Object.assign(nuevo, { nombre:val("a-nombre").trim(), nivel:val("a-nivel"), telefono:val("a-tel").trim(),
-      tutor:val("a-tutor").trim(), notas:val("a-notas").trim(), horario });
+      tutor:val("a-tutor").trim(), notas:val("a-notas").trim(), horario, origen:val("a-origen") });
+    const deLaPrueba = !a && altaDesdePrueba && S.pendientes[altaDesdePrueba] ? S.pendientes[altaDesdePrueba] : null;
+    if (deLaPrueba) { nuevo.pruebaId = deLaPrueba.id; nuevo.pruebaFecha = deLaPrueba.fecha; }
     document.querySelectorAll(".a-tag").forEach(x => { nuevo[x.dataset.t] = x.checked; });
     if (ps) nuevo.silla = ps.checked;
     delete nuevo.pista;
@@ -2364,7 +2552,10 @@ function hojaAlumno(id) {
     }
     cerrarHoja();
     try { await Store.guardarAlumno(nuevo); brindis(a ? "Guardado" : `${nuevo.nombre} quedó dado de alta`);
-      registrar(a ? `Editó los datos de ${nuevo.nombre}` : `Dio de alta a ${nuevo.nombre}`); } catch (e2) {}
+      registrar(a ? `Editó los datos de ${nuevo.nombre}` : `Dio de alta a ${nuevo.nombre}${deLaPrueba ? " (vino a clase de prueba)" : ""}`);
+      if (deLaPrueba) await Store.guardarPendiente({ ...deLaPrueba, hecho:true, hechoPor:perfil, hechoEn:Date.now(), convertidoA:nuevo.id, maestroAlta:perfil });
+    } catch (e2) {}
+    altaDesdePrueba = null;
     render();
   });
 }
@@ -2467,6 +2658,10 @@ function hojaCaballo(id) {
       </div>
       <p class="sub">0 = sin máximo.</p>
       <label class="campo">Notas (nivel de jinete, cuidados)<textarea id="k-notas">${esc(c && c.notas)}</textarea></label>
+      ${saludDe(c || {}).map(x => `<fieldset class="salud-campos"><legend>${x.nombre}</legend>
+        <label class="campo">Última vez<input type="date" class="k-salud-u" data-t="${x.id}" value="${x.ultima}"></label>
+        <label class="campo">Cada cuántos días<input type="number" class="k-salud-c" data-t="${x.id}" min="1" max="730" value="${x.cada}"></label></fieldset>`).join("")}
+      <p class="sub">Los días son una sugerencia; ajústalos con el herrero y el veterinario.</p>
       <button class="btn btn-bloque" type="submit">${c ? "Guardar" : "Agregar caballo"}</button>
     </form>
     ${c ? `<div class="fila entre"><span></span><button class="btn btn-peligro btn-mini" data-act="borrar-caballo" data-id="${id}">Borrar caballo</button></div>` : ""}`);
@@ -2475,6 +2670,9 @@ function hojaCaballo(id) {
     const nuevo = { ...(c ? clon(c) : {}), id: id || nuevoId(), nombre:val("k-nombre").trim(), estatus:val("k-estatus"),
       maxDia:Number(val("k-dia")) || 0, maxSemana:Number(val("k-semana")) || 0, notas:val("k-notas").trim(),
       uso:val("k-uso"), dueno:val("k-dueno").trim() };
+    nuevo.salud = {};
+    SALUD.forEach(x => { const u = document.querySelector(`.k-salud-u[data-t="${x.id}"]`).value, cada = Number(document.querySelector(`.k-salud-c[data-t="${x.id}"]`).value) || x.cada;
+      nuevo.salud[x.id] = { ultima:u, cada }; });
     if (!nuevo.nombre) return;
     cerrarHoja();
     try { await Store.guardarCaballo(nuevo); brindis("Guardado"); registrar(`${c ? "Editó" : "Agregó"} el caballo ${nuevo.nombre}`); } catch (e2) {}
@@ -2707,7 +2905,7 @@ function aplicarOperaciones(ops, comps) {
           etiquetasValidas(op.poner_etiquetas).forEach(t => { a[t] = true; p.push(`+ ${ETIQUETAS[t].nombre}`); });
           etiquetasValidas(op.quitar_etiquetas).forEach(t => { a[t] = false; p.push(`− ${ETIQUETAS[t].nombre}`); });
           if (op.horario !== undefined) { a.horario = horarioDe(op.horario); p.push("horario fijo"); }
-          if (op.baja !== undefined) { a.baja = !!op.baja; p.push(a.baja ? "dado de baja" : "reactivado"); }
+          if (op.baja !== undefined) { a.baja = !!op.baja; a.bajaEn = a.baja ? hoyIso() : ""; p.push(a.baja ? "dado de baja" : "reactivado"); }
           const fuera = (a.horario || []).filter(h => !diaPermitido(a, h.dia)).length;
           if (fuera) { a.horario = a.horario.filter(h => diaPermitido(a, h.dia)); p.push(`quité ${plural(fuera, "día")} del horario fuera de ${diasTxt(a)}`); }
           T.alumnos.add(op.alumnoId);
@@ -2943,6 +3141,15 @@ document.addEventListener("click", async e => {
       const [y, m] = mesPagos.split("-").map(Number); const d = new Date(y, m - 1 + Number(b.dataset.d), 1);
       mesPagos = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; render(); break;
     }
+    case "salud-hecho": {
+      const c = S.caballos[b.dataset.id]; if (!c) break; const x = SALUD.find(z => z.id === b.dataset.t);
+      const c2 = clon(c); c2.salud = c2.salud || {}; c2.salud[x.id] = { ...(c2.salud[x.id] || {}), ultima:hoyIso(), cada:Number((c2.salud[x.id] || {}).cada) || x.cada };
+      Store.guardarCaballo({ ...c2, id:b.dataset.id }).then(() => { brindis(`${x.nombre} de ${c.nombre}: anotado hoy`); registrar(`Anotó ${x.nombre.toLowerCase()} de ${c.nombre} el ${fechaLarga(hoyIso())}`); render(); }).catch(() => {});
+      break;
+    }
+    case "rep-sec": alternarSeccion(b.dataset.k); render(); break;
+    case "rep-mes": { const [y2, m2] = mesRep.split("-").map(Number); const d = new Date(y2, m2 - 1 + Number(b.dataset.d), 1); mesRep = iso(d).slice(0, 7); render(); break; }
+    case "ir": vista = b.dataset.v; if (b.dataset.v === "semana") { lunesVista = lunesHoy(); diaSel = diaHoy(); modoCal = "semana"; } if (b.dataset.v === "pendientes") pendDia = hoyIso(); render(); window.scrollTo(0, 0); break;
     case "cerrar": cerrarHoja(); break;
     case "nueva-clase": hojaNuevaClase({ dia:b.dataset.dia, alumnoId:b.dataset.alumno, repo:b.dataset.repo === "1", hora:b.dataset.hora }); break;
     case "clase": hojaClase(b.dataset.l, b.dataset.id); break;
@@ -3003,7 +3210,7 @@ document.addEventListener("click", async e => {
     case "pend-ir": { const d = deIso(b.dataset.f); lunesVista = iso(lunesDe(d)); diaSel = (d.getDay() + 6) % 7; modoCal = "semana"; vista = "semana"; render(); window.scrollTo(0, 0); break; }
     case "pend-alta": {
       const t = S.pendientes[b.dataset.id]; if (!t) break;
-      hojaAlumno();
+      altaDesdePrueba = t.id; hojaAlumno();
       const n = document.getElementById("a-nombre"), tel = document.getElementById("a-tel"), no = document.getElementById("a-notas");
       if (n) n.value = t.nombre || ""; if (tel) tel.value = t.telefono || ""; if (no && t.texto) no.value = `Clase de prueba: ${t.texto}`;
       break;
@@ -3041,7 +3248,7 @@ document.addEventListener("click", async e => {
       render(); hojaFicha(b.dataset.id); break;
     }
     case "baja": {
-      const a2 = clon(S.alumnos[b.dataset.id]); a2.baja = !a2.baja; cerrarHoja();
+      const a2 = clon(S.alumnos[b.dataset.id]); a2.baja = !a2.baja; a2.bajaEn = a2.baja ? hoyIso() : ""; cerrarHoja();
       try { await Store.guardarAlumno(a2); brindis(a2.baja ? `${a2.nombre} quedó dado de baja (su historial se conserva)` : "Reactivado");
         registrar(`${a2.baja ? "Dio de baja" : "Reactivó"} a ${a2.nombre}`); } catch (e2) {}
       render(); break;
