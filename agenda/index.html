@@ -366,6 +366,32 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .pend .txt b{display:block; font-size:.9rem}
 .pend .txt span{font-size:.76rem; color:var(--ink-3)}
 .seccion{display:grid; gap:.5rem}
+.pend-dia{display:flex; align-items:center; gap:.4rem; flex-wrap:wrap}
+.pend-dia .rango{font-family:var(--serif); font-size:1.25rem; font-weight:600; min-width:9rem; text-align:center}
+.pend-sec{display:grid; gap:.45rem; padding:.85rem; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--sec, var(--perfil)); border-radius:var(--r)}
+.pend-sec > header{display:flex; align-items:center; justify-content:space-between; gap:.5rem}
+.pend-sec h3{font-size:1.15rem}
+.pend-sec .vacio-sec{font-size:.8rem; color:var(--ink-3)}
+.sec-caballos{--sec:#8A6A15} .sec-cancelaciones{--sec:#A33227} .sec-prueba{--sec:#1F6B4F} .sec-general{--sec:var(--perfil)}
+.tarea{display:flex; flex-wrap:wrap; align-items:flex-start; gap:.45rem .6rem; padding:.6rem 0; border-top:1px solid var(--line)}
+.tarea:first-of-type{border-top:0}
+.tarea .chk{flex:none; width:1.6rem; height:1.6rem; border-radius:50%; border:2px solid var(--sec, var(--perfil)); background:transparent; display:grid; place-items:center; color:#fff; font-size:.9rem; cursor:pointer}
+.tarea.hecha .chk{background:var(--sec, var(--perfil))}
+.tarea .txt{flex:1 1 0; min-width:0; padding-top:.15rem}
+.tarea .txt b{display:block; font-size:.92rem; font-weight:600; overflow-wrap:anywhere}
+.tarea.hecha .txt b{text-decoration:line-through; color:var(--ink-3); font-weight:500}
+.tarea .meta{display:flex; flex-wrap:wrap; gap:.3rem .5rem; margin-top:.25rem; font-size:.74rem; color:var(--ink-3); align-items:center}
+.tarea .meta > span{white-space:nowrap}
+.tarea .meta b{display:inline; font-size:inherit; color:var(--ink-2)}
+.tarea .acc{flex:1 0 100%; display:flex; gap:.3rem; flex-wrap:wrap; padding-left:2.2rem}
+.pend-sec > header .btn{white-space:nowrap; flex:none}
+.p-comp{background:var(--info-bg); color:var(--info)} .p-atras{background:var(--aviso-bg); color:var(--aviso)}
+.f-pend .solo{display:none}
+.f-pend[data-sec="caballos"] .s-caballos, .f-pend[data-sec="cancelaciones"] .s-cancelaciones,
+.f-pend[data-sec="prueba"] .s-prueba{display:grid}
+.f-pend .check{display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--ink)}
+.f-pend .check input{width:1.15rem; height:1.15rem}
+.auto-titulo{margin-top:.6rem}
 .seccion h3{font-size:1.3rem}
 
 /* ---------- hoja ---------- */
@@ -665,7 +691,7 @@ const linkWa = (tel, texto) => `https://wa.me/${telWa(tel)}?text=${encodeURIComp
    Guardado. Cada maestro tiene su carpeta: maestros/<id>/alumnos y
    maestros/<id>/semanas. Los caballos son de los dos: caballos/<id>.
    ========================================================================== */
-const S = { alumnos:{}, semanas:{}, otras:{}, caballos:{}, historial:{}, cargado:false,
+const S = { alumnos:{}, semanas:{}, otras:{}, caballos:{}, historial:{}, pendientes:{}, cargado:false,
   crudos:{}, papelera:{}, caballosCrudos:{}, caballosPapelera:{} };
 /* Lo que se manda a la papelera lleva "borrado" (fecha); aquí se separa de lo vigente. */
 function repartir() {
@@ -697,13 +723,13 @@ const Store = {
   },
   local() { try { return JSON.parse(localStorage.getItem("equus-agenda-v1") || "{}"); } catch (e) { return {}; } },
   guardarLocal(p) {
-    try { const L = this.local(); L[p] = { alumnos:S.crudos, semanas:S.semanas, chat:Chat.mensajes.slice(-60), historial:S.historial }; L.caballos = S.caballosCrudos; localStorage.setItem("equus-agenda-v1", JSON.stringify(L)); } catch (e) {}
+    try { const L = this.local(); L[p] = { alumnos:S.crudos, semanas:S.semanas, chat:Chat.mensajes.slice(-60), historial:S.historial }; L.caballos = S.caballosCrudos; L.pendientes = S.pendientes; localStorage.setItem("equus-agenda-v1", JSON.stringify(L)); } catch (e) {}
   },
   abrir(p) {
     this.cerrar(); S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
     if (!this.db) {
       const T = this.local(); const L = T[p] || {}; S.crudos = L.alumnos || {}; S.semanas = L.semanas || {}; Chat.mensajes = L.chat || []; S.historial = L.historial || {};
-      S.otras = (T[otro(p)] || {}).semanas || {}; S.caballosCrudos = T.caballos || {}; repartir(); S.cargado = true; render(); return;
+      S.otras = (T[otro(p)] || {}).semanas || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; repartir(); S.cargado = true; render(); return;
     }
     let listos = 0; const listo = () => { if (++listos >= 2) S.cargado = true; };
     const err = e => { if (e && e.code === "revoked") brindis("Se perdió el acceso al guardado. Recarga la página."); };
@@ -715,6 +741,8 @@ const Store = {
     /* La semana del otro maestro solo se lee para contar los caballos. */
     sub(`maestros/${otro(p)}/semanas`, o => { S.otras = o; });
     sub("caballos", o => { S.caballosCrudos = o; repartir(); });
+    /* Los pendientes son de los dos: cada quien ve los suyos y los que el otro le comparte. */
+    sub("pendientes", o => { S.pendientes = o; });
     sub(`maestros/${p}/historial`, o => { S.historial = o; });
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
@@ -737,6 +765,8 @@ const Store = {
   async borrarAlumno(id) { const o = { ...S.crudos }; delete o[id]; S.crudos = o; repartir(); await this.escribir(`maestros/${perfil}/alumnos/${id}`, null); },
   async guardarSemana(lunes, sem) { S.semanas = { ...S.semanas, [lunes]: sem }; await this.escribir(`maestros/${perfil}/semanas/${lunes}`, sem); },
   async guardarCaballo(c) { S.caballosCrudos = { ...S.caballosCrudos, [c.id]: c }; repartir(); await this.escribir(`caballos/${c.id}`, c); },
+  async guardarPendiente(x) { S.pendientes = { ...S.pendientes, [x.id]: x }; await this.escribir(`pendientes/${x.id}`, x); },
+  async borrarPendiente(id) { const o = { ...S.pendientes }; delete o[id]; S.pendientes = o; await this.escribir(`pendientes/${id}`, null); },
   async borrarCaballo(id) { const o = { ...S.caballosCrudos }; delete o[id]; S.caballosCrudos = o; repartir(); await this.escribir(`caballos/${id}`, null); },
   async intentar(f) {
     try { await f(); }
@@ -1322,17 +1352,138 @@ function contarPendientes(clases) {
     if (k.saldo <= 1 || k.vencido) n++;
     n += k.sinMarcar.length;
   }
-  return n;
+  return n + tareasDelDia(hoyIso()).filter(t => !t.hecho).length;
+}
+/* Pendientes del día: lo que anota cada maestro, por secciones. Cada quien ve
+   los suyos y los que el otro le comparte. Lo que no se termina pasa al día
+   siguiente hasta que se marque. */
+const SECCIONES_PEND = [
+  { id:"caballos",      nombre:"Caballos por montar",            ayuda:"Qué caballo hay que trabajar y quién lo monta" },
+  { id:"cancelaciones", nombre:"Cancelaciones y avisos",         ayuda:"Quién canceló o avisó que no viene" },
+  { id:"prueba",        nombre:"Clases de prueba y nuevos",      ayuda:"Alumnos nuevos que vienen a probar" },
+  { id:"general",       nombre:"Generales",                      ayuda:"Todo lo demás" },
+];
+let pendDia = hoyIso();
+const visiblePend = t => t && (t.autor === perfil || t.compartido);
+function tareasDelDia(dia) {
+  const hoy = hoyIso();
+  return Object.values(S.pendientes || {}).filter(visiblePend)
+    .filter(t => t.fecha === dia || (dia === hoy && !t.hecho && t.fecha < hoy))
+    .sort((x, y) => (x.hecho - y.hecho) || String(x.hora || "99").localeCompare(String(y.hora || "99")) || (x.creado || 0) - (y.creado || 0));
+}
+function filaTarea(t) {
+  const otroN = MAESTROS[otro(perfil)].nombre, mio = t.autor === perfil;
+  const cab = t.caballoId && (S.caballos[t.caballoId] || S.caballosPapelera[t.caballoId]);
+  const al = t.alumnoId && S.alumnos[t.alumnoId];
+  const titulo = t.seccion === "caballos" ? `${cab ? cab.nombre : "Caballo"}${t.texto ? ` · ${t.texto}` : ""}`
+    : t.seccion === "prueba" ? `${t.nombre || "Clase de prueba"}${t.texto ? ` · ${t.texto}` : ""}`
+    : t.seccion === "cancelaciones" && al ? `${al.nombre}${t.texto ? ` · ${t.texto}` : ""}` : (t.texto || "—");
+  const meta = [
+    t.fecha < hoyIso() && !t.hecho ? `<span class="pastilla p-atras">Del ${fechaLarga(t.fecha)}</span>` : "",
+    t.hora ? `<span>${fmtHora(t.hora)}</span>` : "",
+    t.seccion === "caballos" && t.monta ? `<span>Lo monta <b>${esc(MAESTROS[t.monta] ? MAESTROS[t.monta].nombre : t.monta)}</b></span>` : "",
+    t.telefono ? `<span>${esc(t.telefono)}</span>` : "",
+    !mio ? `<span class="pastilla p-comp">De ${esc(MAESTROS[t.autor] ? MAESTROS[t.autor].nombre : "otro")}</span>`
+      : t.compartido ? `<span class="pastilla p-comp">Compartido con ${esc(otroN)}</span>` : "",
+    t.hecho && t.hechoPor && t.hechoPor !== perfil ? `<span>Lo marcó ${esc(MAESTROS[t.hechoPor].nombre)}</span>` : "",
+  ].filter(Boolean).join("");
+  const acc = [
+    t.seccion === "prueba" && t.telefono ? `<a class="btn btn-wa btn-mini" href="${linkWa(t.telefono, `Hola${t.nombre ? " " + primerNombre(t.nombre) : ""}, te escribo de Equus para confirmar tu clase de prueba${t.hora ? ` a las ${fmtHora(t.hora)}` : ""}. — ${MAESTROS[perfil].nombre}`)}" target="_blank" rel="noopener">${ICONO_WA}Escribir</a>` : "",
+    t.seccion === "prueba" && !t.hecho ? `<button class="btn btn-2 btn-mini" data-act="pend-alta" data-id="${t.id}">Dar de alta</button>` : "",
+    t.seccion === "cancelaciones" ? `<button class="btn btn-2 btn-mini" data-act="pend-ir" data-f="${t.fecha}">Ver en la semana</button>` : "",
+    mio ? `<button class="btn btn-2 btn-mini" data-act="pend-compartir" data-id="${t.id}">${t.compartido ? `No compartir` : `Compartir con ${esc(otroN)}`}</button>` : "",
+    mio ? `<button class="btn btn-2 btn-mini" data-act="pend-editar" data-id="${t.id}">Editar</button>` : "",
+  ].filter(Boolean).join("");
+  return `<div class="tarea ${t.hecho ? "hecha" : ""}">
+    <button class="chk" data-act="pend-hecho" data-id="${t.id}" aria-label="${t.hecho ? "Marcar como pendiente" : "Marcar como hecho"}" aria-pressed="${!!t.hecho}">${t.hecho ? "✓" : ""}</button>
+    <div class="txt"><b>${esc(titulo)}</b>${meta ? `<div class="meta">${meta}</div>` : ""}</div>
+    ${acc ? `<div class="acc">${acc}</div>` : ""}</div>`;
 }
 function vistaPendientes(clases) {
+  const hoy = hoyIso(); const ts = tareasDelDia(pendDia);
+  const faltan = ts.filter(t => !t.hecho).length;
+  const titDia = pendDia === hoy ? "Hoy" : pendDia === iso(sumarDias(deIso(hoy), 1)) ? "Mañana" : pendDia === iso(sumarDias(deIso(hoy), -1)) ? "Ayer" : fechaLarga(pendDia);
+  return `
+    <div class="titulo"><div><h2>Pendientes</h2><p class="sub">Tu lista del día. ${faltan ? `Faltan ${plural(faltan, "pendiente")}.` : ts.length ? "Todo hecho." : ""} Puedes compartir cada uno con ${esc(MAESTROS[otro(perfil)].nombre)}.</p></div>
+      <button class="btn" data-act="pend-nuevo">+ Agregar pendiente</button></div>
+    <div class="pend-dia">
+      <button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="-1" aria-label="Día anterior">‹</button>
+      <span class="rango">${titDia}</span>
+      <button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="1" aria-label="Día siguiente">›</button>
+      ${pendDia !== hoy ? `<button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="0">Ir a hoy</button>` : `<span class="sub">${fechaLarga(hoy)}</span>`}
+    </div>
+    ${SECCIONES_PEND.map(sec => { const xs = ts.filter(t => (t.seccion || "general") === sec.id);
+      return `<section class="pend-sec sec-${sec.id}"><header><div><h3>${sec.nombre}</h3><span class="sub">${sec.ayuda}</span></div>
+        <button class="btn btn-2 btn-mini" data-act="pend-nuevo" data-sec="${sec.id}" aria-label="Agregar en ${sec.nombre}">+ Agregar</button></header>
+        ${xs.length ? xs.map(filaTarea).join("") : `<p class="vacio-sec">Nada por ahora.</p>`}</section>`; }).join("")}
+    ${avisosAgenda(clases)}`;
+}
+function hojaPendiente(id, sec) {
+  const t = id ? S.pendientes[id] : null;
+  sec = (t && t.seccion) || sec || "general";
+  const otroN = MAESTROS[otro(perfil)].nombre;
+  const cabs = Object.entries(S.caballos).sort((x, y) => String(x[1].nombre).localeCompare(String(y[1].nombre), "es"));
+  const als = alumnosActivos().sort((x, y) => x.nombre.localeCompare(y.nombre, "es"));
+  abrirHoja(`${cabHoja(t ? "Editar pendiente" : "Nuevo pendiente", "Se guarda en tu lista del día.")}
+    <form id="f-pend" class="f-pend" data-sec="${sec}" style="display:grid; gap:.8rem">
+      <div class="segmento" role="group" aria-label="Sección">${SECCIONES_PEND.map(x => `<button type="button" data-sec="${x.id}" aria-pressed="${x.id === sec}">${x.nombre}</button>`).join("")}</div>
+      <div class="solo s-caballos dos">
+        <label class="campo">Caballo<select id="p-caballo"><option value="">Escoge…</option>${cabs.map(([cid, c]) => `<option value="${cid}" ${t && t.caballoId === cid ? "selected" : ""}>${esc(c.nombre)}</option>`).join("")}</select></label>
+        <label class="campo">Lo monta<select id="p-monta">${Object.entries(MAESTROS).map(([k, m]) => `<option value="${k}" ${(t ? t.monta : perfil) === k ? "selected" : ""}>${esc(m.nombre)}</option>`).join("")}</select></label>
+      </div>
+      <label class="campo solo s-cancelaciones">Alumno (opcional)<select id="p-alumno"><option value="">—</option>${als.map(a => `<option value="${a.id}" ${t && t.alumnoId === a.id ? "selected" : ""}>${esc(a.nombre)}</option>`).join("")}</select></label>
+      <div class="solo s-prueba dos">
+        <label class="campo">Nombre<input type="text" id="p-nombre" value="${esc(t && t.nombre)}" placeholder="Nombre del alumno nuevo"></label>
+        <label class="campo">Teléfono (WhatsApp)<input type="tel" id="p-tel" inputmode="tel" value="${esc(t && t.telefono)}" placeholder="81 1234 5678"></label>
+      </div>
+      <label class="campo">Nota<input type="text" id="p-texto" value="${esc(t && t.texto)}" placeholder="${sec === "caballos" ? "Ej. trabajo pie a tierra 20 min" : sec === "cancelaciones" ? "Ej. canceló la de las 5 por enfermedad" : sec === "prueba" ? "Ej. viene con su mamá, nunca ha montado" : "Ej. pedir herraje para Norte"}"></label>
+      <div class="dos">
+        <label class="campo">Día<input type="date" id="p-fecha" required value="${t ? t.fecha : pendDia}"></label>
+        <label class="campo">Hora (opcional)<select id="p-hora"><option value="">—</option>${TODAS_HORAS.map(h => `<option value="${h}" ${t && t.hora === h ? "selected" : ""}>${fmtHora(h)}</option>`).join("")}</select></label>
+      </div>
+      <label class="check"><input type="checkbox" id="p-comp" ${t && t.compartido ? "checked" : ""}> Compartir con ${esc(otroN)}</label>
+      <p class="sub" id="p-aviso-comp" hidden>Como lo monta ${esc(otroN)}, se comparte con ${esc(otroN)}.</p>
+      <button class="btn btn-bloque" type="submit">${t ? "Guardar cambios" : "Agregar"}</button>
+      ${t ? `<button class="btn btn-2 btn-bloque" type="button" data-act="pend-borrar" data-id="${t.id}">Borrar pendiente</button>` : ""}
+    </form>`);
+  const f = document.getElementById("f-pend");
+  const avisoMonta = () => { const mo = f.dataset.sec === "caballos" && val("p-monta") !== perfil; document.getElementById("p-aviso-comp").hidden = !mo; if (mo) document.getElementById("p-comp").checked = true; };
+  f.querySelectorAll(".segmento button").forEach(b => b.addEventListener("click", () => {
+    f.dataset.sec = b.dataset.sec; f.querySelectorAll(".segmento button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); avisoMonta();
+  }));
+  document.getElementById("p-monta").addEventListener("change", avisoMonta); avisoMonta();
+  f.addEventListener("submit", async e => {
+    e.preventDefault();
+    const s2 = f.dataset.sec;
+    const x = t ? clon(t) : { id:nuevoId(), autor:perfil, creado:Date.now(), hecho:false };
+    Object.assign(x, { seccion:s2, texto:val("p-texto").trim(), fecha:val("p-fecha") || pendDia, hora:val("p-hora"),
+      compartido:document.getElementById("p-comp").checked,
+      caballoId:s2 === "caballos" ? val("p-caballo") : "", monta:s2 === "caballos" ? val("p-monta") : "",
+      alumnoId:s2 === "cancelaciones" ? val("p-alumno") : "",
+      nombre:s2 === "prueba" ? val("p-nombre").trim() : "", telefono:s2 === "prueba" ? val("p-tel").trim() : "" });
+    if (s2 === "caballos" && !x.caballoId) { brindis("Escoge el caballo."); return; }
+    if (s2 === "prueba" && !x.nombre && !x.texto) { brindis("Escribe el nombre o una nota."); return; }
+    if (!["caballos", "prueba", "cancelaciones"].includes(s2) && !x.texto) { brindis("Escribe el pendiente."); return; }
+    if (s2 === "cancelaciones" && !x.alumnoId && !x.texto) { brindis("Escoge el alumno o escribe una nota."); return; }
+    try {
+      await Store.guardarPendiente(x); cerrarHoja();
+      pendDia = x.fecha < hoyIso() ? hoyIso() : x.fecha === hoyIso() || pendDia === x.fecha ? pendDia : x.fecha;
+      brindis(t ? "Pendiente guardado" : x.compartido ? `Pendiente agregado y compartido con ${otroN}` : "Pendiente agregado");
+      registrar(`${t ? "Editó" : "Agregó"} un pendiente (${SECCIONES_PEND.find(z => z.id === s2).nombre}) para el ${fechaLarga(x.fecha)}`);
+      render();
+    } catch (err) {}
+  });
+}
+
+function avisosAgenda(clases) {
   const datos = alumnosActivos().map(a => ({ a, k: cuenta(a.id, clases) }));
   const sinMarcar = datos.flatMap(({ a, k }) => k.sinMarcar.map(c => ({ a, c }))).sort((x,y) => (x.c.fecha + x.c.hora).localeCompare(y.c.fecha + y.c.hora));
   const repos = datos.filter(d => d.k.repoPend);
   const renovar = datos.filter(d => d.k.saldo <= 1 || d.k.vencido || d.k.venceProx);
   const nada = !sinMarcar.length && !repos.length && !renovar.length;
   return `
-    <div class="titulo"><div><h2>Pendientes</h2><p class="sub">Lo que hay que resolver antes de armar la próxima semana.</p></div></div>
-    ${nada ? `<div class="vacio"><b>Todo al día</b>Aquí verás clases sin marcar, reposiciones por agendar y paquetes por renovar.</div>` : ""}
+    <div class="titulo auto-titulo"><div><h2>Avisos de la agenda</h2><p class="sub">Salen solos: clases sin marcar, reposiciones y paquetes por renovar.</p></div></div>
+    ${nada ? `<div class="vacio"><b>Todo al día</b>No hay clases sin marcar, reposiciones por agendar ni paquetes por renovar.</div>` : ""}
     ${sinMarcar.length ? `<section class="seccion"><h3>Clases sin marcar (${sinMarcar.length})</h3>
       <p class="sub">Ya pasaron y siguen como “por dar”. Márcalas para que el saldo sea correcto.</p>
       ${sinMarcar.map(({ a, c }) => `<div class="pend"><div class="txt"><b>${esc(a.nombre)}</b><span>${fechaLarga(c.fecha)} · ${fmtHora(c.hora)}${c.repo ? " · reposición" : ""}</span></div>
@@ -2702,6 +2853,34 @@ document.addEventListener("click", async e => {
       render(); break;
     }
     case "nuevo-alumno": hojaAlumno(); break;
+    case "pend-nuevo": hojaPendiente(null, b.dataset.sec); break;
+    case "pend-editar": hojaPendiente(b.dataset.id); break;
+    case "pend-dia": { const d = Number(b.dataset.d); pendDia = d === 0 ? hoyIso() : iso(sumarDias(deIso(pendDia), d)); render(); break; }
+    case "pend-hecho": {
+      const t = S.pendientes[b.dataset.id]; if (!t) break;
+      const x = { ...t, hecho:!t.hecho, hechoPor:!t.hecho ? perfil : "", hechoEn:!t.hecho ? Date.now() : 0 };
+      Store.guardarPendiente(x).then(() => { render(); if (x.hecho) registrar(`Marcó como hecho un pendiente: ${x.texto || x.nombre || (S.caballos[x.caballoId] || {}).nombre || ""}`.trim()); }).catch(() => {});
+      render(); break;
+    }
+    case "pend-compartir": {
+      const t = S.pendientes[b.dataset.id]; if (!t || t.autor !== perfil) break;
+      const x = { ...t, compartido:!t.compartido };
+      Store.guardarPendiente(x).then(() => { brindis(x.compartido ? `Compartido con ${MAESTROS[otro(perfil)].nombre}` : "Ya no se comparte"); render(); }).catch(() => {});
+      break;
+    }
+    case "pend-borrar": {
+      const t = S.pendientes[b.dataset.id]; if (!t) break;
+      Store.borrarPendiente(t.id).then(() => { cerrarHoja(); brindis("Pendiente borrado"); render(); }).catch(() => {});
+      break;
+    }
+    case "pend-ir": { const d = deIso(b.dataset.f); lunesVista = iso(lunesDe(d)); diaSel = (d.getDay() + 6) % 7; modoCal = "semana"; vista = "semana"; render(); window.scrollTo(0, 0); break; }
+    case "pend-alta": {
+      const t = S.pendientes[b.dataset.id]; if (!t) break;
+      hojaAlumno();
+      const n = document.getElementById("a-nombre"), tel = document.getElementById("a-tel"), no = document.getElementById("a-notas");
+      if (n) n.value = t.nombre || ""; if (tel) tel.value = t.telefono || ""; if (no && t.texto) no.value = `Clase de prueba: ${t.texto}`;
+      break;
+    }
     case "editar-alumno": hojaAlumno(b.dataset.id); break;
     case "ficha": hojaFicha(b.dataset.id, b.dataset.paquete === "1"); break;
     case "tag": {
