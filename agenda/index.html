@@ -368,23 +368,7 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .seccion{display:grid; gap:.5rem}
 .pend-dia{display:flex; align-items:center; gap:.4rem; flex-wrap:wrap}
 .pend-dia .rango{font-family:var(--serif); font-size:1.25rem; font-weight:600; min-width:9rem; text-align:center}
-.pend-sec{display:grid; gap:.45rem; padding:.85rem; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--sec, var(--perfil)); border-radius:var(--r)}
-.pend-sec > header{display:flex; align-items:center; justify-content:space-between; gap:.5rem}
-.pend-sec h3{font-size:1.15rem}
-.pend-sec .vacio-sec{font-size:.8rem; color:var(--ink-3)}
 .sec-caballos{--sec:#8A6A15} .sec-cancelaciones{--sec:#A33227} .sec-prueba{--sec:#1F6B4F} .sec-general{--sec:var(--perfil)}
-.tarea{display:flex; flex-wrap:wrap; align-items:flex-start; gap:.45rem .6rem; padding:.6rem 0; border-top:1px solid var(--line)}
-.tarea:first-of-type{border-top:0}
-.tarea .chk{flex:none; width:1.6rem; height:1.6rem; border-radius:50%; border:2px solid var(--sec, var(--perfil)); background:transparent; display:grid; place-items:center; color:#fff; font-size:.9rem; cursor:pointer}
-.tarea.hecha .chk{background:var(--sec, var(--perfil))}
-.tarea .txt{flex:1 1 0; min-width:0; padding-top:.15rem}
-.tarea .txt b{display:block; font-size:.92rem; font-weight:600; overflow-wrap:anywhere}
-.tarea.hecha .txt b{text-decoration:line-through; color:var(--ink-3); font-weight:500}
-.tarea .meta{display:flex; flex-wrap:wrap; gap:.3rem .5rem; margin-top:.25rem; font-size:.74rem; color:var(--ink-3); align-items:center}
-.tarea .meta > span{white-space:nowrap}
-.tarea .meta b{display:inline; font-size:inherit; color:var(--ink-2)}
-.tarea .acc{flex:1 0 100%; display:flex; gap:.3rem; flex-wrap:wrap; padding-left:2.2rem}
-.pend-sec > header .btn{white-space:nowrap; flex:none}
 .p-comp{background:var(--info-bg); color:var(--info)} .p-atras{background:var(--aviso-bg); color:var(--aviso)}
 .f-pend .solo{display:none}
 .f-pend[data-sec="caballos"] .s-caballos, .f-pend[data-sec="cancelaciones"] .s-cancelaciones,
@@ -392,6 +376,39 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .f-pend .check{display:flex; align-items:center; gap:.5rem; font-size:.88rem; color:var(--ink)}
 .f-pend .check input{width:1.15rem; height:1.15rem}
 .auto-titulo{margin-top:.6rem}
+.acord{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
+.acord + .acord{margin-top:.5rem}
+.acord-cab{width:100%; display:flex; align-items:center; gap:.65rem; padding:.85rem .95rem; background:none; border:0; font:inherit; color:var(--ink); text-align:left; cursor:pointer}
+.acord-cab .punto{flex:none; width:.7rem; height:.7rem; border-radius:50%; background:var(--sec, var(--perfil))}
+.acord-cab .nom{flex:1; font-weight:600; font-size:.98rem}
+.acord-cab .num{flex:none; min-width:1.6rem; padding:.1rem .5rem; border-radius:999px; text-align:center; font-size:.76rem; font-weight:700; background:var(--surface-2); color:var(--ink-3)}
+.acord-cab .num.hay{background:var(--sec, var(--perfil)); color:#fff}
+.acord-cab .flecha{flex:none; width:1rem; height:1rem; color:var(--ink-3); transition:transform .15s}
+.acord.abierto .acord-cab .flecha{transform:rotate(90deg)}
+.acord-cuerpo{padding:0 .95rem .8rem; display:grid; gap:.1rem}
+.acord-cuerpo .agregar-aqui{justify-self:start; margin-top:.4rem; background:none; border:0; padding:.3rem 0; font:inherit; font-size:.82rem; color:var(--sec, var(--perfil)); font-weight:600; cursor:pointer}
+.tarea{display:grid; grid-template-columns:auto 1fr; gap:.2rem .65rem; align-items:center; padding:.55rem 0; border-top:1px solid var(--line)}
+.tarea:first-child{border-top:0}
+.tarea .fila-t{display:flex; align-items:center; gap:.5rem; min-width:0; background:none; border:0; padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer}
+.tarea .fila-t b{flex:1; min-width:0; font-size:.92rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.tarea.abierta .fila-t b{white-space:normal}
+.tarea .fila-t .hr{flex:none; font-size:.75rem; color:var(--ink-3)}
+.tarea .fila-t .marca{flex:none; width:.45rem; height:.45rem; border-radius:50%; background:var(--info)}
+.tarea.hecha .fila-t b{text-decoration:line-through; color:var(--ink-3)}
+.tarea .detalle{grid-column:2; display:grid; gap:.45rem; padding:.2rem 0 .2rem}
+.tarea .meta{display:flex; flex-wrap:wrap; gap:.3rem .6rem; font-size:.76rem; color:var(--ink-3); align-items:center}
+.tarea .meta > span{white-space:nowrap}
+.tarea .meta b{font-weight:600; color:var(--ink-2)}
+.tarea .acc{display:flex; gap:.3rem; flex-wrap:wrap}
+.tarea .chk{width:1.5rem; height:1.5rem; border-radius:50%; border:2px solid var(--sec, var(--perfil)); background:transparent; display:grid; place-items:center; color:#fff; font-size:.8rem; cursor:pointer; padding:0}
+.tarea.hecha .chk{background:var(--sec, var(--perfil))}
+.aviso-fila{display:grid; grid-template-columns:1fr auto; gap:.2rem .6rem; align-items:center; padding:.55rem 0; border-top:1px solid var(--line)}
+.aviso-fila:first-child{border-top:0}
+.aviso-fila b{font-size:.9rem; font-weight:600}
+.aviso-fila span{font-size:.76rem; color:var(--ink-3)}
+.aviso-fila .acc{grid-column:1 / -1; display:flex; gap:.3rem; flex-wrap:wrap}
+.sub-av{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin:.5rem 0 .1rem}
+.sec-avisos{--sec:var(--aviso)}
 .seccion h3{font-size:1.3rem}
 
 /* ---------- hoja ---------- */
@@ -1372,15 +1389,16 @@ function tareasDelDia(dia) {
     .sort((x, y) => (x.hecho - y.hecho) || String(x.hora || "99").localeCompare(String(y.hora || "99")) || (x.creado || 0) - (y.creado || 0));
 }
 function filaTarea(t) {
-  const otroN = MAESTROS[otro(perfil)].nombre, mio = t.autor === perfil;
+  const otroN = MAESTROS[otro(perfil)].nombre, mio = t.autor === perfil, abierta = pendDetalle === t.id;
   const cab = t.caballoId && (S.caballos[t.caballoId] || S.caballosPapelera[t.caballoId]);
   const al = t.alumnoId && S.alumnos[t.alumnoId];
-  const titulo = t.seccion === "caballos" ? `${cab ? cab.nombre : "Caballo"}${t.texto ? ` · ${t.texto}` : ""}`
-    : t.seccion === "prueba" ? `${t.nombre || "Clase de prueba"}${t.texto ? ` · ${t.texto}` : ""}`
-    : t.seccion === "cancelaciones" && al ? `${al.nombre}${t.texto ? ` · ${t.texto}` : ""}` : (t.texto || "—");
+  const titulo = t.seccion === "caballos" ? `${cab ? cab.nombre : "Caballo"}${t.monta && t.monta !== perfil && MAESTROS[t.monta] ? ` · lo monta ${MAESTROS[t.monta].nombre}` : ""}`
+    : t.seccion === "prueba" ? (t.nombre || t.texto || "Clase de prueba")
+    : t.seccion === "cancelaciones" && al ? al.nombre : (t.texto || "—");
+  const nota = (t.seccion === "general" || (t.seccion === "cancelaciones" && !al) || (t.seccion === "prueba" && !t.nombre)) ? "" : t.texto;
   const meta = [
+    nota ? `<span style="white-space:normal; color:var(--ink-2)">${esc(nota)}</span>` : "",
     t.fecha < hoyIso() && !t.hecho ? `<span class="pastilla p-atras">Del ${fechaLarga(t.fecha)}</span>` : "",
-    t.hora ? `<span>${fmtHora(t.hora)}</span>` : "",
     t.seccion === "caballos" && t.monta ? `<span>Lo monta <b>${esc(MAESTROS[t.monta] ? MAESTROS[t.monta].nombre : t.monta)}</b></span>` : "",
     t.telefono ? `<span>${esc(t.telefono)}</span>` : "",
     !mio ? `<span class="pastilla p-comp">De ${esc(MAESTROS[t.autor] ? MAESTROS[t.autor].nombre : "otro")}</span>`
@@ -1394,29 +1412,41 @@ function filaTarea(t) {
     mio ? `<button class="btn btn-2 btn-mini" data-act="pend-compartir" data-id="${t.id}">${t.compartido ? `No compartir` : `Compartir con ${esc(otroN)}`}</button>` : "",
     mio ? `<button class="btn btn-2 btn-mini" data-act="pend-editar" data-id="${t.id}">Editar</button>` : "",
   ].filter(Boolean).join("");
-  return `<div class="tarea ${t.hecho ? "hecha" : ""}">
+  return `<div class="tarea ${t.hecho ? "hecha" : ""} ${abierta ? "abierta" : ""}">
     <button class="chk" data-act="pend-hecho" data-id="${t.id}" aria-label="${t.hecho ? "Marcar como pendiente" : "Marcar como hecho"}" aria-pressed="${!!t.hecho}">${t.hecho ? "✓" : ""}</button>
-    <div class="txt"><b>${esc(titulo)}</b>${meta ? `<div class="meta">${meta}</div>` : ""}</div>
-    ${acc ? `<div class="acc">${acc}</div>` : ""}</div>`;
+    <button class="fila-t" data-act="pend-ver" data-id="${t.id}" aria-expanded="${abierta}"><b>${esc(titulo)}</b>${
+      t.autor !== perfil || t.compartido ? `<span class="marca" title="Compartido"></span>` : ""}${t.hora ? `<span class="hr">${fmtHora(t.hora)}</span>` : ""}</button>
+    ${abierta ? `<div class="detalle">${meta ? `<div class="meta">${meta}</div>` : ""}${acc ? `<div class="acc">${acc}</div>` : ""}</div>` : ""}</div>`;
 }
+let pendDetalle = null;
+/* Qué secciones están abiertas, por maestro (se recuerda en este dispositivo). */
+const pendAbiertas = (() => { try { return new Set(JSON.parse(localStorage.getItem("equus-pend-abiertas") || "[]")); } catch (e) { return new Set(); } })();
+function alternarSeccion(clave) {
+  pendAbiertas.has(clave) ? pendAbiertas.delete(clave) : pendAbiertas.add(clave);
+  try { localStorage.setItem("equus-pend-abiertas", JSON.stringify([...pendAbiertas])); } catch (e) {}
+}
+const acordeon = (clave, sec, nombre, cuenta, cuerpo) => { const ab = pendAbiertas.has(`${perfil}:${clave}`);
+  return `<section class="acord sec-${sec} ${ab ? "abierto" : ""}">
+    <button class="acord-cab" data-act="pend-sec" data-k="${perfil}:${clave}" aria-expanded="${ab}"><span class="punto"></span><span class="nom">${nombre}</span>
+      <span class="num ${cuenta ? "hay" : ""}">${cuenta || "—"}</span><svg class="flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+    ${ab ? `<div class="acord-cuerpo">${cuerpo}</div>` : ""}</section>`; };
 function vistaPendientes(clases) {
   const hoy = hoyIso(); const ts = tareasDelDia(pendDia);
-  const faltan = ts.filter(t => !t.hecho).length;
   const titDia = pendDia === hoy ? "Hoy" : pendDia === iso(sumarDias(deIso(hoy), 1)) ? "Mañana" : pendDia === iso(sumarDias(deIso(hoy), -1)) ? "Ayer" : fechaLarga(pendDia);
   return `
-    <div class="titulo"><div><h2>Pendientes</h2><p class="sub">Tu lista del día. ${faltan ? `Faltan ${plural(faltan, "pendiente")}.` : ts.length ? "Todo hecho." : ""} Puedes compartir cada uno con ${esc(MAESTROS[otro(perfil)].nombre)}.</p></div>
-      <button class="btn" data-act="pend-nuevo">+ Agregar pendiente</button></div>
+    <div class="titulo"><div><h2>Pendientes</h2></div>
+      <button class="btn" data-act="pend-nuevo">+ Agregar</button></div>
     <div class="pend-dia">
       <button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="-1" aria-label="Día anterior">‹</button>
       <span class="rango">${titDia}</span>
       <button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="1" aria-label="Día siguiente">›</button>
-      ${pendDia !== hoy ? `<button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="0">Ir a hoy</button>` : `<span class="sub">${fechaLarga(hoy)}</span>`}
+      ${pendDia !== hoy ? `<button class="btn btn-2 btn-mini" data-act="pend-dia" data-d="0">Hoy</button>` : `<span class="sub">${fechaLarga(hoy)}</span>`}
     </div>
-    ${SECCIONES_PEND.map(sec => { const xs = ts.filter(t => (t.seccion || "general") === sec.id);
-      return `<section class="pend-sec sec-${sec.id}"><header><div><h3>${sec.nombre}</h3><span class="sub">${sec.ayuda}</span></div>
-        <button class="btn btn-2 btn-mini" data-act="pend-nuevo" data-sec="${sec.id}" aria-label="Agregar en ${sec.nombre}">+ Agregar</button></header>
-        ${xs.length ? xs.map(filaTarea).join("") : `<p class="vacio-sec">Nada por ahora.</p>`}</section>`; }).join("")}
-    ${avisosAgenda(clases)}`;
+    <div>${SECCIONES_PEND.map(sec => { const xs = ts.filter(t => (t.seccion || "general") === sec.id);
+      return acordeon(sec.id, sec.id, sec.nombre, xs.filter(t => !t.hecho).length,
+        `${xs.length ? xs.map(filaTarea).join("") : `<p class="sub">Nada por ahora.</p>`}
+         <button class="agregar-aqui" data-act="pend-nuevo" data-sec="${sec.id}">+ Agregar aquí</button>`); }).join("")}
+    ${avisosAgenda(clases)}</div>`;
 }
 function hojaPendiente(id, sec) {
   const t = id ? S.pendientes[id] : null;
@@ -1467,6 +1497,7 @@ function hojaPendiente(id, sec) {
     if (s2 === "cancelaciones" && !x.alumnoId && !x.texto) { brindis("Escoge el alumno o escribe una nota."); return; }
     try {
       await Store.guardarPendiente(x); cerrarHoja();
+      if (!pendAbiertas.has(`${perfil}:${s2}`)) alternarSeccion(`${perfil}:${s2}`);
       pendDia = x.fecha < hoyIso() ? hoyIso() : x.fecha === hoyIso() || pendDia === x.fecha ? pendDia : x.fecha;
       brindis(t ? "Pendiente guardado" : x.compartido ? `Pendiente agregado y compartido con ${otroN}` : "Pendiente agregado");
       registrar(`${t ? "Editó" : "Agregó"} un pendiente (${SECCIONES_PEND.find(z => z.id === s2).nombre}) para el ${fechaLarga(x.fecha)}`);
@@ -1480,29 +1511,22 @@ function avisosAgenda(clases) {
   const sinMarcar = datos.flatMap(({ a, k }) => k.sinMarcar.map(c => ({ a, c }))).sort((x,y) => (x.c.fecha + x.c.hora).localeCompare(y.c.fecha + y.c.hora));
   const repos = datos.filter(d => d.k.repoPend);
   const renovar = datos.filter(d => d.k.saldo <= 1 || d.k.vencido || d.k.venceProx);
-  const nada = !sinMarcar.length && !repos.length && !renovar.length;
-  return `
-    <div class="titulo auto-titulo"><div><h2>Avisos de la agenda</h2><p class="sub">Salen solos: clases sin marcar, reposiciones y paquetes por renovar.</p></div></div>
-    ${nada ? `<div class="vacio"><b>Todo al día</b>No hay clases sin marcar, reposiciones por agendar ni paquetes por renovar.</div>` : ""}
-    ${sinMarcar.length ? `<section class="seccion"><h3>Clases sin marcar (${sinMarcar.length})</h3>
-      <p class="sub">Ya pasaron y siguen como “por dar”. Márcalas para que el saldo sea correcto.</p>
-      ${sinMarcar.map(({ a, c }) => `<div class="pend"><div class="txt"><b>${esc(a.nombre)}</b><span>${fechaLarga(c.fecha)} · ${fmtHora(c.hora)}${c.repo ? " · reposición" : ""}</span></div>
-        <button class="btn btn-mini" data-act="marcar-rapido" data-l="${c.lunes}" data-id="${c.id}" data-e="asistio">Asistió</button>
-        <button class="btn btn-2 btn-mini" data-act="clase" data-l="${c.lunes}" data-id="${c.id}">Otro…</button></div>`).join("")}
-    </section>` : ""}
-    ${repos.length ? `<section class="seccion"><h3>Reposiciones por agendar</h3>
-      ${repos.map(({ a, k }) => `<div class="pend"><div class="txt"><b>${esc(a.nombre)} · ${k.repoPend} pendiente${k.repoPend > 1 ? "s" : ""}</b>
-        <span>Por: ${k.origenRepo.slice(-k.repoPend).map(c => `${fechaCorta(c.fecha)} (${c.estado === "aviso" ? "avisó" : "cancelé"})`).join(", ")}</span></div>
-        <button class="btn btn-mini" data-act="nueva-clase" data-alumno="${a.id}" data-repo="1">Agendar reposición</button></div>`).join("")}
-    </section>` : ""}
-    ${renovar.length ? `<section class="seccion"><h3>Paquetes por renovar</h3>
-      ${renovar.map(({ a, k }) => `<div class="pend"><div class="txt"><b>${esc(a.nombre)}</b><span>${
-          k.saldo <= 0 ? `<b class="alerta-txt">${k.saldo < 0 ? `Debe ${plural(-k.saldo, "clase")}` : "Ya no le quedan clases"}</b>`
-          : k.saldo === 1 ? "Le queda 1 clase" : `Le quedan ${k.saldo}`}${
-          k.vencido ? ` · paquete vencido el ${fechaCorta(k.ultimo.vence)}` : k.venceProx ? ` · vence el ${fechaCorta(k.ultimo.vence)}` : ""}</span></div>
-        <a class="btn btn-wa btn-mini" href="${linkWa(a.telefono, mensajePago(a.id, k))}" target="_blank" rel="noopener">${ICONO_WA}Avisar</a>
-        <button class="btn btn-mini" data-act="ficha" data-id="${a.id}" data-paquete="1">Cargar paquete</button></div>`).join("")}
-    </section>` : ""}`;
+  const total = sinMarcar.length + repos.length + renovar.length;
+  const cuerpo = !total ? `<p class="sub">Todo al día: no hay clases sin marcar, reposiciones ni paquetes por renovar.</p>` : `
+    ${sinMarcar.length ? `<p class="sub-av">Clases sin marcar</p>
+      ${sinMarcar.map(({ a, c }) => `<div class="aviso-fila"><div><b>${esc(a.nombre)}</b><br><span>${fechaLarga(c.fecha)} · ${fmtHora(c.hora)}${c.repo ? " · reposición" : ""}</span></div>
+        <div class="acc"><button class="btn btn-mini" data-act="marcar-rapido" data-l="${c.lunes}" data-id="${c.id}" data-e="asistio">Asistió</button>
+        <button class="btn btn-2 btn-mini" data-act="clase" data-l="${c.lunes}" data-id="${c.id}">Otro…</button></div></div>`).join("")}` : ""}
+    ${repos.length ? `<p class="sub-av">Reposiciones por agendar</p>
+      ${repos.map(({ a, k }) => `<div class="aviso-fila"><div><b>${esc(a.nombre)}</b><br><span>${plural(k.repoPend, "reposición", "reposiciones")} · por ${k.origenRepo.slice(-k.repoPend).map(c => fechaCorta(c.fecha)).join(", ")}</span></div>
+        <div class="acc"><button class="btn btn-mini" data-act="nueva-clase" data-alumno="${a.id}" data-repo="1">Agendar</button></div></div>`).join("")}` : ""}
+    ${renovar.length ? `<p class="sub-av">Paquetes por renovar</p>
+      ${renovar.map(({ a, k }) => `<div class="aviso-fila"><div><b>${esc(a.nombre)}</b><br><span>${
+          k.saldo <= 0 ? (k.saldo < 0 ? `Debe ${plural(-k.saldo, "clase")}` : "Sin clases") : k.saldo === 1 ? "Le queda 1 clase" : `Le quedan ${k.saldo}`}${
+          k.vencido ? ` · vencido` : k.venceProx ? ` · vence ${fechaCorta(k.ultimo.vence)}` : ""}</span></div>
+        <div class="acc"><a class="btn btn-wa btn-mini" href="${linkWa(a.telefono, mensajePago(a.id, k))}" target="_blank" rel="noopener">${ICONO_WA}Avisar</a>
+        <button class="btn btn-2 btn-mini" data-act="ficha" data-id="${a.id}" data-paquete="1">Cargar paquete</button></div></div>`).join("")}` : ""}`;
+  return acordeon("avisos", "avisos", "Avisos de la agenda", total, cuerpo);
 }
 
 /* ==========================================================================
@@ -2854,6 +2878,8 @@ document.addEventListener("click", async e => {
     }
     case "nuevo-alumno": hojaAlumno(); break;
     case "pend-nuevo": hojaPendiente(null, b.dataset.sec); break;
+    case "pend-sec": alternarSeccion(b.dataset.k); render(); break;
+    case "pend-ver": pendDetalle = pendDetalle === b.dataset.id ? null : b.dataset.id; render(); break;
     case "pend-editar": hojaPendiente(b.dataset.id); break;
     case "pend-dia": { const d = Number(b.dataset.d); pendDia = d === 0 ? hoyIso() : iso(sumarDias(deIso(pendDia), d)); render(); break; }
     case "pend-hecho": {
