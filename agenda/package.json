@@ -1,0 +1,10 @@
+{
+  "name": "equus-agenda",
+  "private": true,
+  "type": "module",
+  "description": "Equus · Agenda de alumnos (Tania y Edwin)",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  }
+}
