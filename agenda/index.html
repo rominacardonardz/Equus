@@ -419,8 +419,8 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .aviso-fila .acc{grid-column:1 / -1; display:flex; gap:.3rem; flex-wrap:wrap}
 .sub-av{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin:.5rem 0 .1rem}
 .sec-avisos{--sec:var(--aviso)}
-.sec-respaldo{--sec:var(--info)} .sec-comp{--sec:#6B3FA0}
-.comp-card{display:grid; gap:.25rem; width:100%; text-align:left; padding:.9rem 1rem; background:var(--surface); border:1px solid var(--line); border-left:4px solid #6B3FA0; border-radius:var(--r); font:inherit; color:var(--ink); cursor:pointer}
+.sec-respaldo{--sec:var(--info)} .sec-comp{--sec:var(--perfil)}
+.comp-card{display:grid; gap:.25rem; width:100%; text-align:left; padding:.9rem 1rem; background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--perfil); border-radius:var(--r); font:inherit; color:var(--ink); cursor:pointer}
 .comp-card + .comp-card{margin-top:.5rem}
 .comp-card b{font-size:1.02rem}
 .comp-card .sub{font-size:.8rem}
@@ -1981,7 +1981,7 @@ function vistaPagos(clases) {
         <span class="${de("pendiente").length ? "mal" : ""}">${plural(de("pendiente").length, "debe", "deben")}</span></div>
       ${(() => { const cs = compsDelMes(mesPagos); if (!cs.length) return "";
         const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
-        return `<div class="chips"><span style="background:#EEE5F8; color:#6B3FA0">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
+        return `<div class="chips"><span style="background:var(--perfil-bg); color:var(--perfil); font-weight:600">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
     </div>
     ${!activos.length ? `<div class="vacio"><b>Aquí verás los pagos</b>en cuanto des de alta alumnos con su paquete.</div>` : `<div>
       ${grupo("deben", "Deben su paquete", de("pendiente"))}
@@ -2581,7 +2581,7 @@ const nombreHojaXL = (t, usados) => { let b = String(t).replace(/[\\/?*[\]:]/g, 
   while (usados.has(n.toLowerCase())) n = `${b.slice(0, 26)} ${k++}`; usados.add(n.toLowerCase()); return n; };
 async function libroCompetencias(m) {
   if (!window.ExcelJS) return null;
-  const C = XL[perfil]; const MOR = { fuerte:"5B2E91", medio:"C9B3E8", suave:"F3EEFA", tinta:"2B1846" };
+  const C = XL[perfil]; const MOR = { fuerte:C.fuerte, medio:C.medio, suave:C.suave, tinta:C.tinta };
   const comps = compsDelMes(m);
   const wb = new ExcelJS.Workbook(); wb.creator = "Equus · Agenda de alumnos"; wb.created = new Date();
   const usados = new Set(["resumen del mes", "por alumno", "pagos recibidos"]);
@@ -2593,14 +2593,19 @@ async function libroCompetencias(m) {
     if (o.fondo) c.fill = relleno(o.fondo); if (o.dinero) c.numFmt = DINERO; if (o.fecha) c.numFmt = "dd/mm/yyyy"; return c; };
   /* --- una hoja por competencia */
   for (const c of comps) {
-    const ws = wb.addWorksheet(nombreHojaXL(c.nombre, usados), { properties:{ tabColor:argb(MOR.medio) }, views:[{ state:"frozen", ySplit:5, showGridLines:false }] });
-    ws.columns = [22, 11, 9, 40, 12, 12, 12, 12, 13, 11, 13, 13, 13, 12, 16, 28].map(width => ({ width }));
+    const ws = wb.addWorksheet(nombreHojaXL(c.nombre, usados), { properties:{ tabColor:argb(MOR.medio) }, views:[{ state:"frozen", ySplit:5, xSplit:1, showGridLines:false }] });
+    ws.columns = [22, 11, 12, 13, 13, 13, 15, 9, 40, 12, 12, 12, 12, 13, 11, 28].map(width => ({ width }));
     bandaXL(ws, 1, 16, `${c.nombre} · ${c.lugar || ""} · ${fechasTxt(c)}`, { size:17, fondo:MOR.fuerte, alto:36 });
     const cs = c.costos || {};
     bandaXL(ws, 2, 16, `Costos: prueba ${dinero$(cs.prueba)} · inscripción ${dinero$(cs.inscripcion)} · transporte ${dinero$(cs.transporte)} · viáticos ${dinero$(cs.viaticos)} · caballeriza ${dinero$(cs.caballeriza)} por caballo y día`,
       { size:10, bold:false, italic:true, fondo:MOR.suave, color:MOR.tinta, alto:26 });
-    bandaXL(ws, 3, 16, "Verde = ya pagó todo · Amarillo = pagó una parte · Rojo = no ha pagado. El total y lo que falta se calculan solos.", { size:10, bold:false, italic:true, fondo:XC.blanco, color:XC.gris, alto:20 });
-    encabezadosXL(ws, 5, ["Alumno", "Maestro", "Pruebas", "Detalle de pruebas", "Pruebas $", "Inscripción", "Transporte", "Viáticos", "Caballeriza", "Otros", "TOTAL", "Pagado", "Falta", "¿Pagó?", "Forma de pago", "Nota"], MOR);
+    bandaXL(ws, 3, 16, "¿Pagó?: verde = ya pagó todo · amarillo = pagó una parte · rojo = no ha pagado. El total y lo que falta se calculan solos.", { size:10, bold:false, italic:true, fondo:XC.blanco, color:XC.gris, alto:20 });
+    /* Títulos de grupo: lo importante y el desglose del total */
+    ws.mergeCells(4, 1, 4, 7); celda(ws, 4, 1, "CUENTA DEL ALUMNO", { bold:true, size:10, color:XC.blanco, fondo:MOR.fuerte });
+    ws.mergeCells(4, 8, 4, 9); celda(ws, 4, 8, "PRUEBAS", { bold:true, size:10, color:MOR.tinta, fondo:MOR.suave });
+    ws.mergeCells(4, 10, 4, 15); celda(ws, 4, 10, "DESGLOSE DEL TOTAL", { bold:true, size:10, color:MOR.tinta, fondo:MOR.suave });
+    celda(ws, 4, 16, "", { fondo:MOR.suave }); ws.getRow(4).height = 20;
+    encabezadosXL(ws, 5, ["Alumno", "Maestro", "¿Pagó?", "TOTAL", "Pagado", "Falta", "Forma de pago", "Pruebas", "Detalle de pruebas", "Pruebas $", "Inscripción", "Transporte", "Viáticos", "Caballeriza", "Otros", "Nota"], MOR);
     const ins = inscritosDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
     const r1 = 6;
     ins.forEach(({ i, a, k }, n) => {
@@ -2610,30 +2615,31 @@ async function libroCompetencias(m) {
       const fondo = n % 2 ? MOR.suave : XC.blanco;
       celda(ws, f, 1, a.nombre, { bold:true, izq:true, fondo });
       celda(ws, f, 2, MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "", { fondo });
-      celda(ws, f, 3, prs.length, { fondo });
-      celda(ws, f, 4, prs.map(p => `${fechaCorta(p.fecha)}${p.hora ? " " + fmtHora(p.hora) : ""} · ${p.categoria} · ${nombreCab(p)}${p.resultado ? " · " + p.resultado : ""}`).join("\n"), { izq:true, wrap:true, size:10, fondo });
-      [[5, pruebasCosto], [6, v("Inscripción")], [7, v("Transporte")], [8, v("Viáticos")], [9, v("Caballeriza")], [10, v("Otros")]].forEach(([col, x]) => celda(ws, f, col, x, { dinero:true, fondo }));
-      celda(ws, f, 11, { formula:`SUM(E${f}:J${f})`, result:k.total }, { dinero:true, bold:true, fondo });
-      celda(ws, f, 12, k.pagado, { dinero:true, fondo });
-      celda(ws, f, 13, { formula:`K${f}-L${f}`, result:k.saldo }, { dinero:true, bold:true, fondo });
-      celda(ws, f, 14, { formula:`IF(M${f}<=0,"Sí",IF(L${f}>0,"Parcial","No"))`, result:k.saldo <= 0 ? "Sí" : k.pagado ? "Parcial" : "No" }, { bold:true, fondo });
-      celda(ws, f, 15, [...new Set((i.pagos || []).map(pg => metodoTxt(pg.metodo)).filter(Boolean))].join(" y "), { fondo });
+      celda(ws, f, 3, { formula:`IF(F${f}<=0,"Sí",IF(E${f}>0,"Parcial","No"))`, result:k.saldo <= 0 ? "Sí" : k.pagado ? "Parcial" : "No" }, { bold:true, fondo });
+      celda(ws, f, 4, { formula:`SUM(J${f}:O${f})`, result:k.total }, { dinero:true, bold:true, size:12, fondo });
+      celda(ws, f, 5, k.pagado, { dinero:true, fondo });
+      celda(ws, f, 6, { formula:`D${f}-E${f}`, result:k.saldo }, { dinero:true, bold:true, size:12, fondo });
+      celda(ws, f, 7, [...new Set((i.pagos || []).map(pg => metodoTxt(pg.metodo)).filter(Boolean))].join(" y "), { fondo });
+      celda(ws, f, 8, prs.length, { fondo });
+      celda(ws, f, 9, prs.map(p => `${fechaCorta(p.fecha)}${p.hora ? " " + fmtHora(p.hora) : ""} · ${p.categoria} · ${nombreCab(p)}${p.resultado ? " · " + p.resultado : ""}`).join("\n"), { izq:true, wrap:true, size:10, fondo });
+      [[10, pruebasCosto], [11, v("Inscripción")], [12, v("Transporte")], [13, v("Viáticos")], [14, v("Caballeriza")], [15, v("Otros")]].forEach(([col, x]) => celda(ws, f, col, x, { dinero:true, size:10, color:XC.gris, fondo }));
       celda(ws, f, 16, (i.ajustes && i.ajustes.nota) || "", { izq:true, wrap:true, size:10, fondo });
       ws.getRow(f).height = Math.max(22, 15 * prs.length + 6);
     });
     const r2 = r1 + Math.max(ins.length, 1) - 1;
     if (!ins.length) { ws.mergeCells(r1, 1, r1, 16); celda(ws, r1, 1, "Sin alumnos inscritos.", { izq:true, color:XC.gris }); }
-    else ws.addConditionalFormatting({ ref:`N${r1}:N${r2}`, rules:[
+    else ws.addConditionalFormatting({ ref:`C${r1}:C${r2}`, rules:[
       { type:"cellIs", operator:"equal", formulae:['"Sí"'], priority:1, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.verdeBg) }, font:{ bold:true, color:argb(XC.verde) } } },
       { type:"cellIs", operator:"equal", formulae:['"Parcial"'], priority:2, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb("FAF0D4") }, font:{ bold:true, color:argb("7A5A10") } } },
       { type:"cellIs", operator:"equal", formulae:['"No"'], priority:3, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.rojoBg) }, font:{ bold:true, color:argb(XC.rojo) } } } ] });
     const ft = r2 + 2;
-    ws.mergeCells(ft, 1, ft, 10);
+    ws.mergeCells(ft, 1, ft, 3);
     celda(ws, ft, 1, `TOTAL ${c.nombre.toUpperCase()}`, { bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte, izq:true });
     const tot = ins.reduce((t, x) => t + x.k.total, 0), pag = ins.reduce((t, x) => t + x.k.pagado, 0);
-    celda(ws, ft, 11, ins.length ? { formula:`SUM(K${r1}:K${r2})`, result:tot } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
-    celda(ws, ft, 12, ins.length ? { formula:`SUM(L${r1}:L${r2})`, result:pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
-    celda(ws, ft, 13, ins.length ? { formula:`SUM(M${r1}:M${r2})`, result:tot - pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 4, ins.length ? { formula:`SUM(D${r1}:D${r2})`, result:tot } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 5, ins.length ? { formula:`SUM(E${r1}:E${r2})`, result:pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 6, ins.length ? { formula:`SUM(F${r1}:F${r2})`, result:tot - pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 7, "", { fondo:MOR.fuerte });
     ws.getRow(ft).height = 30;
     const ef = ins.reduce((t, x) => t + (x.i.pagos || []).filter(pg => pg.metodo === "efectivo").reduce((u, pg) => u + Number(pg.monto || 0), 0), 0);
     const tr = ins.reduce((t, x) => t + (x.i.pagos || []).filter(pg => pg.metodo === "transferencia").reduce((u, pg) => u + Number(pg.monto || 0), 0), 0);
@@ -2647,8 +2653,8 @@ async function libroCompetencias(m) {
   refs.forEach((x, n) => { const f = 5 + n, fondo = n % 2 ? MOR.suave : XC.blanco, q = `'${x.hoja.replace(/'/g, "''")}'`;
     celda(res, f, 1, x.c.nombre, { bold:true, izq:true, fondo }); celda(res, f, 2, x.c.lugar || "", { fondo }); celda(res, f, 3, fechasTxt(x.c), { fondo });
     celda(res, f, 4, x.alumnos, { fondo }); celda(res, f, 5, x.pruebas, { fondo });
-    celda(res, f, 6, { formula:`${q}!K${x.ft}`, result:x.tot }, { dinero:true, fondo }); celda(res, f, 7, { formula:`${q}!L${x.ft}`, result:x.pag }, { dinero:true, fondo });
-    celda(res, f, 8, { formula:`${q}!M${x.ft}`, result:x.tot - x.pag }, { dinero:true, bold:true, fondo, color:x.tot - x.pag > 0 ? XC.rojo : XC.verde });
+    celda(res, f, 6, { formula:`${q}!D${x.ft}`, result:x.tot }, { dinero:true, fondo }); celda(res, f, 7, { formula:`${q}!E${x.ft}`, result:x.pag }, { dinero:true, fondo });
+    celda(res, f, 8, { formula:`${q}!F${x.ft}`, result:x.tot - x.pag }, { dinero:true, bold:true, fondo, color:x.tot - x.pag > 0 ? XC.rojo : XC.verde });
     celda(res, f, 9, x.ef, { dinero:true, fondo }); celda(res, f, 10, x.tr, { dinero:true, fondo }); res.getRow(f).height = 22; });
   const rf = 5 + Math.max(refs.length, 1);
   if (refs.length) {
