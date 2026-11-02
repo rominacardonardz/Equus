@@ -258,7 +258,9 @@ async function sincronizar(cfg, quien) {
   // 4. Recordar lo que se escribió, para saber después qué se editó en la hoja
   const exportados = {};
   [...fT, ...fE].forEach(x => { exportados[x.clave] = x.exp; }); fC.forEach(x => { exportados[x.clave] = x.exp; });
-  const nuevo = { ...cfg, exportados, ultimo: Date.now(), por: quien || "", error: "", url: `https://docs.google.com/spreadsheets/d/${id}/edit`, titulo: (meta.properties && meta.properties.title) || "" };
+  // Número de cada pestaña, para enlaces que abren directo una pestaña (#gid=)
+  const gids = Object.fromEntries(Object.entries(TABS).map(([k, t]) => [k, existentes[t]]).filter(([, v]) => v != null));
+  const nuevo = { ...cfg, exportados, gids, ultimo: Date.now(), por: quien || "", error: "", url: `https://docs.google.com/spreadsheets/d/${id}/edit`, titulo: (meta.properties && meta.properties.title) || "" };
   await guardarDoc("config/sheets", nuevo);
   return { cambios: cambios.tania.length + cambios.edwin.length + cambios.comp.length, url: nuevo.url };
 }
