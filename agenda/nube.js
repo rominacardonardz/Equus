@@ -144,6 +144,8 @@
     return () => { const s = mapa.get(clave); if (s) s.delete(fn); };
   };
   const db = {
+    /* Vuelve a leer todo lo que la página está mostrando (por ejemplo, después de que el servidor cambió algo). */
+    recargar: () => recargarTodo(),
     collection: col => {
       const q = { limit: () => q, onSnapshot: (fn, err) => suscribir(subsCol, col, fn, cargarCol, err),
         async get() { await cargarCol(col); return snapCol(col); } };
@@ -244,6 +246,21 @@
       }, 30);
       return "#";
     },
+  };
+
+  /* ------------------------------- Google Sheets editable (en el servidor) */
+  const hojas = {
+    async info() { try { return await fetch("/api/sheets?info=1", { cache: "no-store" }).then(r => r.json()); } catch (e) { return { configurada: false }; } },
+    async pedir(cuerpo) {
+      let r;
+      try {
+        r = await fetch("/api/sheets", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` }, body: JSON.stringify(cuerpo) });
+        if (r.status === 401) r = await fetch("/api/sheets", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token(true)}` }, body: JSON.stringify(cuerpo) });
+      } catch (e) { return { ok: false, error: "Sin conexión. Intenta de nuevo." }; }
+      return r.json().catch(() => ({ ok: false, error: "Respuesta inesperada del servidor." }));
+    },
+    sync() { return this.pedir({ accion: "sync" }); },
+    conectar(hoja) { return this.pedir({ accion: "conectar", hoja }); },
   };
 
   /* ------------------------------- Excel siempre al día (lugar fijo) */
@@ -358,6 +375,7 @@
   const SERVICIOS = {
     db: () => db, user: () => user, sample: () => (cfg.chat ? sample : null), assets: () => assets, downloads: () => downloads,
     vivo: () => vivo,
+    hojas: () => hojas,
     mcp: () => (cfg.googleClientId && yo.dueno ? mcp : null),
   };
 

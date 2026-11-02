@@ -1,7 +1,11 @@
 {
   "functions": {
-    "api/asistente.js": { "maxDuration": 60 }
+    "api/asistente.js": { "maxDuration": 60 },
+    "api/sheets.js": { "maxDuration": 60 }
   },
+  "crons": [
+    { "path": "/api/sheets", "schedule": "17 12 * * *" }
+  ],
   "headers": [
     { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
   ]

@@ -834,6 +834,8 @@ const Store = {
     try { this.assets = c && c.use ? await c.use("assets") : null; } catch (e) { this.assets = null; }
     try { this.mcp = c && c.use ? await c.use("mcp") : null; } catch (e) { this.mcp = null; }
     try { this.vivo = c && c.use ? await c.use("vivo") : null; } catch (e) { this.vivo = null; }
+    try { this.hojas = c && c.use ? await c.use("hojas") : null; } catch (e) { this.hojas = null; }
+    if (this.hojas) this.hojas.info().then(i => { Hojas.info = i; render(); });
     if (this.user) { try { this.esDueno = !!(await this.user.isOwner()); } catch (e) { this.esDueno = false; } }
     if (this.sample) { try { const l = await this.sample.limits(); this.limitesImg = (l && l.images) || null; } catch (e) { this.limitesImg = null; } }
     /* Quién guarda (para el historial) y si esta persona puede guardar. null = no se sabe: se deja intentar. */
@@ -848,7 +850,7 @@ const Store = {
     try { const L = this.local(); L[p] = { alumnos:S.crudos, semanas:S.semanas, chat:Chat.mensajes.slice(-60), historial:S.historial }; L.caballos = S.caballosCrudos; L.pendientes = S.pendientes; L.competencias = S.competencias; L.inscripciones = S.inscripciones; localStorage.setItem("equus-agenda-v1", JSON.stringify(L)); } catch (e) {}
   },
   abrir(p) {
-    this.cerrar(); if (typeof ExcelVivo !== "undefined") { ExcelVivo.revisado = false; ExcelVivo.leido = false; } S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
+    this.cerrar(); if (typeof ExcelVivo !== "undefined") { ExcelVivo.revisado = false; ExcelVivo.leido = false; Hojas.revisado = false; Hojas.leido = false; } S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
     if (!this.db) {
       const T = this.local(); const L = T[p] || {}; S.crudos = L.alumnos || {}; S.semanas = L.semanas || {}; Chat.mensajes = L.chat || []; S.historial = L.historial || {};
       S.otras = (T[otro(p)] || {}).semanas || {}; S.otrosAlumnos = (T[otro(p)] || {}).alumnos || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; S.competencias = T.competencias || {}; S.inscripciones = T.inscripciones || {}; repartir(); S.cargado = true; render(); return;
@@ -874,6 +876,7 @@ const Store = {
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
     this.quitar.push(this.db.doc("config/respaldo").onSnapshot(sn => { ultimoRespaldo = (sn.exists && sn.data().fecha) || null; }, err));
+    this.quitar.push(this.db.doc("config/sheets").onSnapshot(sn => { Hojas.cfg = sn.exists ? sn.data() : null; Hojas.leido = true; revisarHojas(); if (vista === "pagos" || vista === "competencias") render(); }, err));
     this.quitar.push(this.db.doc("config/excel").onSnapshot(sn => { ExcelVivo.cfg = sn.exists ? sn.data() : null; ExcelVivo.leido = true; revisarExcelVivo(); if (vista === "pagos" || vista === "competencias") render(); }, err));
     /* La conversación con el asistente se guarda por maestro. */
     this.quitar.push(this.db.doc(`maestros/${p}/chat/historial`).onSnapshot(s => {
@@ -1174,7 +1177,7 @@ function render() {
       : "Conectando…"}</p>
     ${!Store.sample ? "" : `<button class="fab" data-act="chat-abrir" aria-label="Abrir asistente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg><span class="fab-t">Escribir cambios</span></button>`}`;
   setTimeout(revisarDrive, 0);
-  revisarExcelVivo();
+  revisarExcelVivo(); revisarHojas();
   setTimeout(purgarVencidos, 0);
 }
 
@@ -1691,7 +1694,7 @@ function listaCompetencias() {
       ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
         return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
       <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>${tarjetaExcelVivo(true)}` : ""}
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>${tarjetaHojas()}${tarjetaExcelVivo(true)}` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -2002,7 +2005,7 @@ function vistaPagos(clases) {
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
       ${acordeon("hoja", "hoja", "Excel y Google Drive", 0, `<div class="acc" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem">
         <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaExcelVivo(false)}${tarjetaDrive()}`, "pago-sec")}
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaHojas()}${tarjetaExcelVivo(false)}${tarjetaDrive()}`, "pago-sec")}
     </div>`}`;
 }
 let pagoDetalle = null;
@@ -2767,6 +2770,7 @@ const mesesVivos = () => { const hoy = hoyIso(), r = new Set([hoy.slice(0, 7)]);
   Object.values(S.competencias || {}).forEach(c => { if ((c.fin || c.inicio || "") >= iso(sumarDias(new Date(), -62))) { r.add(String(c.inicio).slice(0, 7)); r.add(String(c.fin || c.inicio).slice(0, 7)); } });
   return [...r].filter(m => /^\d{4}-\d{2}$/.test(m)); };
 function programarExcelVivo(espera = 12000) {
+  programarHojas();
   if (!Store.vivo || !Store.db) return;
   clearTimeout(ExcelVivo.timer); ExcelVivo.timer = setTimeout(actualizarExcelVivo, espera);
 }
@@ -2784,6 +2788,57 @@ async function actualizarExcelVivo() {
   } catch (e) { console.error("Excel al día:", e); }
   ExcelVivo.trabajando = false;
 }
+/* ------------------------------------------------------------ Google Sheets editable
+   La hoja vive en el Google Drive de la dueña y la comparte con Tania y Edwin.
+   El servidor la sincroniza en los dos sentidos: después de cada cambio en la
+   agenda (unos segundos después), al abrir la agenda y una vez al día solo. */
+const Hojas = { info:null, cfg:null, leido:false, timer:null, trabajando:false, revisado:false, msg:"" };
+const hojaConectada = () => !!(Hojas.cfg && Hojas.cfg.spreadsheetId);
+function programarHojas(espera = 8000) {
+  if (!Store.hojas || !hojaConectada()) return;
+  clearTimeout(Hojas.timer); Hojas.timer = setTimeout(() => sincronizarHojas(false), espera);
+}
+async function sincronizarHojas(manual) {
+  if (!Store.hojas || Hojas.trabajando) { if (!manual) programarHojas(); return; }
+  Hojas.trabajando = true; Hojas.msg = ""; if (vista === "pagos" || vista === "competencias") render();
+  const r = await Store.hojas.sync();
+  Hojas.trabajando = false;
+  if (Store.db && Store.db.recargar) Store.db.recargar();
+  if (r && r.ok && r.ocupado && !manual) programarHojas(20000);
+  if (manual) brindis(r && r.ok ? (r.cambios ? `Hoja sincronizada · ${plural(r.cambios, "cambio")} de la hoja ${r.cambios === 1 ? "pasó" : "pasaron"} a la agenda` : "Hoja sincronizada") : (r && r.error) || "No se pudo sincronizar");
+  else if (r && r.cambios) brindis(`${plural(r.cambios, "cambio")} de Google Sheets ${r.cambios === 1 ? "pasó" : "pasaron"} a la agenda`);
+  if (r && !r.ok) Hojas.msg = r.error || "";
+  if (vista === "pagos" || vista === "competencias") render();
+}
+function revisarHojas() {
+  if (!S.cargado || !Hojas.leido || Hojas.revisado || !Store.hojas || !hojaConectada()) return;
+  Hojas.revisado = true;
+  /* Al abrir: trae lo que se editó en la hoja (si la última vez fue hace más de 3 minutos). */
+  if (!Hojas.cfg.ultimo || Date.now() - Hojas.cfg.ultimo > 3 * 60000) programarHojas(2500);
+}
+function tarjetaHojas() {
+  if (!Store.hojas) return "";
+  const i = Hojas.info, c = Hojas.cfg || {};
+  const cab = `<section class="hoy-card sec-hoja" style="margin-top:.6rem"><header><h3>Google Sheets (editable)</h3></header>`;
+  if (!i) return "";
+  if (!i.configurada) return `${cab}<p class="sub">Una hoja de Google que se edita en los dos sentidos: lo que cambies en la agenda aparece en la hoja, y lo que cambien en las celdas amarillas de la hoja pasa a la agenda. Falta terminar la configuración en Google y Vercel (Romina la está haciendo).</p></section>`;
+  if (!hojaConectada()) return `${cab}
+    ${Store.esDueno ? `<p class="sub">1. Crea una hoja en blanco en tu Google Drive (Google Sheets → En blanco) y ponle nombre, por ejemplo <b>Equus · Pagos</b>.<br>
+      2. Toca <b>Compartir</b> y agrega este correo como <b>Editor</b> (quita la palomita de “Notificar”):</p>
+      <div class="renglon"><span class="t" style="white-space:normal; overflow-wrap:anywhere"><b>${esc(i.correo)}</b></span><button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(i.correo)}">Copiar</button></div>
+      <p class="sub">3. Comparte la hoja también con Tania y Edwin como Editores.<br>4. Copia el enlace de la hoja (barra de direcciones) y pégalo aquí:</p>
+      <form id="f-hoja" style="display:flex; gap:.4rem; flex-wrap:wrap"><input type="url" id="h-url" required placeholder="https://docs.google.com/spreadsheets/d/…" style="flex:1; min-width:12rem; font:inherit; padding:.5rem .6rem; border:1px solid var(--line-fuerte); border-radius:var(--r-sm)">
+        <button class="btn btn-mini" type="submit" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Conectando…" : "Conectar"}</button></form>
+      ${Hojas.msg ? `<p class="estado error">${esc(Hojas.msg)}</p>` : ""}`
+      : `<p class="sub">Romina todavía no conecta la hoja de Google.</p>`}</section>`;
+  return `${cab}
+    <div style="display:flex; gap:.4rem; flex-wrap:wrap"><a class="btn btn-mini" href="${esc(c.url)}" target="_blank" rel="noopener">Abrir la hoja</a>
+      <button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(c.url)}">Copiar enlace</button>
+      <button class="btn btn-2 btn-mini" data-act="hojas-sync" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Sincronizando…" : "Sincronizar ahora"}</button></div>
+    <p class="sub">${c.ultimo ? `Sincronizada ${haceCuanto(c.ultimo)}.` : ""} Las celdas amarillas (¿Pagó?, Forma de pago, Monto y, en competencias, Pagado) se pueden cambiar en la hoja y pasan a la agenda. Se sincroniza sola después de cada cambio en la agenda, al abrirla y una vez al día.</p>
+    ${Hojas.msg || c.error ? `<p class="estado error">${esc(Hojas.msg || c.error)}</p>` : ""}</section>`;
+}
+
 /* Al abrir la agenda: si los Excel de este perfil no existen o tienen más de 6 horas, se generan. */
 function revisarExcelVivo() {
   if (!S.cargado || !ExcelVivo.leido || ExcelVivo.revisado || !Store.vivo) return;
@@ -3940,6 +3995,7 @@ document.addEventListener("click", async e => {
     case "comp-vista": compVista = b.dataset.k; inscDetalle = null; render(); break;
     case "comp-pdf": pdfCompetencia(b.dataset.id); break;
     case "excel-comp": excelCompetencias(b.dataset.m || mesPagos); break;
+    case "hojas-sync": clearTimeout(Hojas.timer); sincronizarHojas(true); break;
     case "excel-vivo-ya": b.disabled = true; b.textContent = "Actualizando…"; clearTimeout(ExcelVivo.timer); await actualizarExcelVivo(); brindis("Excel actualizado"); render(); break;
     case "excel-vivo-clave": {
       if (!confirmarDosVeces(b, "clave-excel", "Toca otra vez: los enlaces viejos dejarán de servir")) return;
@@ -4181,7 +4237,14 @@ document.addEventListener("click", async e => {
     }
   }
 });
-document.addEventListener("submit", e => {
+document.addEventListener("submit", async e => {
+  if (e.target.id === "f-hoja") { e.preventDefault(); if (Hojas.trabajando) return;
+    const enlace = val("h-url");
+    Hojas.trabajando = true; Hojas.msg = ""; render();
+    const r = await Store.hojas.conectar(enlace); Hojas.trabajando = false;
+    if (Store.db && Store.db.recargar) Store.db.recargar();
+    if (r && r.ok) { brindis("¡Hoja conectada! Ya se llenó con los datos de la agenda."); registrar("Conectó la hoja de Google Sheets"); } else Hojas.msg = (r && r.error) || "No se pudo conectar.";
+    render(); return; }
   if (e.target.id === "f-chat") { e.preventDefault(); enviarChat(val("chat-txt")); }
 });
 document.addEventListener("input", e => {
