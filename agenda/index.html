@@ -1681,6 +1681,13 @@ function listaCompetencias() {
       ${sugeridasFaltan().map(x => `<div class="renglon"><span class="t">${esc(x.nombre)}</span><span class="x">${fechasTxt(x)}</span></div>`).join("")}
       <button class="btn" data-act="comp-sugeridas" style="justify-self:start">Agregar ${sugeridasFaltan().length === 1 ? "esta competencia" : `estas ${sugeridasFaltan().length} competencias`}</button>
       <p class="sub">Después pon sus costos en Editar.</p></section>` : ""}
+    ${todas.length ? `<section class="hoy-card sec-comp"><header><h3>Pagos del mes</h3>
+        <div class="navsem"><button class="flecha" data-act="mes" data-d="-1" aria-label="Mes anterior">‹</button><span class="mes" style="font-size:1rem">${MESES_LARGO[Number(mesPagos.slice(5, 7)) - 1]} ${mesPagos.slice(0, 4)}</span>
+          <button class="flecha" data-act="mes" data-d="1" aria-label="Mes siguiente">›</button></div></header>
+      ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
+        return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
+      <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -1987,7 +1994,7 @@ function vistaPagos(clases) {
             return `<p class="sub-av">${esc(c.nombre)} · ${fechasTxt(c)}</p><p class="sub">Cobrado ${dinero$(pag)} de ${dinero$(tot)}${tot - pag > 0 ? ` · <b class="alerta-txt">falta ${dinero$(tot - pag)}</b>` : ""}</p>
               ${xs.length ? xs.map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
                 <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
-            + `<div style="margin-top:.6rem"><button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>`
+            + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button><button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>`
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
       ${acordeon("hoja", "hoja", "Excel y Google Drive", 0, `<div class="acc" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem">
         <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button>
@@ -2686,6 +2693,51 @@ async function libroCompetencias(m) {
     margins:{ left:0.4, right:0.4, top:0.5, bottom:0.5, header:0.2, footer:0.2 } }; });
   return await wb.xlsx.writeBuffer();
 }
+/* PDF con el resumen de pagos de competencias del mes: total general, una tabla
+   por competencia (alumno por alumno) y los pagos recibidos. */
+async function pdfPagosCompetencias(m) {
+  if (!window.jspdf) { brindis("No cargó el generador de PDF. Revisa tu conexión."); return; }
+  m = m || mesPagos;
+  const comps = compsDelMes(m);
+  const datos = comps.map(c => { const xs = inscritosDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
+    return { c, xs, tot:xs.reduce((t, x) => t + x.k.total, 0), pag:xs.reduce((t, x) => t + x.k.pagado, 0) }; });
+  const T = datos.reduce((t, d) => t + d.tot, 0), P = datos.reduce((t, d) => t + d.pag, 0);
+  const pagos = datos.flatMap(d => d.xs.flatMap(({ i, a }) => (i.pagos || []).map(pg => ({ pg, c:d.c, a })))).sort((x, y) => String(x.pg.fecha).localeCompare(String(y.pg.fecha)));
+  const ef = pagos.filter(x => x.pg.metodo === "efectivo").reduce((t, x) => t + Number(x.pg.monto || 0), 0);
+  const tr = pagos.filter(x => x.pg.metodo === "transferencia").reduce((t, x) => t + Number(x.pg.monto || 0), 0);
+  const ctx = pdfBase("Pagos de competencias", `${nombreMesXL(m)} · ${plural(comps.length, "competencia")}`);
+  const { doc, W, H, C } = ctx; let y = 136;
+  /* Recuadros con los totales del mes */
+  const cajas = [["Total a cobrar", dinero$(T)], ["Cobrado", dinero$(P)], ["Falta", dinero$(T - P)], ["Efectivo / Transf.", `${dinero$(ef)} / ${dinero$(tr)}`]];
+  const ancho = (W - 80 - 3 * 10) / 4;
+  cajas.forEach(([t, v], n) => { const x = 40 + n * (ancho + 10);
+    doc.setFillColor(...C.suave); doc.roundedRect(x, y, ancho, 52, 6, 6, "F");
+    doc.setTextColor(...C.texto); doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(pdfTxt(t), x + 10, y + 18);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(n === 3 ? 11 : 15); if (n === 2 && T - P > 0) doc.setTextColor(163, 50, 39); doc.text(pdfTxt(v), x + 10, y + 40); });
+  y += 76;
+  if (!comps.length) { doc.setTextColor(...C.texto); doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.text("No hay competencias este mes.", 40, y); }
+  else {
+    doc.setTextColor(...C.texto); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text("Resumen por competencia", 40, y); y += 10;
+    y = pdfTabla(ctx, y, [{ t:"Competencia", x:40, max:26 }, { t:"Fechas", x:200, max:24 }, { t:"Alumnos", x:330 }, { t:"Total", x:385 }, { t:"Cobrado", x:445 }, { t:"Falta", x:505 }],
+      datos.map(d => [d.c.nombre, fechasTxt(d.c), String(d.xs.length), dinero$(d.tot), dinero$(d.pag), dinero$(d.tot - d.pag)])) + 28;
+    for (const d of datos) {
+      if (y > H - 150) { doc.addPage(); y = 50; }
+      doc.setTextColor(...C.texto); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(pdfTxt(`${d.c.nombre} · ${fechasTxt(d.c)}`), 40, y);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.text(pdfTxt(`Cobrado ${dinero$(d.pag)} de ${dinero$(d.tot)} · falta ${dinero$(d.tot - d.pag)}`), 40, y + 15); y += 24;
+      y = d.xs.length ? pdfTabla(ctx, y, [{ t:"Alumno", x:40, max:24 }, { t:"Maestro", x:180 }, { t:"Pruebas", x:250 }, { t:"Total", x:310 }, { t:"Pagado", x:380 }, { t:"Falta", x:445 }, { t:"Estado", x:505 }],
+        d.xs.map(({ i, a, k }) => [a.nombre, MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "", String((i.pruebas || []).length), dinero$(k.total), dinero$(k.pagado), dinero$(Math.max(0, k.saldo)),
+          k.saldo <= 0 && k.total ? "Pagado" : k.pagado ? "Parcial" : "Debe"])) + 26 : y + 20;
+    }
+    if (pagos.length) {
+      if (y > H - 150) { doc.addPage(); y = 50; }
+      doc.setTextColor(...C.texto); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text("Pagos recibidos", 40, y); y += 10;
+      y = pdfTabla(ctx, y, [{ t:"Fecha", x:40 }, { t:"Competencia", x:110, max:24 }, { t:"Alumno", x:270, max:22 }, { t:"Monto", x:410 }, { t:"Forma", x:480 }],
+        pagos.map(({ pg, c, a }) => [fechaCorta(pg.fecha), c.nombre, a.nombre, dinero$(pg.monto), metodoTxt(pg.metodo) || "-"]));
+    }
+  }
+  pdfPie(doc, W, H);
+  await guardarArchivo(`pagos-competencias-${m}.pdf`, doc.output("blob"));
+}
 async function excelCompetencias(m) {
   m = m || mesPagos;
   brindis("Preparando el Excel de competencias…");
@@ -2953,7 +3005,10 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
       <input type="hidden" id="c-dia" value="${d}">
       <label class="campo">Hora<select id="c-hora">${opcionesHora(h0, d)}</select></label>
       <label class="campo" id="c-pista-c" hidden>Pista<select id="c-pista"></select></label>
-      <label class="campo">Caballo<select id="c-caballo"></select></label>
+      <div class="campo" style="grid-column:1/-1">Caballo<span class="sub" id="c-cab-h1"></span><select id="c-caballo"></select>
+        <div id="c-cabs-extra" style="display:grid; gap:.4rem"></div>
+        <button type="button" class="btn btn-2 btn-mini" id="c-cab-mas" style="justify-self:start; margin-top:.3rem">+ Otro caballo (la hora siguiente)</button>
+        <span class="sub" id="c-cab-resumen"></span></div>
       <label class="check" id="c-repo-c" style="grid-column:1/-1"><input type="checkbox" id="c-repo" ${repo ? "checked" : ""}> Es reposición</label>
       <div id="c-info" class="nota" style="grid-column:1/-1"></div>
       <button class="btn btn-bloque" type="submit" style="grid-column:1/-1" id="c-ok">Agregar a la semana</button>
@@ -2979,16 +3034,35 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
     if (esProp(a)) { box.className = "nota"; box.innerHTML = "<b>Propietario:</b> monta de martes a domingo, sin límite de clases ni reposiciones."; return; }
     const esRepo = document.getElementById("c-repo").checked;
     box.className = "nota" + ((k.libres <= 0) || (esRepo && !k.repoPend) ? " aviso" : "");
-    const nd = Math.max(1, diasElegidos().length);
+    const nd = Math.max(1, diasElegidos().length) * turnos();
     box.className = "nota" + ((k.libres < nd) || (esRepo && !k.repoPend) ? " aviso" : "");
     box.innerHTML = `Le quedan <b>${k.saldo}</b> de ${k.compradas} · <b>${k.agendadas}</b> ya agendada${k.agendadas === 1 ? "" : "s"} · <b>${k.repoPend}</b> ${k.repoPend === 1 ? "reposición pendiente" : "reposiciones pendientes"}.${
       k.libres < nd ? `<br>Con ${nd > 1 ? "estas clases" : "esta clase"} se pasa de su paquete.` : ""}${esRepo && !k.repoPend ? "<br>No tiene reposiciones pendientes." : ""}`;
   };
+  /* Varios caballos seguidos: el primero a la hora escogida y cada uno de los demás una hora después. */
+  const turnos = () => 1 + document.querySelectorAll("#c-cabs-extra .c-cab-x").length;
   const refrescarCaballos = () => {
-    const sel = document.getElementById("c-caballo"); const v = sel.value;
-    sel.innerHTML = opcionesCaballo(v, lunesVista, Number(val("c-dia")), val("c-hora"));
+    const sel = document.getElementById("c-caballo"); const v = sel.value; const h = val("c-hora"), d = Number(val("c-dia"));
+    sel.innerHTML = opcionesCaballo(v, lunesVista, d, h);
     if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) sel.value = "";
+    const extras = [...document.querySelectorAll("#c-cabs-extra .c-cab-x")];
+    document.getElementById("c-cab-h1").textContent = extras.length ? ` · ${fmtHora(h)}` : "";
+    extras.forEach((x, n) => { const hx = masHoras(h, n + 1); const s2 = x.querySelector("select"); const v2 = s2.value;
+      x.querySelector(".hx").textContent = fmtHora(hx); s2.innerHTML = opcionesCaballo(v2, lunesVista, d, hx);
+      if (s2.selectedOptions[0] && s2.selectedOptions[0].disabled) s2.value = ""; });
+    const nombres = [sel, ...extras.map(x => x.querySelector("select"))].map((s3, n) => s3.value ? `${fmtHora(masHoras(h, n))} ${(S.caballos[s3.value] || {}).nombre}` : "");
+    document.getElementById("c-cab-resumen").textContent = extras.length ? nombres.filter(Boolean).join(" · ") : "";
+    if (typeof info === "function") info();
   };
+  document.getElementById("c-cab-mas").addEventListener("click", () => {
+    document.getElementById("c-cabs-extra").insertAdjacentHTML("beforeend", `<div class="c-cab-x" style="display:grid; grid-template-columns:4.5rem 1fr auto; gap:.4rem; align-items:center">
+      <span class="sub hx"></span><select aria-label="Caballo siguiente"></select><button type="button" class="btn btn-2 btn-mini" aria-label="Quitar caballo">×</button></div>`);
+    const fila = document.querySelector("#c-cabs-extra .c-cab-x:last-child");
+    fila.querySelector("button").addEventListener("click", () => { fila.remove(); refrescarCaballos(); });
+    fila.querySelector("select").addEventListener("change", refrescarCaballos);
+    refrescarCaballos();
+  });
+  document.getElementById("c-caballo").addEventListener("change", refrescarCaballos);
   /* Solo se escoge pista cuando el alumno tiene más de una para esa fecha. */
   const refrescarPista = () => {
     const a = S.alumnos[val("c-alumno")]; const f = iso(sumarDias(lunes, Number(val("c-dia"))));
@@ -3013,31 +3087,35 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
     const aid = val("c-alumno"), al = S.alumnos[aid], hora = val("c-hora");
     const dias = diasElegidos().filter(x => diaPermitido(al, x));
     if (!dias.length) { brindis(`Escoge al menos un día. ${al.nombre} monta ${diasTxt(al)}.`); return; }
-    const repoSel = document.getElementById("c-repo").checked && !esProp(al), cab = val("c-caballo");
+    const repoSel = document.getElementById("c-repo").checked && !esProp(al);
+    const extras = [...document.querySelectorAll("#c-cabs-extra .c-cab-x select")].map(x => x.value);
+    /* [caballo, hora] de cada turno; los turnos extra sin caballo no se agregan. */
+    const plan = [[val("c-caballo"), hora], ...extras.map((v, n) => [v, masHoras(hora, n + 1)]).filter(([v]) => v)];
     const sem = clon(S.semanas[lunesVista] || { lunes: lunesVista, clases:{} });
     sem.clases = sem.clases || {}; sem.lunes = lunesVista;
     const nuevas = [], repetidas = [], sinCaballo = [];
     const todas = clasesDeCaballos();
-    for (const dia of dias) {
-      if (Object.values(sem.clases).some(x => x.alumnoId === aid && x.dia === dia && x.hora === hora)) { repetidas.push(dia); continue; }
+    for (const dia of dias) for (const [cab, hora] of plan) {
+      if (Object.values(sem.clases).some(x => x.alumnoId === aid && x.dia === dia && x.hora === hora)) { repetidas.push(`${DIAS[dia]} ${fmtHora(hora)}`); continue; }
       const f = iso(sumarDias(lunes, dia)); const pistas = pistasAlumno(al, f);
       /* El caballo se revisa en cada día: si ese día está ocupado o lleno, la clase queda sin caballo. */
       let caballoId = cab;
       if (cab) {
         const k = S.caballos[cab] || {}; const u = usoCaballo(cab, lunesVista, dia, hora, null, todas);
         const extra = nuevas.filter(x => x.caballoId === cab).length;
-        if (u.aLaHora || (Number(k.maxDia) && u.dia >= Number(k.maxDia)) || (Number(k.maxSemana) && u.semana + extra >= Number(k.maxSemana)) || (k.estatus && k.estatus !== "activo")) { caballoId = ""; sinCaballo.push(dia); }
+        if (u.aLaHora || (Number(k.maxDia) && u.dia >= Number(k.maxDia)) || (Number(k.maxSemana) && u.semana + extra >= Number(k.maxSemana)) || (k.estatus && k.estatus !== "activo")) { caballoId = ""; sinCaballo.push(`${DIAS[dia]} ${fmtHora(hora)} (${k.nombre})`); }
       }
       const c = { alumnoId:aid, dia, hora, estado:"programada", pista: ps.value && pistas.includes(ps.value) ? ps.value : pistaAlumno(al, f),
         repo:repoSel, caballoId, caballo:"", nota:"" };
       sem.clases[nuevoId()] = c; nuevas.push(c);
     }
     if (!nuevas.length) { brindis("Ese alumno ya tiene clase a esa hora en esos días."); return; }
+    nuevas.sort((x, y) => (x.dia - y.dia) || x.hora.localeCompare(y.hora));
     cerrarHoja(); diaSel = nuevas[0].dia;
     try {
       await Store.guardarSemana(lunesVista, sem);
-      brindis(`${nuevas.length > 1 ? `${nuevas.length} clases agregadas` : "Clase agregada"}${repetidas.length ? ` · ya tenía el ${repetidas.map(x => DIAS[x]).join(", ")}` : ""}${
-        sinCaballo.length ? ` · sin caballo el ${sinCaballo.map(x => DIAS[x]).join(", ")} (ocupado o lleno)` : ""}`);
+      brindis(`${nuevas.length > 1 ? `${nuevas.length} clases agregadas` : "Clase agregada"}${repetidas.length ? ` · ya tenía ${repetidas.join(", ")}` : ""}${
+        sinCaballo.length ? ` · sin caballo: ${sinCaballo.join(", ")} (ocupado o lleno)` : ""}`);
       registrar(`Agregó ${nuevas.length > 1 ? `${nuevas.length} clases` : repoSel ? "reposición" : "clase"} de ${nomA(aid)}: ${nuevas.map(c => cuandoTxt(lunesVista, c)).join(", ")}`);
     } catch (e2) {}
     render();
@@ -3195,6 +3273,8 @@ function hojaAlumno(id) {
     render();
   });
 }
+const masHoras = (h, n) => { const [H, M] = String(h || "00:00").split(":").map(Number); const t = Math.min(23 * 60 + 59, H * 60 + (M || 0) + 60 * n);
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
 const filaHorario = h => `<div class="horario-fila">
   <select class="h-dia" aria-label="Día">${DIAS.map((n, i) => `<option value="${i}" ${i === h.dia ? "selected" : ""}>${n}</option>`).join("")}</select>
   <select class="h-hora" aria-label="Hora">${opcionesHora(h.hora, h.dia)}</select>
@@ -3798,6 +3878,7 @@ document.addEventListener("click", async e => {
     case "comp-vista": compVista = b.dataset.k; inscDetalle = null; render(); break;
     case "comp-pdf": pdfCompetencia(b.dataset.id); break;
     case "excel-comp": excelCompetencias(b.dataset.m || mesPagos); break;
+    case "pdf-pagos-comp": pdfPagosCompetencias(b.dataset.m || mesPagos); break;
     case "comp-pagos": compSel = b.dataset.id; compVista = "pagos"; inscDetalle = null; vista = "competencias"; render(); window.scrollTo(0, 0); break;
     case "comp-sugeridas": {
       const faltan = sugeridasFaltan(); let n = 0;
