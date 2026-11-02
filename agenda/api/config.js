@@ -6,5 +6,7 @@ export default function handler(req, res) {
     supabaseUrl: process.env.SUPABASE_URL || "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
     googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+    // El chat queda apagado salvo que en Vercel se ponga CHAT_ACTIVO = 1 (necesita créditos en Anthropic).
+    chat: process.env.CHAT_ACTIVO === "1" && !!process.env.ANTHROPIC_API_KEY,
   });
 }

@@ -344,7 +344,7 @@
   };
 
   const SERVICIOS = {
-    db: () => db, user: () => user, sample: () => sample, assets: () => assets, downloads: () => downloads,
+    db: () => db, user: () => user, sample: () => (cfg.chat ? sample : null), assets: () => assets, downloads: () => downloads,
     mcp: () => (cfg.googleClientId && yo.dueno ? mcp : null),
   };
 
