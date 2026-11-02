@@ -1596,6 +1596,13 @@ const haceDias = t => t ? Math.floor((Date.now() - t) / 864e5) : null;
    Tania o de Edwin) y tiene una o varias pruebas: día, hora, categoría,
    caballo, número y resultado. Los pagos se calculan con los costos de la
    competencia y se pueden ajustar a mano por alumno. */
+/* Calendario que nos pasaron; se agrega con un toque desde Competencias. Los costos se ponen después en Editar. */
+const COMPETENCIAS_SUGERIDAS = [
+  { nombre:"La Silla · semana 1", lugar:"La Silla", inicio:"2026-11-05", fin:"2026-11-08" },
+  { nombre:"La Silla · semana 2", lugar:"La Silla", inicio:"2026-11-12", fin:"2026-11-15" },
+  { nombre:"Querétaro", lugar:"Querétaro", inicio:"2026-11-26", fin:"2026-11-29" },
+];
+const sugeridasFaltan = () => COMPETENCIAS_SUGERIDAS.filter(x => x.fin >= hoyIso() && !Object.values(S.competencias || {}).some(c => c.inicio === x.inicio && normaliza(c.lugar) === normaliza(x.lugar)));
 const CATEGORIAS = [".60 m", ".75 m", ".80 m", ".90 m", "1.00 m", "1.15 m"];
 const RESULTADOS = ["1º", "2º", "3º", "4º", "5º", "6º", "Listón", "Sin faltas", "Eliminado", "Retirado"];
 const COSTOS = [["prueba", "Costo por prueba"], ["inscripcion", "Inscripción (por alumno)"], ["transporte", "Transporte (por alumno)"],
@@ -1652,7 +1659,8 @@ function vistaCompetencias() {
       <span class="sub">${c.lugar ? esc(c.lugar) + " · " : ""}${fechasTxt(c)} · ${plural(nPr, "prueba")}</span>
       ${c.limite ? `<span class="sub">Inscripción hasta el ${fechaLarga(c.limite)}</span>` : ""}
       <div class="acc"><button class="btn btn-2 btn-mini" data-act="comp-editar" data-id="${c.id}">Editar</button>
-        ${nPr ? `<button class="btn btn-2 btn-mini" data-act="comp-pdf" data-id="${c.id}">${ICONO_PDF}PDF del programa</button>` : ""}</div></section>
+        ${nPr ? `<button class="btn btn-2 btn-mini" data-act="comp-pdf" data-id="${c.id}">${ICONO_PDF}PDF del programa</button>` : ""}
+        <button class="btn btn-2 btn-mini" data-act="excel-comp" data-m="${String(c.inicio).slice(0, 7)}">${ICONO_PDF}Excel del mes</button></div></section>
     <div class="segmento" role="group" aria-label="Sección">${tabs.map(([k, t]) => `<button data-act="comp-vista" data-k="${k}" aria-pressed="${compVista === k}">${t}</button>`).join("")}</div>
     ${cuerpo}
     ${c.notas ? `<div class="nota"><b>Notas:</b> ${esc(c.notas)}</div>` : ""}`;
@@ -1669,6 +1677,10 @@ function listaCompetencias() {
   return `
     <div class="titulo"><div><h2>Competencias</h2><p class="sub">Las ven Tania y Edwin.</p></div>
       <button class="btn" data-act="comp-nueva">+ Competencia</button></div>
+    ${sugeridasFaltan().length ? `<section class="hoy-card sec-comp"><header><h3>Calendario de noviembre</h3></header>
+      ${sugeridasFaltan().map(x => `<div class="renglon"><span class="t">${esc(x.nombre)}</span><span class="x">${fechasTxt(x)}</span></div>`).join("")}
+      <button class="btn" data-act="comp-sugeridas" style="justify-self:start">Agregar ${sugeridasFaltan().length === 1 ? "esta competencia" : `estas ${sugeridasFaltan().length} competencias`}</button>
+      <p class="sub">Después pon sus costos en Editar.</p></section>` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -1875,6 +1887,7 @@ function hojaPagoComp(id) {
     </form>`);
   document.getElementById("f-pagoc").addEventListener("submit", async e => {
     e.preventDefault(); const m = Number(val("pc-monto")); if (!m) return;
+    if (m > Math.max(0, k.saldo)) { brindis(k.saldo > 0 ? `Solo falta ${dinero$(k.saldo)}. Revisa el monto o ajusta sus montos.` : "Ya pagó todo. Si hay un cargo extra, agrégalo en Ajustar montos."); return; }
     const x = clon(i); x.pagos = [...(x.pagos || []), { id:nuevoId(), monto:m, metodo:val("pc-metodo"), fecha:val("pc-fecha") || hoyIso() }];
     cerrarHoja();
     try { await Store.guardarInscripcion(x); brindis(`Pago de ${dinero$(m)} guardado`); registrar(`Registró pago de ${dinero$(m)} (${metodoTxt(val("pc-metodo")) || ""}) de ${a.nombre} para ${c.nombre}`); } catch (e2) {}
@@ -1959,13 +1972,26 @@ function vistaPagos(clases) {
       <div class="total"><span class="sub">Cobrado en el mes</span><b>${cobrado ? dinero(cobrado) : "$0"}</b></div>
       <div class="chips"><span>Efectivo ${dinero(porMetodo("efectivo"))}</span><span>Transferencia ${dinero(porMetodo("transferencia"))}</span>
         <span class="${de("pendiente").length ? "mal" : ""}">${plural(de("pendiente").length, "debe", "deben")}</span></div>
+      ${(() => { const cs = compsDelMes(mesPagos); if (!cs.length) return "";
+        const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
+        return `<div class="chips"><span style="background:#EEE5F8; color:#6B3FA0">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
     </div>
     ${!activos.length ? `<div class="vacio"><b>Aquí verás los pagos</b>en cuanto des de alta alumnos con su paquete.</div>` : `<div>
       ${grupo("deben", "Deben su paquete", de("pendiente"))}
       ${grupo("pagaron", "Ya pagaron", de("pagado"))}
       ${grupo("sin", "Sin paquete este mes", de("sin"))}
+      ${(() => { const cs = compsDelMes(mesPagos); const filasC = cs.flatMap(c => inscritosDe(c.id).map(i => ({ c, i, a:alumnoDe(i.alumnoId), k:cuentaInscripcion(i, c) })));
+        const deben = filasC.filter(x => x.k.saldo > 0).length;
+        return acordeon("compsPagos", "comp", "Competencias", deben, cs.length ? cs.map(c => { const xs = filasC.filter(x => x.c.id === c.id).sort((p, q) => (p.a ? p.a.nombre : "").localeCompare(q.a ? q.a.nombre : ""));
+            const tot = xs.reduce((t, x) => t + x.k.total, 0), pag = xs.reduce((t, x) => t + x.k.pagado, 0);
+            return `<p class="sub-av">${esc(c.nombre)} · ${fechasTxt(c)}</p><p class="sub">Cobrado ${dinero$(pag)} de ${dinero$(tot)}${tot - pag > 0 ? ` · <b class="alerta-txt">falta ${dinero$(tot - pag)}</b>` : ""}</p>
+              ${xs.length ? xs.map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
+                <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
+            + `<div style="margin-top:.6rem"><button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>`
+          : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
       ${acordeon("hoja", "hoja", "Excel y Google Drive", 0, `<div class="acc" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem">
-        <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button></div>${tarjetaDrive()}`, "pago-sec")}
+        <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button>
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaDrive()}`, "pago-sec")}
     </div>`}`;
 }
 let pagoDetalle = null;
@@ -2536,6 +2562,136 @@ async function excelPagos() {
   let buf = null; try { buf = await libroPagos(); } catch (e) { buf = null; }
   if (!buf) { brindis("No cargó el generador de Excel. Revisa tu conexión."); return; }
   guardarArchivo(`pagos-${perfil}-${hoyIso()}.xlsx`, new Blob([buf]), "Excel");
+}
+
+/* ------------------------------------------------------------ Excel de competencias
+   Un libro por mes: resumen del mes, una hoja por competencia (alumno por
+   alumno: pruebas, cuánto, cuánto pagó y cuánto falta), cuentas por alumno
+   y los pagos recibidos. Los totales son fórmulas. */
+const compsDelMes = m => Object.values(S.competencias || {}).filter(c => (c.inicio || "").startsWith(m) || (c.fin || "").startsWith(m))
+  .sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)));
+const nombreHojaXL = (t, usados) => { let b = String(t).replace(/[\\/?*[\]:]/g, " ").trim().slice(0, 28) || "Competencia", n = b, k = 2;
+  while (usados.has(n.toLowerCase())) n = `${b.slice(0, 26)} ${k++}`; usados.add(n.toLowerCase()); return n; };
+async function libroCompetencias(m) {
+  if (!window.ExcelJS) return null;
+  const C = XL[perfil]; const MOR = { fuerte:"5B2E91", medio:"C9B3E8", suave:"F3EEFA", tinta:"2B1846" };
+  const comps = compsDelMes(m);
+  const wb = new ExcelJS.Workbook(); wb.creator = "Equus · Agenda de alumnos"; wb.created = new Date();
+  const usados = new Set(["resumen del mes", "por alumno", "pagos recibidos"]);
+  const res = wb.addWorksheet("Resumen del mes", { properties:{ tabColor:argb(MOR.fuerte) }, views:[{ state:"frozen", ySplit:4, showGridLines:false }] });
+  const refs = [];
+  const celda = (ws, f, col, v, o = {}) => { const c = ws.getCell(f, col); c.value = v; c.border = borde;
+    c.font = { name:"Calibri", size:o.size || 11, bold:!!o.bold, color:argb(o.color || MOR.tinta) };
+    c.alignment = { vertical:"middle", horizontal:o.izq ? "left" : "center", wrapText:!!o.wrap, indent:o.izq ? 1 : 0 };
+    if (o.fondo) c.fill = relleno(o.fondo); if (o.dinero) c.numFmt = DINERO; if (o.fecha) c.numFmt = "dd/mm/yyyy"; return c; };
+  /* --- una hoja por competencia */
+  for (const c of comps) {
+    const ws = wb.addWorksheet(nombreHojaXL(c.nombre, usados), { properties:{ tabColor:argb(MOR.medio) }, views:[{ state:"frozen", ySplit:5, showGridLines:false }] });
+    ws.columns = [22, 11, 9, 40, 12, 12, 12, 12, 13, 11, 13, 13, 13, 12, 16, 28].map(width => ({ width }));
+    bandaXL(ws, 1, 16, `${c.nombre} · ${c.lugar || ""} · ${fechasTxt(c)}`, { size:17, fondo:MOR.fuerte, alto:36 });
+    const cs = c.costos || {};
+    bandaXL(ws, 2, 16, `Costos: prueba ${dinero$(cs.prueba)} · inscripción ${dinero$(cs.inscripcion)} · transporte ${dinero$(cs.transporte)} · viáticos ${dinero$(cs.viaticos)} · caballeriza ${dinero$(cs.caballeriza)} por caballo y día`,
+      { size:10, bold:false, italic:true, fondo:MOR.suave, color:MOR.tinta, alto:26 });
+    bandaXL(ws, 3, 16, "Verde = ya pagó todo · Amarillo = pagó una parte · Rojo = no ha pagado. El total y lo que falta se calculan solos.", { size:10, bold:false, italic:true, fondo:XC.blanco, color:XC.gris, alto:20 });
+    encabezadosXL(ws, 5, ["Alumno", "Maestro", "Pruebas", "Detalle de pruebas", "Pruebas $", "Inscripción", "Transporte", "Viáticos", "Caballeriza", "Otros", "TOTAL", "Pagado", "Falta", "¿Pagó?", "Forma de pago", "Nota"], MOR);
+    const ins = inscritosDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
+    const r1 = 6;
+    ins.forEach(({ i, a, k }, n) => {
+      const f = r1 + n, prs = (i.pruebas || []).slice().sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
+      const v = nom => (k.lineas.find(([t]) => t.startsWith(nom)) || [, 0])[1];
+      const pruebasCosto = k.lineas[0][1];
+      const fondo = n % 2 ? MOR.suave : XC.blanco;
+      celda(ws, f, 1, a.nombre, { bold:true, izq:true, fondo });
+      celda(ws, f, 2, MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "", { fondo });
+      celda(ws, f, 3, prs.length, { fondo });
+      celda(ws, f, 4, prs.map(p => `${fechaCorta(p.fecha)}${p.hora ? " " + fmtHora(p.hora) : ""} · ${p.categoria} · ${nombreCab(p)}${p.resultado ? " · " + p.resultado : ""}`).join("\n"), { izq:true, wrap:true, size:10, fondo });
+      [[5, pruebasCosto], [6, v("Inscripción")], [7, v("Transporte")], [8, v("Viáticos")], [9, v("Caballeriza")], [10, v("Otros")]].forEach(([col, x]) => celda(ws, f, col, x, { dinero:true, fondo }));
+      celda(ws, f, 11, { formula:`SUM(E${f}:J${f})`, result:k.total }, { dinero:true, bold:true, fondo });
+      celda(ws, f, 12, k.pagado, { dinero:true, fondo });
+      celda(ws, f, 13, { formula:`K${f}-L${f}`, result:k.saldo }, { dinero:true, bold:true, fondo });
+      celda(ws, f, 14, { formula:`IF(M${f}<=0,"Sí",IF(L${f}>0,"Parcial","No"))`, result:k.saldo <= 0 ? "Sí" : k.pagado ? "Parcial" : "No" }, { bold:true, fondo });
+      celda(ws, f, 15, [...new Set((i.pagos || []).map(pg => metodoTxt(pg.metodo)).filter(Boolean))].join(" y "), { fondo });
+      celda(ws, f, 16, (i.ajustes && i.ajustes.nota) || "", { izq:true, wrap:true, size:10, fondo });
+      ws.getRow(f).height = Math.max(22, 15 * prs.length + 6);
+    });
+    const r2 = r1 + Math.max(ins.length, 1) - 1;
+    if (!ins.length) { ws.mergeCells(r1, 1, r1, 16); celda(ws, r1, 1, "Sin alumnos inscritos.", { izq:true, color:XC.gris }); }
+    else ws.addConditionalFormatting({ ref:`N${r1}:N${r2}`, rules:[
+      { type:"cellIs", operator:"equal", formulae:['"Sí"'], priority:1, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.verdeBg) }, font:{ bold:true, color:argb(XC.verde) } } },
+      { type:"cellIs", operator:"equal", formulae:['"Parcial"'], priority:2, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb("FAF0D4") }, font:{ bold:true, color:argb("7A5A10") } } },
+      { type:"cellIs", operator:"equal", formulae:['"No"'], priority:3, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.rojoBg) }, font:{ bold:true, color:argb(XC.rojo) } } } ] });
+    const ft = r2 + 2;
+    ws.mergeCells(ft, 1, ft, 10);
+    celda(ws, ft, 1, `TOTAL ${c.nombre.toUpperCase()}`, { bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte, izq:true });
+    const tot = ins.reduce((t, x) => t + x.k.total, 0), pag = ins.reduce((t, x) => t + x.k.pagado, 0);
+    celda(ws, ft, 11, ins.length ? { formula:`SUM(K${r1}:K${r2})`, result:tot } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 12, ins.length ? { formula:`SUM(L${r1}:L${r2})`, result:pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    celda(ws, ft, 13, ins.length ? { formula:`SUM(M${r1}:M${r2})`, result:tot - pag } : 0, { dinero:true, bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte });
+    ws.getRow(ft).height = 30;
+    const ef = ins.reduce((t, x) => t + (x.i.pagos || []).filter(pg => pg.metodo === "efectivo").reduce((u, pg) => u + Number(pg.monto || 0), 0), 0);
+    const tr = ins.reduce((t, x) => t + (x.i.pagos || []).filter(pg => pg.metodo === "transferencia").reduce((u, pg) => u + Number(pg.monto || 0), 0), 0);
+    refs.push({ c, hoja:ws.name, ft, alumnos:ins.length, pruebas:ins.reduce((t, x) => t + (x.i.pruebas || []).length, 0), tot, pag, ef, tr, ins });
+  }
+  /* --- resumen del mes */
+  res.columns = [30, 16, 24, 10, 10, 15, 15, 15, 15, 15].map(width => ({ width }));
+  bandaXL(res, 1, 10, `Competencias · ${nombreMesXL(m)}`, { size:20, fondo:MOR.fuerte, alto:40 });
+  bandaXL(res, 2, 10, comps.length ? `${plural(comps.length, "competencia")} este mes. Cada una tiene su hoja con el detalle por alumno.` : "No hay competencias este mes.", { size:10, bold:false, italic:true, fondo:MOR.suave, color:MOR.tinta, alto:24 });
+  encabezadosXL(res, 4, ["Competencia", "Lugar", "Fechas", "Alumnos", "Pruebas", "Total a cobrar", "Cobrado", "Falta", "Efectivo", "Transferencia"], MOR);
+  refs.forEach((x, n) => { const f = 5 + n, fondo = n % 2 ? MOR.suave : XC.blanco, q = `'${x.hoja.replace(/'/g, "''")}'`;
+    celda(res, f, 1, x.c.nombre, { bold:true, izq:true, fondo }); celda(res, f, 2, x.c.lugar || "", { fondo }); celda(res, f, 3, fechasTxt(x.c), { fondo });
+    celda(res, f, 4, x.alumnos, { fondo }); celda(res, f, 5, x.pruebas, { fondo });
+    celda(res, f, 6, { formula:`${q}!K${x.ft}`, result:x.tot }, { dinero:true, fondo }); celda(res, f, 7, { formula:`${q}!L${x.ft}`, result:x.pag }, { dinero:true, fondo });
+    celda(res, f, 8, { formula:`${q}!M${x.ft}`, result:x.tot - x.pag }, { dinero:true, bold:true, fondo, color:x.tot - x.pag > 0 ? XC.rojo : XC.verde });
+    celda(res, f, 9, x.ef, { dinero:true, fondo }); celda(res, f, 10, x.tr, { dinero:true, fondo }); res.getRow(f).height = 22; });
+  const rf = 5 + Math.max(refs.length, 1);
+  if (refs.length) {
+    const sumas = (col, k) => celda(res, rf, col, { formula:`SUM(${String.fromCharCode(64 + col)}5:${String.fromCharCode(64 + col)}${rf - 1})`, result:refs.reduce((t, x) => t + x[k], 0) }, { dinero:col >= 6, bold:true, color:XC.blanco, fondo:MOR.fuerte });
+    res.mergeCells(rf, 1, rf, 3); celda(res, rf, 1, "TOTAL FINAL DEL MES (competencias)", { bold:true, size:13, color:XC.blanco, fondo:MOR.fuerte, izq:true });
+    sumas(4, "alumnos"); sumas(5, "pruebas"); sumas(6, "tot"); sumas(7, "pag");
+    celda(res, rf, 8, { formula:`F${rf}-G${rf}`, result:refs.reduce((t, x) => t + x.tot - x.pag, 0) }, { dinero:true, bold:true, color:XC.blanco, fondo:MOR.fuerte });
+    sumas(9, "ef"); sumas(10, "tr"); res.getRow(rf).height = 32;
+  }
+  /* --- por alumno (todas las competencias del mes) */
+  const pa = wb.addWorksheet("Por alumno", { properties:{ tabColor:argb(C.medio) }, views:[{ state:"frozen", ySplit:3, showGridLines:false }] });
+  pa.columns = [24, 12, 34, 10, 14, 14, 14, 12].map(width => ({ width }));
+  bandaXL(pa, 1, 8, `Cuenta de cada alumno · ${nombreMesXL(m)}`, { size:16, fondo:MOR.fuerte, alto:34 });
+  encabezadosXL(pa, 3, ["Alumno", "Maestro", "Competencias", "Pruebas", "Total", "Pagado", "Falta", "¿Pagó?"], MOR);
+  const porA = {};
+  refs.forEach(x => x.ins.forEach(({ i, a, k }) => { const o = porA[i.alumnoId] = porA[i.alumnoId] || { a, m:i.maestro, comps:[], pr:0, tot:0, pag:0 };
+    o.comps.push(x.c.nombre); o.pr += (i.pruebas || []).length; o.tot += k.total; o.pag += k.pagado; }));
+  const lista = Object.values(porA).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
+  lista.forEach((o, n) => { const f = 4 + n, fondo = n % 2 ? MOR.suave : XC.blanco;
+    celda(pa, f, 1, o.a.nombre, { bold:true, izq:true, fondo }); celda(pa, f, 2, MAESTROS[o.m] ? MAESTROS[o.m].nombre : "", { fondo });
+    celda(pa, f, 3, o.comps.join(", "), { izq:true, wrap:true, size:10, fondo }); celda(pa, f, 4, o.pr, { fondo });
+    celda(pa, f, 5, o.tot, { dinero:true, fondo }); celda(pa, f, 6, o.pag, { dinero:true, fondo });
+    celda(pa, f, 7, { formula:`E${f}-F${f}`, result:o.tot - o.pag }, { dinero:true, bold:true, fondo });
+    celda(pa, f, 8, { formula:`IF(G${f}<=0,"Sí",IF(F${f}>0,"Parcial","No"))`, result:o.tot - o.pag <= 0 ? "Sí" : o.pag ? "Parcial" : "No" }, { bold:true, fondo }); pa.getRow(f).height = 22; });
+  if (lista.length) pa.addConditionalFormatting({ ref:`H4:H${3 + lista.length}`, rules:[
+    { type:"cellIs", operator:"equal", formulae:['"Sí"'], priority:1, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.verdeBg) }, font:{ bold:true, color:argb(XC.verde) } } },
+    { type:"cellIs", operator:"equal", formulae:['"Parcial"'], priority:2, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb("FAF0D4") }, font:{ bold:true, color:argb("7A5A10") } } },
+    { type:"cellIs", operator:"equal", formulae:['"No"'], priority:3, style:{ fill:{ type:"pattern", pattern:"solid", bgColor:argb(XC.rojoBg) }, font:{ bold:true, color:argb(XC.rojo) } } } ] });
+  /* --- pagos recibidos */
+  const pr = wb.addWorksheet("Pagos recibidos", { properties:{ tabColor:argb(XC.verde) }, views:[{ state:"frozen", ySplit:3, showGridLines:false }] });
+  pr.columns = [13, 28, 24, 14, 16].map(width => ({ width }));
+  bandaXL(pr, 1, 5, `Pagos recibidos · ${nombreMesXL(m)}`, { size:16, fondo:MOR.fuerte, alto:34 });
+  encabezadosXL(pr, 3, ["Fecha", "Competencia", "Alumno", "Monto", "Forma de pago"], MOR);
+  const pagos = refs.flatMap(x => x.ins.flatMap(({ i, a }) => (i.pagos || []).map(pg => ({ pg, c:x.c, a })))).sort((x, y) => String(x.pg.fecha).localeCompare(String(y.pg.fecha)));
+  pagos.forEach(({ pg, c, a }, n) => { const f = 4 + n, fondo = n % 2 ? MOR.suave : XC.blanco;
+    celda(pr, f, 1, fechaXL(pg.fecha), { fecha:true, fondo }); celda(pr, f, 2, c.nombre, { izq:true, fondo }); celda(pr, f, 3, a.nombre, { izq:true, bold:true, fondo });
+    celda(pr, f, 4, Number(pg.monto) || 0, { dinero:true, fondo }); celda(pr, f, 5, metodoTxt(pg.metodo), { fondo }); pr.getRow(f).height = 20; });
+  if (pagos.length) { const f = 4 + pagos.length; pr.mergeCells(f, 1, f, 3); celda(pr, f, 1, "TOTAL COBRADO", { bold:true, color:XC.blanco, fondo:MOR.fuerte, izq:true });
+    celda(pr, f, 4, { formula:`SUM(D4:D${f - 1})`, result:pagos.reduce((t, x) => t + Number(x.pg.monto || 0), 0) }, { dinero:true, bold:true, color:XC.blanco, fondo:MOR.fuerte }); pr.getRow(f).height = 26; }
+  /* Para imprimir: horizontal y todo el ancho en una hoja. */
+  wb.worksheets.forEach(ws => { ws.pageSetup = { orientation:"landscape", fitToPage:true, fitToWidth:1, fitToHeight:0, paperSize:1,
+    margins:{ left:0.4, right:0.4, top:0.5, bottom:0.5, header:0.2, footer:0.2 } }; });
+  return await wb.xlsx.writeBuffer();
+}
+async function excelCompetencias(m) {
+  m = m || mesPagos;
+  brindis("Preparando el Excel de competencias…");
+  let buf = null; try { buf = await libroCompetencias(m); } catch (e) { console.error(e); buf = null; }
+  if (!buf) { brindis("No cargó el generador de Excel. Revisa tu conexión."); return; }
+  guardarArchivo(`competencias-${m}.xlsx`, new Blob([buf]), "Excel");
 }
 
 /* ------------------------------------------------------------ Google Drive
@@ -3641,6 +3797,14 @@ document.addEventListener("click", async e => {
     case "comp-volver": compSel = null; render(); break;
     case "comp-vista": compVista = b.dataset.k; inscDetalle = null; render(); break;
     case "comp-pdf": pdfCompetencia(b.dataset.id); break;
+    case "excel-comp": excelCompetencias(b.dataset.m || mesPagos); break;
+    case "comp-pagos": compSel = b.dataset.id; compVista = "pagos"; inscDetalle = null; vista = "competencias"; render(); window.scrollTo(0, 0); break;
+    case "comp-sugeridas": {
+      const faltan = sugeridasFaltan(); let n = 0;
+      try { for (const x of faltan) { await Store.guardarCompetencia({ id:nuevoId(), creado:Date.now(), autor:perfil, ...x, limite:"", notas:"", costos:{ prueba:0, inscripcion:0, transporte:0, viaticos:0, caballeriza:0 } }); n++; }
+        brindis(`${plural(n, "competencia")} agregada${n === 1 ? "" : "s"}. Pon sus costos en Editar.`); registrar(`Agregó ${plural(n, "competencia")} del calendario: ${faltan.map(x => x.nombre).join(", ")}`); } catch (e2) {}
+      render(); break;
+    }
     case "insc-nueva": if (!alumnosActivos().length && !Object.keys(S.otrosAlumnos).length) { brindis("Primero da de alta alumnos."); break; } hojaInscripcion(b.dataset.c); break;
     case "insc-editar": { const i = S.inscripciones[b.dataset.id]; if (i) hojaInscripcion(i.competenciaId, i.id, !!b.dataset.montos); break; }
     case "insc-ver": inscDetalle = inscDetalle === b.dataset.id ? null : b.dataset.id; render(); break;
