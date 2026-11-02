@@ -427,7 +427,7 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .hoy-card .renglon .t{flex:1; min-width:0; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .hoy-card .renglon .x{flex:none; font-size:.74rem; color:var(--ink-3)}
 .hoy-card .ver{justify-self:start; background:none; border:0; padding:.2rem 0; font:inherit; font-size:.82rem; font-weight:600; color:var(--sec, var(--perfil)); cursor:pointer}
-.hc-clases{--sec:var(--perfil)} .hc-pend{--sec:#8A6A15} .hc-cobros{--sec:var(--alerta)} .hc-cab{--sec:var(--ok)}
+.hc-resp{--sec:var(--info)} .hc-clases{--sec:var(--perfil)} .hc-pend{--sec:#8A6A15} .hc-cobros{--sec:var(--alerta)} .hc-cab{--sec:var(--ok)}
 /* Reporte */
 .kpis-rep{display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem}
 @media (min-width:48rem){.kpis-rep{grid-template-columns:repeat(4,1fr)}}
@@ -1084,9 +1084,17 @@ function elegirPerfil(p) {
 /* ==========================================================================
    Render
    ========================================================================== */
+let irARespaldo = /^#respaldo$/i.test(location.hash);
+addEventListener("hashchange", () => { if (/^#respaldo$/i.test(location.hash)) { irARespaldo = true; render(); } });
 function render() {
   const app = document.getElementById("app");
   if (!perfil) { app.innerHTML = vistaPortada(); return; }
+  if (irARespaldo) {
+    irARespaldo = false; vista = "reporte";
+    if (!pendAbiertas.has(`${perfil}:rep-respaldo`)) alternarSeccion(`${perfil}:rep-respaldo`);
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    setTimeout(() => { const el = document.querySelector(".sec-respaldo"); if (el) el.scrollIntoView({ block:"center" }); }, 50);
+  }
   const clases = todasLasClases();
   const pendientes = contarPendientes(clases);
   const m = MAESTROS[perfil];
@@ -1343,7 +1351,13 @@ function vistaHoy(clases) {
           ...salud.map(({ c, x }) => `<button class="renglon" data-act="ir" data-v="reporte"><span class="t">${esc(c.nombre)} · ${x.nombre}</span><span class="x">${x.estado === "vencido" ? "vencido" : `el ${fechaCorta(x.proxima)}`}</span></button>`)].slice(0, 6).join("")
           : `<p class="sub">Sin avisos de herraje, vacunas ni desparasitación.</p>`}
         <button class="ver" data-act="ir" data-v="caballos">Ver caballos ›</button></section>
-    </div>`;
+    </div>
+    ${(() => { const d = haceDias(ultimoRespaldo), toca = d === null || d > 30;
+      return toca ? `<section class="hoy-card hc-resp" style="margin-top:.7rem"><header><h3>Respaldo del mes</h3></header>
+          <p class="sub">${d === null ? "Todavía no hay ningún respaldo." : `El último fue hace ${plural(d, "día")}.`} Descárgalo y guárdalo en tu iCloud o Google Drive.</p>
+          <button class="btn" data-act="respaldo" style="justify-self:start">${ICONO_PDF}Descargar respaldo</button></section>`
+        : `<p class="sub" style="margin-top:.8rem; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap">Último respaldo: ${d === 0 ? "hoy" : `hace ${plural(d, "día")}`}
+          <button class="btn btn-2 btn-mini" data-act="respaldo">${ICONO_PDF}Descargar otro</button></p>`; })()}`;
 }
 
 /* ---------------------------------------------------------------- reporte
