@@ -373,6 +373,13 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .pend-dia .rango{font-family:var(--serif); font-size:1.25rem; font-weight:600; min-width:9rem; text-align:center}
 .sec-caballos{--sec:#8A6A15} .sec-cancelaciones{--sec:#A33227} .sec-prueba{--sec:#1F6B4F} .sec-general{--sec:var(--perfil)}
 .p-comp{background:var(--info-bg); color:var(--info)} .p-atras{background:var(--aviso-bg); color:var(--aviso)}
+.dias-sel{display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem; margin-top:.3rem}
+.dia-b{display:grid; justify-items:center; gap:.05rem; padding:.4rem 0; border-radius:10px; border:1px solid var(--line-fuerte); background:var(--surface); color:var(--ink); font:inherit; cursor:pointer}
+.dia-b small{font-size:.62rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3)}
+.dia-b b{font-size:1.05rem; font-family:var(--serif)}
+.dia-b[aria-pressed="true"]{background:var(--perfil); border-color:var(--perfil); color:var(--on-perfil)}
+.dia-b[aria-pressed="true"] small{color:inherit; opacity:.85}
+.dia-b:disabled{opacity:.3; cursor:not-allowed}
 .f-pend .solo{display:none}
 .f-pend[data-sec="caballos"] .s-caballos, .f-pend[data-sec="cancelaciones"] .s-cancelaciones,
 .f-pend[data-sec="prueba"] .s-prueba{display:grid}
@@ -2434,14 +2441,30 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
     <form id="f-clase" class="dos" style="gap:.7rem">
       <label class="campo" style="grid-column:1/-1">Alumno
         <select id="c-alumno" required>${activos.map(a => `<option value="${a.id}" ${a.id === a0.id ? "selected" : ""}>${esc(a.nombre)}</option>`).join("")}</select></label>
-      <label class="campo">Día<select id="c-dia">${DIAS.map((n, i) => `<option value="${i}" ${i === d ? "selected" : ""}>${n} ${fechaCorta(iso(sumarDias(lunes, i)))}</option>`).join("")}</select></label>
+      <div class="campo" style="grid-column:1/-1">Días <span class="sub">(puedes escoger varios)</span>
+        <div class="dias-sel" role="group" aria-label="Días">${DIAS.map((n, i) => `<button type="button" class="dia-b" data-d="${i}" aria-pressed="${i === d}"><small>${DIAS_CORTO[i]}</small><b>${deIso(iso(sumarDias(lunes, i))).getDate()}</b></button>`).join("")}</div></div>
+      <input type="hidden" id="c-dia" value="${d}">
       <label class="campo">Hora<select id="c-hora">${opcionesHora(h0, d)}</select></label>
       <label class="campo" id="c-pista-c" hidden>Pista<select id="c-pista"></select></label>
       <label class="campo">Caballo<select id="c-caballo"></select></label>
       <label class="check" id="c-repo-c" style="grid-column:1/-1"><input type="checkbox" id="c-repo" ${repo ? "checked" : ""}> Es reposición</label>
       <div id="c-info" class="nota" style="grid-column:1/-1"></div>
-      <button class="btn btn-bloque" type="submit" style="grid-column:1/-1">Agregar a la semana</button>
+      <button class="btn btn-bloque" type="submit" style="grid-column:1/-1" id="c-ok">Agregar a la semana</button>
     </form>`);
+  const diasElegidos = () => [...document.querySelectorAll("#f-clase .dia-b[aria-pressed='true']:not(:disabled)")].map(b => Number(b.dataset.d));
+  /* El primer día marcado manda en las horas, el caballo y la pista que se muestran. */
+  const marcarPrincipal = () => {
+    const ds = diasElegidos(); const n = ds.length;
+    document.getElementById("c-ok").textContent = n > 1 ? `Agregar ${n} clases` : "Agregar a la semana";
+    if (n && Number(val("c-dia")) !== ds[0]) {
+      document.getElementById("c-dia").value = ds[0];
+      const sel = document.getElementById("c-hora"); const v = sel.value; sel.innerHTML = opcionesHora(v, ds[0]); refrescarCaballos(); refrescarPista();
+    }
+    info();
+  };
+  document.querySelectorAll("#f-clase .dia-b").forEach(b => b.addEventListener("click", () => {
+    if (b.disabled) return; b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); marcarPrincipal();
+  }));
   const info = () => {
     const a = S.alumnos[val("c-alumno")]; const k = cuenta(val("c-alumno"));
     const box = document.getElementById("c-info");
@@ -2449,8 +2472,10 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
     if (esProp(a)) { box.className = "nota"; box.innerHTML = "<b>Propietario:</b> monta de martes a domingo, sin límite de clases ni reposiciones."; return; }
     const esRepo = document.getElementById("c-repo").checked;
     box.className = "nota" + ((k.libres <= 0) || (esRepo && !k.repoPend) ? " aviso" : "");
+    const nd = Math.max(1, diasElegidos().length);
+    box.className = "nota" + ((k.libres < nd) || (esRepo && !k.repoPend) ? " aviso" : "");
     box.innerHTML = `Le quedan <b>${k.saldo}</b> de ${k.compradas} · <b>${k.agendadas}</b> ya agendada${k.agendadas === 1 ? "" : "s"} · <b>${k.repoPend}</b> ${k.repoPend === 1 ? "reposición pendiente" : "reposiciones pendientes"}.${
-      k.libres <= 0 ? "<br>Con esta clase se pasa de su paquete." : ""}${esRepo && !k.repoPend ? "<br>No tiene reposiciones pendientes." : ""}`;
+      k.libres < nd ? `<br>Con ${nd > 1 ? "estas clases" : "esta clase"} se pasa de su paquete.` : ""}${esRepo && !k.repoPend ? "<br>No tiene reposiciones pendientes." : ""}`;
   };
   const refrescarCaballos = () => {
     const sel = document.getElementById("c-caballo"); const v = sel.value;
@@ -2466,34 +2491,48 @@ function hojaNuevaClase({ dia, alumnoId, repo, hora } = {}) {
   };
   /* Los lunes no hay clases y el domingo es solo para propietarios. */
   const refrescarDias = () => {
-    const a = S.alumnos[val("c-alumno")]; const sel = document.getElementById("c-dia");
-    [...sel.options].forEach(o => { o.disabled = !diaPermitido(a, Number(o.value)); });
-    if (sel.selectedOptions[0] && sel.selectedOptions[0].disabled) {
-      const ok = [...sel.options].find(o => !o.disabled);
-      if (ok) { sel.value = ok.value; sel.dispatchEvent(new Event("change")); }
-    }
+    const a = S.alumnos[val("c-alumno")];
+    document.querySelectorAll("#f-clase .dia-b").forEach(b => { const ok = diaPermitido(a, Number(b.dataset.d)); b.disabled = !ok; if (!ok) b.setAttribute("aria-pressed", "false"); });
+    if (!diasElegidos().length) { const b = document.querySelector("#f-clase .dia-b:not(:disabled)"); if (b) b.setAttribute("aria-pressed", "true"); }
+    marcarPrincipal();
   };
   document.getElementById("c-alumno").addEventListener("change", () => { refrescarDias(); refrescarPista(); info(); });
   document.getElementById("c-repo").addEventListener("change", info);
-  document.getElementById("c-dia").addEventListener("change", e => {
-    const sel = document.getElementById("c-hora"); const v = sel.value; sel.innerHTML = opcionesHora(v, Number(e.target.value)); refrescarCaballos(); refrescarPista();
-  });
   document.getElementById("c-hora").addEventListener("change", refrescarCaballos);
   refrescarDias(); refrescarCaballos(); refrescarPista(); info();
   document.getElementById("f-clase").addEventListener("submit", async e => {
     e.preventDefault();
     const ps = document.getElementById("c-pista");
-    const al = S.alumnos[val("c-alumno")];
-    if (!diaPermitido(al, Number(val("c-dia")))) { brindis(`${al.nombre} solo monta ${diasTxt(al)}.`); return; }
-    const c = { alumnoId: val("c-alumno"), dia: Number(val("c-dia")), hora: val("c-hora"), estado:"programada",
-      pista: ps.value || pistaAlumno(S.alumnos[val("c-alumno")], iso(sumarDias(lunes, Number(val("c-dia"))))), repo: document.getElementById("c-repo").checked && !esProp(al), caballoId: val("c-caballo"), caballo:"", nota:"" };
+    const aid = val("c-alumno"), al = S.alumnos[aid], hora = val("c-hora");
+    const dias = diasElegidos().filter(x => diaPermitido(al, x));
+    if (!dias.length) { brindis(`Escoge al menos un día. ${al.nombre} monta ${diasTxt(al)}.`); return; }
+    const repoSel = document.getElementById("c-repo").checked && !esProp(al), cab = val("c-caballo");
     const sem = clon(S.semanas[lunesVista] || { lunes: lunesVista, clases:{} });
-    sem.clases = sem.clases || {};
-    if (Object.values(sem.clases).some(x => x.alumnoId === c.alumnoId && x.dia === c.dia && x.hora === c.hora)) { brindis("Ese alumno ya tiene clase a esa hora."); return; }
-    sem.lunes = lunesVista; sem.clases[nuevoId()] = c;
-    cerrarHoja(); diaSel = c.dia;
-    try { await Store.guardarSemana(lunesVista, sem); brindis("Clase agregada");
-      registrar(`Agregó ${c.repo ? "reposición" : "clase"} de ${nomA(c.alumnoId)} el ${cuandoTxt(lunesVista, c)}`); } catch (e2) {}
+    sem.clases = sem.clases || {}; sem.lunes = lunesVista;
+    const nuevas = [], repetidas = [], sinCaballo = [];
+    const todas = clasesDeCaballos();
+    for (const dia of dias) {
+      if (Object.values(sem.clases).some(x => x.alumnoId === aid && x.dia === dia && x.hora === hora)) { repetidas.push(dia); continue; }
+      const f = iso(sumarDias(lunes, dia)); const pistas = pistasAlumno(al, f);
+      /* El caballo se revisa en cada día: si ese día está ocupado o lleno, la clase queda sin caballo. */
+      let caballoId = cab;
+      if (cab) {
+        const k = S.caballos[cab] || {}; const u = usoCaballo(cab, lunesVista, dia, hora, null, todas);
+        const extra = nuevas.filter(x => x.caballoId === cab).length;
+        if (u.aLaHora || (Number(k.maxDia) && u.dia >= Number(k.maxDia)) || (Number(k.maxSemana) && u.semana + extra >= Number(k.maxSemana)) || (k.estatus && k.estatus !== "activo")) { caballoId = ""; sinCaballo.push(dia); }
+      }
+      const c = { alumnoId:aid, dia, hora, estado:"programada", pista: ps.value && pistas.includes(ps.value) ? ps.value : pistaAlumno(al, f),
+        repo:repoSel, caballoId, caballo:"", nota:"" };
+      sem.clases[nuevoId()] = c; nuevas.push(c);
+    }
+    if (!nuevas.length) { brindis("Ese alumno ya tiene clase a esa hora en esos días."); return; }
+    cerrarHoja(); diaSel = nuevas[0].dia;
+    try {
+      await Store.guardarSemana(lunesVista, sem);
+      brindis(`${nuevas.length > 1 ? `${nuevas.length} clases agregadas` : "Clase agregada"}${repetidas.length ? ` · ya tenía el ${repetidas.map(x => DIAS[x]).join(", ")}` : ""}${
+        sinCaballo.length ? ` · sin caballo el ${sinCaballo.map(x => DIAS[x]).join(", ")} (ocupado o lleno)` : ""}`);
+      registrar(`Agregó ${nuevas.length > 1 ? `${nuevas.length} clases` : repoSel ? "reposición" : "clase"} de ${nomA(aid)}: ${nuevas.map(c => cuandoTxt(lunesVista, c)).join(", ")}`);
+    } catch (e2) {}
     render();
   });
 }
