@@ -412,7 +412,7 @@ td{padding:.45rem; border-bottom:1px solid var(--line); vertical-align:middle; f
 .aviso-fila .acc{grid-column:1 / -1; display:flex; gap:.3rem; flex-wrap:wrap}
 .sub-av{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin:.5rem 0 .1rem}
 .sec-avisos{--sec:var(--aviso)}
-.sec-maestros{--sec:var(--perfil)} .sec-pruebas{--sec:var(--ok)} .sec-salud{--sec:#8A6A15} .sec-altas{--sec:var(--info)}
+.sec-respaldo{--sec:var(--info)} .sec-maestros{--sec:var(--perfil)} .sec-pruebas{--sec:var(--ok)} .sec-salud{--sec:#8A6A15} .sec-altas{--sec:var(--info)}
 /* Hoy */
 .hoy-cab h2{font-size:1.9rem}
 .hoy-grid{display:grid; gap:.7rem}
@@ -839,6 +839,7 @@ const Store = {
     sub(`maestros/${p}/historial`, o => { S.historial = o; });
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
+    this.quitar.push(this.db.doc("config/respaldo").onSnapshot(sn => { ultimoRespaldo = (sn.exists && sn.data().fecha) || null; }, err));
     /* La conversación con el asistente se guarda por maestro. */
     this.quitar.push(this.db.doc(`maestros/${p}/chat/historial`).onSnapshot(s => {
       if (!Chat.pensando) { Chat.mensajes = (s.exists && s.data().mensajes) || []; renderChat(); }
@@ -1431,8 +1432,83 @@ function vistaReporte() {
           <button class="btn btn-2 btn-mini" data-act="salud-hecho" data-id="${c.id}" data-t="${x.id}">Hecho hoy</button></div></div>`).join("")).join("")
         + `<p class="sub">Para cambiar una fecha o cada cuántos días toca, abre el caballo en Caballos → Editar.</p>`
         : `<p class="sub">Agrega caballos para llevar sus fechas de herraje, vacunas y desparasitación.</p>`, "rep-sec")}
+    ${acordeon("rep-respaldo", "respaldo", "Respaldo de datos", haceDias(ultimoRespaldo) === null || haceDias(ultimoRespaldo) > 30 ? 1 : 0, `
+      <p class="sub">${ultimoRespaldo ? `Último respaldo: <b>${haceDias(ultimoRespaldo) === 0 ? "hoy" : `hace ${plural(haceDias(ultimoRespaldo), "día")}`}</b>.` : "Todavía no hay ningún respaldo."}
+        Descarga uno al mes y guárdalo en tu Google Drive o iCloud.</p>
+      <div style="display:flex; gap:.4rem; flex-wrap:wrap">
+        <button class="btn btn-mini" data-act="respaldo">${ICONO_PDF}Descargar respaldo completo</button>
+        ${Store.esDueno ? `<button class="btn btn-2 btn-mini" data-act="restaurar">Restaurar un respaldo</button>` : ""}</div>
+      <p class="sub">Trae los alumnos, semanas, pagos, caballos, pendientes e historial de Tania y Edwin. Las fotos de los comprobantes no van en el archivo: se quedan guardadas en la nube.</p>`, "rep-sec")}
     </div>`;
 }
+
+/* ---------------------------------------------------------------- respaldo
+   Un archivo con todo lo que guarda la agenda (de los dos maestros). Los
+   comprobantes (fotos y PDF) no van dentro: se quedan en Supabase. */
+const COLS_RESPALDO = () => [...Object.keys(MAESTROS).flatMap(m => [`maestros/${m}/alumnos`, `maestros/${m}/semanas`, `maestros/${m}/historial`, `maestros/${m}/chat`]),
+  "caballos", "pendientes", "config", "usuarios"];
+const RUTA_VALIDA = p => /^(maestros\/(tania|edwin)\/(alumnos|semanas|historial|chat)|caballos|pendientes|config|usuarios)\/[A-Za-z0-9_\-.~:@+]{1,200}$/.test(p);
+let ultimoRespaldo = null;
+async function descargarRespaldo() {
+  const docs = {};
+  try {
+    if (Store.db) {
+      for (const col of COLS_RESPALDO()) {
+        const sn = await Store.db.collection(col).get();
+        sn.docs.forEach(d => { docs[`${col}/${d.id}`] = d.data(); });
+      }
+    } else {
+      const L = Store.local();
+      for (const m of Object.keys(MAESTROS)) { const x = L[m] || {};
+        Object.entries(x.alumnos || {}).forEach(([id, v]) => { docs[`maestros/${m}/alumnos/${id}`] = v; });
+        Object.entries(x.semanas || {}).forEach(([id, v]) => { docs[`maestros/${m}/semanas/${id}`] = v; });
+        Object.entries(x.historial || {}).forEach(([id, v]) => { docs[`maestros/${m}/historial/${id}`] = v; }); }
+      Object.entries(L.caballos || {}).forEach(([id, v]) => { docs[`caballos/${id}`] = v; });
+      Object.entries(L.pendientes || {}).forEach(([id, v]) => { docs[`pendientes/${id}`] = v; });
+    }
+  } catch (e) { brindis("No se pudo leer todo para el respaldo. Revisa tu conexión e intenta de nuevo."); return; }
+  const n = Object.keys(docs).length;
+  const archivo = { app:"equus-agenda", version:1, fecha:new Date().toISOString(), documentos:n, docs };
+  const nombre = `respaldo-equus-${hoyIso()}.json`;
+  await guardarArchivo(nombre, new Blob([JSON.stringify(archivo, null, 1)], { type:"application/json" }), "Respaldo");
+  ultimoRespaldo = Date.now();
+  if (Store.db) Store.db.doc("config/respaldo").set({ fecha:ultimoRespaldo, por:perfil, documentos:n }).catch(() => {});
+  registrar(`Descargó un respaldo completo (${plural(n, "documento")})`);
+  render();
+}
+function hojaRestaurar() {
+  abrirHoja(`${cabHoja("Restaurar un respaldo", "Solo la dueña de la agenda")}
+    <p class="sub">Escoge un archivo <b>respaldo-equus-….json</b>. Lo que traiga el archivo se vuelve a guardar tal como estaba ese día.
+      Lo que se agregó después y no está en el archivo <b>no se borra</b>.</p>
+    <label class="campo">Archivo de respaldo<input type="file" id="r-archivo" accept=".json,application/json"></label>
+    <p class="sub" id="r-info"></p>
+    <button class="btn btn-bloque" id="r-ok" disabled>Restaurar</button>`);
+  let datos = null;
+  document.getElementById("r-archivo").addEventListener("change", async e => {
+    const f = e.target.files && e.target.files[0]; const info = document.getElementById("r-info"); datos = null; document.getElementById("r-ok").disabled = true;
+    if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (!j || j.app !== "equus-agenda" || !j.docs || typeof j.docs !== "object") throw 0;
+      const ok = Object.entries(j.docs).filter(([p, v]) => RUTA_VALIDA(p) && v && typeof v === "object");
+      if (!ok.length) throw 0;
+      datos = ok;
+      const cuenta = pre => ok.filter(([p]) => p.includes(pre)).length;
+      info.innerHTML = `Respaldo del <b>${esc(new Date(j.fecha).toLocaleString("es-MX"))}</b>: ${cuenta("/alumnos/")} alumnos, ${cuenta("/semanas/")} semanas, ${cuenta("caballos/")} caballos, ${cuenta("pendientes/")} pendientes.`;
+      document.getElementById("r-ok").disabled = false;
+    } catch (err) { info.textContent = "Ese archivo no es un respaldo de la agenda."; }
+  });
+  document.getElementById("r-ok").addEventListener("click", async () => {
+    if (!datos || !Store.db) return;
+    const b = document.getElementById("r-ok"); b.disabled = true; b.textContent = "Restaurando…";
+    let hechos = 0;
+    try { for (const [p, v] of datos) { await Store.db.doc(p).set(v); hechos++; b.textContent = `Restaurando… ${hechos} de ${datos.length}`; } }
+    catch (e) { brindis(`Se restauraron ${hechos} de ${datos.length}. Revisa tu conexión e intenta otra vez.`); b.disabled = false; b.textContent = "Restaurar"; return; }
+    registrar(`Restauró un respaldo (${plural(hechos, "documento")})`);
+    brindis("Respaldo restaurado"); setTimeout(() => location.reload(), 900);
+  });
+}
+const haceDias = t => t ? Math.floor((Date.now() - t) / 864e5) : null;
 
 /* ---------------------------------------------------------------- alumnos */
 function vistaAlumnos(clases) {
@@ -3148,6 +3224,8 @@ document.addEventListener("click", async e => {
       break;
     }
     case "rep-sec": alternarSeccion(b.dataset.k); render(); break;
+    case "respaldo": b.disabled = true; b.textContent = "Preparando…"; descargarRespaldo().finally(() => render()); break;
+    case "restaurar": if (Store.esDueno) hojaRestaurar(); break;
     case "rep-mes": { const [y2, m2] = mesRep.split("-").map(Number); const d = new Date(y2, m2 - 1 + Number(b.dataset.d), 1); mesRep = iso(d).slice(0, 7); render(); break; }
     case "ir": vista = b.dataset.v; if (b.dataset.v === "semana") { lunesVista = lunesHoy(); diaSel = diaHoy(); modoCal = "semana"; } if (b.dataset.v === "pendientes") pendDia = hoyIso(); render(); window.scrollTo(0, 0); break;
     case "cerrar": cerrarHoja(); break;

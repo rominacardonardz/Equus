@@ -145,7 +145,8 @@
   };
   const db = {
     collection: col => {
-      const q = { limit: () => q, onSnapshot: (fn, err) => suscribir(subsCol, col, fn, cargarCol, err) };
+      const q = { limit: () => q, onSnapshot: (fn, err) => suscribir(subsCol, col, fn, cargarCol, err),
+        async get() { await cargarCol(col); return snapCol(col); } };
       return q;
     },
     doc: p => ({
