@@ -192,20 +192,26 @@
       return { media_type: "image/jpeg", data: c.toDataURL("image/jpeg", 0.85).split(",")[1] };
     } finally { URL.revokeObjectURL(url); }
   }
-  async function token() { const s = (await sb.auth.getSession()).data.session; return s && s.access_token; }
+  async function token(nuevo) {
+    if (nuevo) { try { const r = await sb.auth.refreshSession(); if (r.data && r.data.session) return r.data.session.access_token; } catch (e) {} }
+    const s = (await sb.auth.getSession()).data.session; return s && s.access_token;
+  }
   const sample = async () => { throw error("not_supported"); };
   sample.limits = async () => ({ images: { maxCount: 5, mediaTypes: ["image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "image/heif"] } });
   sample.json = async (turnos, opciones = {}) => {
     let imagenes = [];
     try { imagenes = await Promise.all((opciones.images || []).map(imagenB64)); }
     catch (e) { throw error("invalid_image", "No se pudo leer una de las imágenes"); }
+    const pedir = async nuevo => fetch("/api/asistente", {
+      method: "POST", signal: opciones.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token(nuevo)}` },
+      body: JSON.stringify({ turnos, imagenes }),
+    });
     let r;
     try {
-      r = await fetch("/api/asistente", {
-        method: "POST", signal: opciones.signal,
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
-        body: JSON.stringify({ turnos, imagenes }),
-      });
+      r = await pedir(false);
+      // Si la sesión se venció (por ejemplo, la app estuvo en segundo plano), se renueva y se intenta otra vez.
+      if (r.status === 401) r = await pedir(true);
     } catch (e) { throw error(e && e.name === "AbortError" ? "cancelled" : "unavailable"); }
     const j = await r.json().catch(() => null);
     if (!r.ok || !j || j.error) throw error((j && j.error) || (r.status === 413 ? "prompt_too_large" : "unknown"));

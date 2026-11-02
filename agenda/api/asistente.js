@@ -14,14 +14,21 @@ const SISTEMA = "Eres el asistente de una agenda de clases de equitación. Respo
 
 const client = new Anthropic(); // toma ANTHROPIC_API_KEY de las variables de entorno
 
-async function editorDe(token) {
-  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_ANON_KEY;
-  if (!token || !url || !key) return false;
+// Revisa la sesión con Supabase y que el correo esté en la lista de editores.
+// Devuelve "ok", "sesion" (la sesión no sirve) o "permiso" (no es editor).
+async function revisarAcceso(token) {
+  const url = String(process.env.SUPABASE_URL || "").replace(/\/+$/, ""), key = process.env.SUPABASE_ANON_KEY;
+  if (!token || !url || !key) { console.error("asistente: falta token o configuración de Supabase"); return "sesion"; }
   const h = { apikey: key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
   const u = await fetch(`${url}/auth/v1/user`, { headers: h });
-  if (!u.ok) return false;
+  if (!u.ok) { console.error("asistente: Supabase no aceptó la sesión", u.status, (await u.text()).slice(0, 200)); return "sesion"; }
   const r = await fetch(`${url}/rest/v1/rpc/es_editor`, { method: "POST", headers: h, body: "{}" });
-  return r.ok && (await r.json()) === true;
+  if (r.ok) { const v = await r.json(); if (v === true || v === "true") return "ok"; }
+  else console.error("asistente: es_editor respondió", r.status, (await r.text()).slice(0, 200));
+  // Segunda forma de revisar: la lista de editores solo la puede leer un editor.
+  const e = await fetch(`${url}/rest/v1/editores?select=email&limit=1`, { headers: h });
+  if (e.ok && (await e.json()).length) return "ok";
+  return "permiso";
 }
 
 // Junta turnos seguidos del mismo rol y pone las fotos en el último mensaje.
@@ -60,8 +67,11 @@ export default async function handler(req, res) {
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: "sampling_disabled" });
 
   const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  try { if (!(await editorDe(token))) return res.status(401).json({ error: "session_expired" }); }
-  catch (e) { return res.status(502).json({ error: "unavailable" }); }
+  try {
+    const acceso = await revisarAcceso(token);
+    if (acceso === "sesion") return res.status(401).json({ error: "session_expired" });
+    if (acceso === "permiso") return res.status(403).json({ error: "not_editor" });
+  } catch (e) { console.error("asistente: no se pudo revisar el acceso", e); return res.status(502).json({ error: "unavailable" }); }
 
   const { turnos, imagenes = [] } = req.body || {};
   if (!Array.isArray(turnos) || !turnos.length) return res.status(400).json({ error: "invalid_input" });
