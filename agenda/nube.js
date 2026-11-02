@@ -246,6 +246,18 @@
     },
   };
 
+  /* ------------------------------- Excel siempre al día (lugar fijo) */
+  // Se borra la versión anterior y se sube la nueva con el mismo nombre; el enlace no cambia.
+  const vivo = {
+    async subir(nombre, blob) {
+      const ruta = `excel/${nombre}`;
+      await sb.storage.from("comprobantes").remove([ruta]).catch(() => {});
+      const { error: err } = await sb.storage.from("comprobantes").upload(ruta, blob, {
+        contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", upsert: false });
+      if (err) throw error("unknown", err.message);
+    },
+  };
+
   /* ----------------------------------------------------- descargas */
   const downloads = {
     async save({ filename, data }) {
@@ -345,6 +357,7 @@
 
   const SERVICIOS = {
     db: () => db, user: () => user, sample: () => (cfg.chat ? sample : null), assets: () => assets, downloads: () => downloads,
+    vivo: () => vivo,
     mcp: () => (cfg.googleClientId && yo.dueno ? mcp : null),
   };
 

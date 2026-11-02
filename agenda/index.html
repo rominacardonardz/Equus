@@ -833,6 +833,7 @@ const Store = {
     /* Comprobantes: solo quien puede editar la agenda recibe "assets". */
     try { this.assets = c && c.use ? await c.use("assets") : null; } catch (e) { this.assets = null; }
     try { this.mcp = c && c.use ? await c.use("mcp") : null; } catch (e) { this.mcp = null; }
+    try { this.vivo = c && c.use ? await c.use("vivo") : null; } catch (e) { this.vivo = null; }
     if (this.user) { try { this.esDueno = !!(await this.user.isOwner()); } catch (e) { this.esDueno = false; } }
     if (this.sample) { try { const l = await this.sample.limits(); this.limitesImg = (l && l.images) || null; } catch (e) { this.limitesImg = null; } }
     /* Quién guarda (para el historial) y si esta persona puede guardar. null = no se sabe: se deja intentar. */
@@ -847,7 +848,7 @@ const Store = {
     try { const L = this.local(); L[p] = { alumnos:S.crudos, semanas:S.semanas, chat:Chat.mensajes.slice(-60), historial:S.historial }; L.caballos = S.caballosCrudos; L.pendientes = S.pendientes; L.competencias = S.competencias; L.inscripciones = S.inscripciones; localStorage.setItem("equus-agenda-v1", JSON.stringify(L)); } catch (e) {}
   },
   abrir(p) {
-    this.cerrar(); S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
+    this.cerrar(); if (typeof ExcelVivo !== "undefined") { ExcelVivo.revisado = false; ExcelVivo.leido = false; } S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
     if (!this.db) {
       const T = this.local(); const L = T[p] || {}; S.crudos = L.alumnos || {}; S.semanas = L.semanas || {}; Chat.mensajes = L.chat || []; S.historial = L.historial || {};
       S.otras = (T[otro(p)] || {}).semanas || {}; S.otrosAlumnos = (T[otro(p)] || {}).alumnos || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; S.competencias = T.competencias || {}; S.inscripciones = T.inscripciones || {}; repartir(); S.cargado = true; render(); return;
@@ -873,6 +874,7 @@ const Store = {
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
     this.quitar.push(this.db.doc("config/respaldo").onSnapshot(sn => { ultimoRespaldo = (sn.exists && sn.data().fecha) || null; }, err));
+    this.quitar.push(this.db.doc("config/excel").onSnapshot(sn => { ExcelVivo.cfg = sn.exists ? sn.data() : null; ExcelVivo.leido = true; revisarExcelVivo(); if (vista === "pagos" || vista === "competencias") render(); }, err));
     /* La conversación con el asistente se guarda por maestro. */
     this.quitar.push(this.db.doc(`maestros/${p}/chat/historial`).onSnapshot(s => {
       if (!Chat.pensando) { Chat.mensajes = (s.exists && s.data().mensajes) || []; renderChat(); }
@@ -882,6 +884,7 @@ const Store = {
   async escribir(ruta, datos) {
     if (this.db) await this.intentar(() => datos ? this.db.doc(ruta).set(datos) : this.db.doc(ruta).delete());
     else this.guardarLocal(perfil);
+    if (!/^(config|usuarios)\//.test(ruta) && !/\/(historial|chat)\//.test(ruta)) programarExcelVivo();
   },
   async guardarAlumno(a) { S.crudos = { ...S.crudos, [a.id]: a }; repartir(); await this.escribir(`maestros/${perfil}/alumnos/${a.id}`, a); },
   async borrarSemana(lunes) { const o = { ...S.semanas }; delete o[lunes]; S.semanas = o; await this.escribir(`maestros/${perfil}/semanas/${lunes}`, null); },
@@ -1171,6 +1174,7 @@ function render() {
       : "Conectando…"}</p>
     ${!Store.sample ? "" : `<button class="fab" data-act="chat-abrir" aria-label="Abrir asistente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg><span class="fab-t">Escribir cambios</span></button>`}`;
   setTimeout(revisarDrive, 0);
+  revisarExcelVivo();
   setTimeout(purgarVencidos, 0);
 }
 
@@ -1687,7 +1691,7 @@ function listaCompetencias() {
       ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
         return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
       <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>` : ""}
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>${tarjetaExcelVivo(true)}` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -1998,7 +2002,7 @@ function vistaPagos(clases) {
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
       ${acordeon("hoja", "hoja", "Excel y Google Drive", 0, `<div class="acc" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem">
         <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaDrive()}`, "pago-sec")}
+        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaExcelVivo(false)}${tarjetaDrive()}`, "pago-sec")}
     </div>`}`;
 }
 let pagoDetalle = null;
@@ -2750,6 +2754,58 @@ async function excelCompetencias(m) {
   let buf = null; try { buf = await libroCompetencias(m); } catch (e) { console.error(e); buf = null; }
   if (!buf) { brindis("No cargó el generador de Excel. Revisa tu conexión."); return; }
   guardarArchivo(`competencias-${m}.xlsx`, new Blob([buf]), "Excel");
+}
+
+/* ------------------------------------------------------------ Excel siempre al día
+   Cada cambio en la agenda vuelve a generar los Excel (unos segundos después)
+   y los guarda en Supabase con el mismo nombre. Cada uno tiene un enlace fijo
+   (/api/excel) que siempre da la versión más reciente. El enlace lleva una
+   clave; quien lo tenga puede ver el Excel, así que solo se comparte con
+   quien deba verlo. La dueña puede cambiar la clave. */
+const ExcelVivo = { cfg:null, leido:false, timer:null, trabajando:false };
+const mesesVivos = () => { const hoy = hoyIso(), r = new Set([hoy.slice(0, 7)]);
+  Object.values(S.competencias || {}).forEach(c => { if ((c.fin || c.inicio || "") >= iso(sumarDias(new Date(), -62))) { r.add(String(c.inicio).slice(0, 7)); r.add(String(c.fin || c.inicio).slice(0, 7)); } });
+  return [...r].filter(m => /^\d{4}-\d{2}$/.test(m)); };
+function programarExcelVivo(espera = 12000) {
+  if (!Store.vivo || !Store.db) return;
+  clearTimeout(ExcelVivo.timer); ExcelVivo.timer = setTimeout(actualizarExcelVivo, espera);
+}
+async function actualizarExcelVivo() {
+  if (!Store.vivo || !S.cargado || !perfil || !window.ExcelJS) return;
+  if (ExcelVivo.trabajando) { programarExcelVivo(); return; }
+  ExcelVivo.trabajando = true;
+  try {
+    const cfg = { ...(ExcelVivo.cfg || {}) };
+    if (!cfg.clave) cfg.clave = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, "0")).join("");
+    const p = await libroPagos(); if (p) await Store.vivo.subir(`pagos-${perfil}.xlsx`, new Blob([p]));
+    for (const m of mesesVivos()) { const b = await libroCompetencias(m); if (b) await Store.vivo.subir(`competencias-${m}.xlsx`, new Blob([b])); }
+    cfg.actualizado = { ...(cfg.actualizado || {}), [`pagos-${perfil}`]:Date.now(), competencias:Date.now() };
+    await Store.db.doc("config/excel").set(cfg);
+  } catch (e) { console.error("Excel al día:", e); }
+  ExcelVivo.trabajando = false;
+}
+/* Al abrir la agenda: si los Excel de este perfil no existen o tienen más de 6 horas, se generan. */
+function revisarExcelVivo() {
+  if (!S.cargado || !ExcelVivo.leido || ExcelVivo.revisado || !Store.vivo) return;
+  ExcelVivo.revisado = true;
+  const a = ExcelVivo.cfg && ExcelVivo.cfg.actualizado;
+  if (!a || !a[`pagos-${perfil}`] || Date.now() - a[`pagos-${perfil}`] > 6 * 3600e3) programarExcelVivo(4000);
+}
+const enlaceExcel = (f, mes) => ExcelVivo.cfg && ExcelVivo.cfg.clave ? `${location.origin}/api/excel?f=${f}${mes ? `&mes=${mes}` : ""}&k=${ExcelVivo.cfg.clave}` : "";
+function tarjetaExcelVivo(soloComp) {
+  if (!Store.vivo) return "";
+  const act = (ExcelVivo.cfg && ExcelVivo.cfg.actualizado) || {};
+  const fila = (t, f, clave, mes) => { const u = enlaceExcel(f, mes);
+    return `<div class="renglon" style="flex-wrap:wrap"><span class="t"><b>${t}</b><br><span class="sub">${act[clave] ? `Al día · ${haceCuanto(act[clave])}` : "Se crea con el próximo cambio"}</span></span>
+      ${u ? `<a class="btn btn-mini" href="${esc(u)}" target="_blank" rel="noopener">Abrir</a><button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(u)}">Copiar enlace</button>` : ""}</div>`; };
+  return `<section class="hoy-card sec-hoja" style="margin-top:.6rem"><header><h3>Excel siempre al día</h3></header>
+    <p class="sub">Estos enlaces no cambian: cada vez que alguien cambia algo en la agenda, el Excel se actualiza solo. Guárdalos en favoritos o compártelos con quien deba verlos.</p>
+    ${soloComp ? "" : fila("Pagos de Tania", "pagos-tania", "pagos-tania") + fila("Pagos de Edwin", "pagos-edwin", "pagos-edwin")}
+    ${fila(`Competencias de ${MESES_LARGO[Number(hoyIso().slice(5, 7)) - 1]}`, "competencias", "competencias")}
+    ${soloComp && mesPagos !== hoyIso().slice(0, 7) ? fila(`Competencias de ${MESES_LARGO[Number(mesPagos.slice(5, 7)) - 1]}`, "competencias", "competencias", mesPagos) : ""}
+    <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="excel-vivo-ya">Actualizar ahora</button>
+      ${Store.esDueno && ExcelVivo.cfg && ExcelVivo.cfg.clave ? `<button class="btn btn-2 btn-mini" data-act="excel-vivo-clave">Cambiar enlaces</button>` : ""}</div>
+    <p class="sub">Los pagos de cada maestro se actualizan desde su perfil. Si un enlace dice que no hay Excel, abre la agenda en ese perfil y toca “Actualizar ahora”.</p></section>`;
 }
 
 /* ------------------------------------------------------------ Google Drive
@@ -3884,6 +3940,12 @@ document.addEventListener("click", async e => {
     case "comp-vista": compVista = b.dataset.k; inscDetalle = null; render(); break;
     case "comp-pdf": pdfCompetencia(b.dataset.id); break;
     case "excel-comp": excelCompetencias(b.dataset.m || mesPagos); break;
+    case "excel-vivo-ya": b.disabled = true; b.textContent = "Actualizando…"; clearTimeout(ExcelVivo.timer); await actualizarExcelVivo(); brindis("Excel actualizado"); render(); break;
+    case "excel-vivo-clave": {
+      if (!confirmarDosVeces(b, "clave-excel", "Toca otra vez: los enlaces viejos dejarán de servir")) return;
+      ExcelVivo.cfg = { ...(ExcelVivo.cfg || {}), clave:"" }; await actualizarExcelVivo(); brindis("Enlaces nuevos listos"); registrar("Cambió los enlaces de los Excel"); render(); break;
+    }
+    case "copiar-enlace": try { await navigator.clipboard.writeText(b.dataset.u); brindis("Enlace copiado"); } catch (e2) { prompt("Copia el enlace:", b.dataset.u); } break;
     case "pdf-pagos-comp": pdfPagosCompetencias(b.dataset.m || mesPagos); break;
     case "comp-pagos": compSel = b.dataset.id; compVista = "pagos"; inscDetalle = null; vista = "competencias"; render(); window.scrollTo(0, 0); break;
     case "comp-sugeridas": {
