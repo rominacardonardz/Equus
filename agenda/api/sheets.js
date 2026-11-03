@@ -311,13 +311,16 @@ function filasDeComp(c, inscs, nombres, caballos) {
 /* ------------------------------------------------------------ escribir un archivo */
 async function escribirArchivo(token, id, tipoArchivo, pestanas, resumen, anteriores = []) {
   // pestanas: [{ titulo, plan }] en orden; resumen: plan del resumen; anteriores: pestañas que la agenda creó antes
-  const meta = await google(token, `/${id}?fields=properties.title,sheets(properties(sheetId,title,index),conditionalFormats,charts(chartId),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId))`);
+  const meta = await google(token, `/${id}?fields=properties(title,locale,timeZone),sheets(properties(sheetId,title,index),conditionalFormats,charts(chartId),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId))`);
   const hojas = meta.sheets || [];
   const porTitulo = Object.fromEntries(hojas.map(h => [h.properties.title, h]));
   const todas = [{ titulo: "Resumen", plan: resumen }, ...pestanas];
   const faltan = todas.filter(x => !porTitulo[x.titulo]);
   const pre = [];
-  if (meta.properties && meta.properties.title !== TITULO_ARCHIVO[tipoArchivo]) pre.push({ updateSpreadsheetProperties: { properties: { title: TITULO_ARCHIVO[tipoArchivo] }, fields: "title" } });
+  // Las fórmulas se escriben con comas; con la región de España Google espera ";" y marca #ERROR!.
+  const mp = meta.properties || {};
+  if (mp.title !== TITULO_ARCHIVO[tipoArchivo] || mp.locale !== "en_US" || mp.timeZone !== "America/Monterrey")
+    pre.push({ updateSpreadsheetProperties: { properties: { title: TITULO_ARCHIVO[tipoArchivo], locale: "en_US", timeZone: "America/Monterrey" }, fields: "title,locale,timeZone" } });
   faltan.forEach(x => pre.push({ addSheet: { properties: { title: x.titulo } } }));
   let ids = Object.fromEntries(hojas.map(h => [h.properties.title, h.properties.sheetId]));
   if (pre.length) {
