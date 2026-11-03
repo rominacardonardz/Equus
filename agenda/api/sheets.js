@@ -74,8 +74,23 @@ async function leerDoc(path) {
 }
 async function guardarDoc(path, data) {
   const r = await fetch(`${SB()}/rest/v1/docs`, { method: "POST", headers: { ...hSB(), Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify({ path, data, updated_at: new Date().toISOString() }) });
+    body: JSON.stringify({ path, data: { ...data, _rev: (Number(data && data._rev) || 0) + 1 }, updated_at: new Date().toISOString() }) });
   if (!r.ok) throw new Error("No se pudo guardar en la base de datos.");
+}
+/* Aparta la sincronización en la base de datos en un solo paso: si dos personas la piden
+   al mismo tiempo, solo una la consigue (así un cambio de la hoja nunca se aplica dos veces). */
+async function apartar(cfg) {
+  const ahora = Date.now(), vencido = ahora - 50000;
+  const url = `${SB()}/rest/v1/docs?path=eq.${encodeURIComponent("config/sheets")}&or=(data->enCurso.is.null,data->>enCurso.lt.${vencido},data->>enCurso.eq.0)`;
+  const r = await fetch(url, { method: "PATCH", headers: { ...hSB(), Prefer: "return=representation" },
+    body: JSON.stringify({ data: { ...cfg, enCurso: ahora, _rev: (Number(cfg._rev) || 0) + 1 }, updated_at: new Date().toISOString() }) });
+  if (!r.ok) throw new Error("No se pudo leer la base de datos.");
+  const f = await r.json();
+  if (!f.length) { // todavía no existe la configuración: se crea
+    if (await leerDoc("config/sheets")) return null;
+    const d = { ...cfg, enCurso: ahora }; await guardarDoc("config/sheets", d); return { ...d, _rev: (Number(d._rev) || 0) + 1 };
+  }
+  return f[0].data;
 }
 async function anotarHistorial(perfil, textos) {
   if (!textos.length) return;
@@ -448,6 +463,7 @@ async function sincronizar(cfg, quien) {
   nuevo.exportados = { ...(P ? {} : Object.fromEntries(Object.entries(exp).filter(([k]) => !k.startsWith("comp|")))), ...(C ? {} : Object.fromEntries(Object.entries(exp).filter(([k]) => k.startsWith("comp|")))), ...exportados };
   if (!P) Object.keys(exp).forEach(k => { if (!k.startsWith("comp|")) nuevo.exportados[k] = exp[k]; });
   if (!C) Object.keys(exp).forEach(k => { if (k.startsWith("comp|")) nuevo.exportados[k] = exp[k]; });
+  nuevo.enCurso = 0; // se libera para la siguiente sincronización
   await guardarDoc("config/sheets", nuevo);
   return { cambios: cambios.tania.length + cambios.edwin.length };
 }
@@ -482,10 +498,10 @@ export default async function handler(req, res) {
   if (!cs) return res.status(503).json({ error: "Falta GOOGLE_SERVICE_ACCOUNT en Vercel." });
   let cfg = migrar((await leerDoc("config/sheets")) || {});
   // Si hay otra sincronización en curso (menos de 50 s), no se encima.
-  const ocupado = () => cfg.enCurso && Date.now() - cfg.enCurso < 50000;
   const correr = async quien => {
-    if (ocupado()) return res.status(200).json({ ok: true, ocupado: true });
-    await guardarDoc("config/sheets", { ...cfg, enCurso: Date.now() });
+    const apartado = await apartar(cfg);
+    if (!apartado) return res.status(200).json({ ok: true, ocupado: true });
+    cfg = { ...cfg, ...apartado };
     try { const r = await sincronizar(cfg, quien); return res.status(200).json({ ok: true, ...r }); }
     catch (e) { await guardarDoc("config/sheets", { ...cfg, enCurso: 0, error: e.message, errorEn: Date.now() }).catch(() => {}); return res.status(200).json({ ok: false, error: e.message }); }
   };

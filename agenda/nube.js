@@ -121,6 +121,34 @@
     if (data) cache.set(p, data.data); else cache.delete(p);
     (subsDoc.get(p) || []).forEach(fn => fn(snapDoc(p)));
   }
+  /* Juntar dos versiones de un registro: lo que cambió cada quien se conserva.
+     Listas con id (paquetes, pagos, pruebas…) se juntan elemento por elemento. */
+  const sinRev = d => { if (!d || typeof d !== "object") return d; const { _rev, ...r } = d; return r; };
+  const igual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const esObj = x => x && typeof x === "object" && !Array.isArray(x);
+  function mezclar(base, mio, suyo) {
+    if (igual(mio, base)) return clon(suyo);
+    if (igual(suyo, base) || igual(mio, suyo)) return clon(mio);
+    const conId = xs => Array.isArray(xs) && xs.every(x => esObj(x) && x.id != null);
+    if (conId(mio) && conId(suyo)) {
+      const b = new Map((conId(base) ? base : []).map(x => [x.id, x])), m = new Map(mio.map(x => [x.id, x])), s = new Map(suyo.map(x => [x.id, x]));
+      const out = [];
+      for (const x of suyo) {
+        if (m.has(x.id)) out.push(mezclar(b.get(x.id), m.get(x.id), x));
+        else if (!b.has(x.id) || !igual(x, b.get(x.id))) out.push(clon(x)); // lo agregó o cambió la otra persona
+      }
+      for (const x of mio) if (!s.has(x.id) && !b.has(x.id)) out.push(clon(x)); // lo agregué yo
+      return out;
+    }
+    if (esObj(mio) && esObj(suyo)) {
+      const out = {}, bb = esObj(base) ? base : {};
+      for (const k of new Set([...Object.keys(mio), ...Object.keys(suyo), ...Object.keys(bb)])) {
+        const v = mezclar(bb[k], mio[k], suyo[k]); if (v !== undefined) out[k] = v;
+      }
+      return out;
+    }
+    return clon(mio);
+  }
   function recargarTodo() {
     for (const col of subsCol.keys()) if (subsCol.get(col).size) cargarCol(col).catch(() => {});
     for (const p of subsDoc.keys()) if (subsDoc.get(p).size) cargarDoc(p).catch(() => {});
@@ -154,11 +182,35 @@
     doc: p => ({
       onSnapshot: (fn, err) => suscribir(subsDoc, p, fn, cargarDoc, err),
       async get() { await cargarDoc(p); return snapDoc(p); },
+      /* Si otra persona cambió el mismo registro un instante antes (Tania y Edwin a la vez),
+         no se pisa: se juntan los dos cambios. Cada registro lleva un número de versión (_rev). */
       async set(datos) {
         const antes = cache.get(p);
-        cache.set(p, clon(datos)); avisar(p);
-        const { error: err } = await sb.from("docs").upsert({ path: p, data: datos, updated_at: new Date().toISOString() });
-        if (err) { if (antes === undefined) cache.delete(p); else cache.set(p, antes); avisar(p); throw errorDe(err); }
+        let mio = sinRev(datos), base = antes;
+        cache.set(p, { ...clon(mio), ...(antes && antes._rev != null ? { _rev: antes._rev } : {}) }); avisar(p);
+        const fallar = err => { if (antes === undefined) cache.delete(p); else cache.set(p, antes); avisar(p); throw errorDe(err); };
+        for (let intento = 0; intento < 5; intento++) {
+          const ahora = new Date().toISOString();
+          if (base === undefined) {
+            const nuevo = { ...mio, _rev: 1 };
+            const { error: err } = await sb.from("docs").upsert({ path: p, data: nuevo, updated_at: ahora });
+            if (err) fallar(err);
+            cache.set(p, nuevo); avisar(p); return;
+          }
+          const rev = base._rev, nuevo = { ...mio, _rev: (Number(rev) || 0) + 1 };
+          let q = sb.from("docs").update({ data: nuevo, updated_at: ahora }).eq("path", p);
+          q = rev == null ? q.is("data->_rev", null) : q.eq("data->>_rev", String(rev));
+          const { data: hechas, error: err } = await q.select("path");
+          if (err) fallar(err);
+          if (hechas && hechas.length) { cache.set(p, nuevo); avisar(p); return; }
+          // Alguien más lo cambió: traer su versión y juntar
+          const { data: fila, error: err2 } = await sb.from("docs").select("path,data").eq("path", p).maybeSingle();
+          if (err2) fallar(err2);
+          const suyo = fila ? fila.data : undefined;
+          mio = suyo === undefined ? mio : mezclar(sinRev(base), mio, sinRev(suyo));
+          base = suyo;
+        }
+        fallar(new Error("Muchas personas cambiaron esto al mismo tiempo. Intenta de nuevo."));
       },
       async delete() {
         const antes = cache.get(p);
