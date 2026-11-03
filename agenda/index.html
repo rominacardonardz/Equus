@@ -15,7 +15,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script src="nube.js"></script>
 <style>
@@ -1177,7 +1176,7 @@ function render() {
       : "Conectando…"}</p>
     ${!Store.sample ? "" : `<button class="fab" data-act="chat-abrir" aria-label="Abrir asistente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg><span class="fab-t">Escribir cambios</span></button>`}`;
   setTimeout(revisarDrive, 0);
-  revisarExcelVivo(); revisarHojas();
+  revisarHojas();
   setTimeout(purgarVencidos, 0);
 }
 
@@ -1667,7 +1666,7 @@ function vistaCompetencias() {
       ${c.limite ? `<span class="sub">Inscripción hasta el ${fechaLarga(c.limite)}</span>` : ""}
       <div class="acc"><button class="btn btn-2 btn-mini" data-act="comp-editar" data-id="${c.id}">Editar</button>
         ${nPr ? `<button class="btn btn-2 btn-mini" data-act="comp-pdf" data-id="${c.id}">${ICONO_PDF}PDF del programa</button>` : ""}
-        <button class="btn btn-2 btn-mini" data-act="excel-comp" data-m="${String(c.inicio).slice(0, 7)}">${ICONO_PDF}Excel del mes</button></div></section>
+        ${botonHoja("comp")}</div></section>
     <div class="segmento" role="group" aria-label="Sección">${tabs.map(([k, t]) => `<button data-act="comp-vista" data-k="${k}" aria-pressed="${compVista === k}">${t}</button>`).join("")}</div>
     ${cuerpo}
     ${c.notas ? `<div class="nota"><b>Notas:</b> ${esc(c.notas)}</div>` : ""}`;
@@ -1694,7 +1693,7 @@ function listaCompetencias() {
       ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
         return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
       <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel del mes</button></div></section>${tarjetaHojas(true)}${tarjetaExcelVivo(true)}` : ""}
+        ${botonHoja("comp", "Abrir en Google Sheets")}</div></section>${tarjetaHojas(true)}` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -1986,6 +1985,7 @@ function vistaPagos(clases) {
       <div class="total"><span class="sub">Cobrado en el mes</span><b>${cobrado ? dinero(cobrado) : "$0"}</b></div>
       <div class="chips"><span>Efectivo ${dinero(porMetodo("efectivo"))}</span><span>Transferencia ${dinero(porMetodo("transferencia"))}</span>
         <span class="${de("pendiente").length ? "mal" : ""}">${plural(de("pendiente").length, "debe", "deben")}</span></div>
+      ${hojaConectada() ? `<div style="display:flex; gap:.4rem; flex-wrap:wrap">${botonHoja(perfil, `Pagos de ${MAESTROS[perfil].nombre} en Google Sheets`)}</div>` : ""}
       ${(() => { const cs = compsDelMes(mesPagos); if (!cs.length) return "";
         const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
         return `<div class="chips"><span style="background:var(--perfil-bg); color:var(--perfil); font-weight:600">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
@@ -2001,11 +2001,9 @@ function vistaPagos(clases) {
             return `<p class="sub-av">${esc(c.nombre)} · ${fechasTxt(c)}</p><p class="sub">Cobrado ${dinero$(pag)} de ${dinero$(tot)}${tot - pag > 0 ? ` · <b class="alerta-txt">falta ${dinero$(tot - pag)}</b>` : ""}</p>
               ${xs.length ? xs.map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
                 <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
-            + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button><button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>`
+            + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button>${botonHoja("comp", "Abrir en Google Sheets")}</div>`
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
-      ${acordeon("hoja", "hoja", "Excel y Google Drive", 0, `<div class="acc" style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.5rem">
-        <button class="btn btn-2 btn-mini" data-act="excel">${ICONO_PDF}Descargar Excel de pagos</button>
-        <button class="btn btn-2 btn-mini" data-act="excel-comp">${ICONO_PDF}Excel de competencias</button></div>${tarjetaHojas()}${tarjetaExcelVivo(false)}${tarjetaDrive()}`, "pago-sec")}
+      ${acordeon("hoja", "hoja", "Google Sheets", 0, tarjetaHojas(), "pago-sec")}
     </div>`}`;
 }
 let pagoDetalle = null;
@@ -2769,9 +2767,9 @@ const ExcelVivo = { cfg:null, leido:false, timer:null, trabajando:false };
 const mesesVivos = () => { const hoy = hoyIso(), r = new Set([hoy.slice(0, 7)]);
   Object.values(S.competencias || {}).forEach(c => { if ((c.fin || c.inicio || "") >= iso(sumarDias(new Date(), -62))) { r.add(String(c.inicio).slice(0, 7)); r.add(String(c.fin || c.inicio).slice(0, 7)); } });
   return [...r].filter(m => /^\d{4}-\d{2}$/.test(m)); };
-function programarExcelVivo(espera = 12000) {
+function programarExcelVivo() {
   programarHojas();
-  if (!Store.vivo || !Store.db) return;
+  return; /* Los Excel descargables se quitaron: todo vive en Google Sheets. */
   clearTimeout(ExcelVivo.timer); ExcelVivo.timer = setTimeout(actualizarExcelVivo, espera);
 }
 async function actualizarExcelVivo() {
@@ -2816,6 +2814,8 @@ function revisarHojas() {
   /* Al abrir: trae lo que se editó en la hoja (si la última vez fue hace más de 3 minutos). */
   if (!Hojas.cfg.ultimo || Date.now() - Hojas.cfg.ultimo > 3 * 60000) programarHojas(2500);
 }
+/* Botón para abrir la hoja de Google directo en una pestaña (solo si ya está conectada). */
+const botonHoja = (k, texto) => hojaConectada() ? `<a class="btn btn-2 btn-mini" href="${esc(enlacePestana(k))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>${texto || "Google Sheets"}</a>` : "";
 const enlacePestana = k => { const c = Hojas.cfg || {}; return c.url ? (c.gids && c.gids[k] != null ? `${c.url}#gid=${c.gids[k]}` : c.url) : ""; };
 function tarjetaHojas(soloComp) {
   if (!Store.hojas) return "";
@@ -2857,21 +2857,6 @@ function revisarExcelVivo() {
   if (!a || !a[`pagos-${perfil}`] || Date.now() - a[`pagos-${perfil}`] > 6 * 3600e3) programarExcelVivo(4000);
 }
 const enlaceExcel = (f, mes) => ExcelVivo.cfg && ExcelVivo.cfg.clave ? `${location.origin}/api/excel?f=${f}${mes ? `&mes=${mes}` : ""}&k=${ExcelVivo.cfg.clave}` : "";
-function tarjetaExcelVivo(soloComp) {
-  if (!Store.vivo) return "";
-  const act = (ExcelVivo.cfg && ExcelVivo.cfg.actualizado) || {};
-  const fila = (t, f, clave, mes) => { const u = enlaceExcel(f, mes);
-    return `<div class="renglon" style="flex-wrap:wrap"><span class="t"><b>${t}</b><br><span class="sub">${act[clave] ? `Al día · ${haceCuanto(act[clave])}` : "Se crea con el próximo cambio"}</span></span>
-      ${u ? `<a class="btn btn-mini" href="${esc(u)}" target="_blank" rel="noopener">Abrir</a><button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(u)}">Copiar enlace</button>` : ""}</div>`; };
-  return `<section class="hoy-card sec-hoja" style="margin-top:.6rem"><header><h3>Excel siempre al día</h3></header>
-    <p class="sub">Estos enlaces no cambian: cada vez que alguien cambia algo en la agenda, el Excel se actualiza solo. Guárdalos en favoritos o compártelos con quien deba verlos.</p>
-    ${soloComp ? "" : fila("Pagos de Tania", "pagos-tania", "pagos-tania") + fila("Pagos de Edwin", "pagos-edwin", "pagos-edwin")}
-    ${fila(`Competencias de ${MESES_LARGO[Number(hoyIso().slice(5, 7)) - 1]}`, "competencias", "competencias")}
-    ${soloComp && mesPagos !== hoyIso().slice(0, 7) ? fila(`Competencias de ${MESES_LARGO[Number(mesPagos.slice(5, 7)) - 1]}`, "competencias", "competencias", mesPagos) : ""}
-    <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="excel-vivo-ya">Actualizar ahora</button>
-      ${Store.esDueno && ExcelVivo.cfg && ExcelVivo.cfg.clave ? `<button class="btn btn-2 btn-mini" data-act="excel-vivo-clave">Cambiar enlaces</button>` : ""}</div>
-    <p class="sub">Los pagos de cada maestro se actualizan desde su perfil. Si un enlace dice que no hay Excel, abre la agenda en ese perfil y toca “Actualizar ahora”.</p></section>`;
-}
 
 /* ------------------------------------------------------------ Google Drive
    La dueña conecta su Google Drive una vez. La página crea la carpeta
@@ -4004,13 +3989,7 @@ document.addEventListener("click", async e => {
     case "comp-volver": compSel = null; render(); break;
     case "comp-vista": compVista = b.dataset.k; inscDetalle = null; render(); break;
     case "comp-pdf": pdfCompetencia(b.dataset.id); break;
-    case "excel-comp": excelCompetencias(b.dataset.m || mesPagos); break;
     case "hojas-sync": clearTimeout(Hojas.timer); sincronizarHojas(true); break;
-    case "excel-vivo-ya": b.disabled = true; b.textContent = "Actualizando…"; clearTimeout(ExcelVivo.timer); await actualizarExcelVivo(); brindis("Excel actualizado"); render(); break;
-    case "excel-vivo-clave": {
-      if (!confirmarDosVeces(b, "clave-excel", "Toca otra vez: los enlaces viejos dejarán de servir")) return;
-      ExcelVivo.cfg = { ...(ExcelVivo.cfg || {}), clave:"" }; await actualizarExcelVivo(); brindis("Enlaces nuevos listos"); registrar("Cambió los enlaces de los Excel"); render(); break;
-    }
     case "copiar-enlace": try { await navigator.clipboard.writeText(b.dataset.u); brindis("Enlace copiado"); } catch (e2) { prompt("Copia el enlace:", b.dataset.u); } break;
     case "pdf-pagos-comp": pdfPagosCompetencias(b.dataset.m || mesPagos); break;
     case "comp-pagos": compSel = b.dataset.id; compVista = "pagos"; inscDetalle = null; vista = "competencias"; render(); window.scrollTo(0, 0); break;
@@ -4232,7 +4211,6 @@ document.addEventListener("click", async e => {
     }
     case "chat-img-quitar": { const i = Number(b.dataset.i); const x = Chat.imagenes[i]; if (x) URL.revokeObjectURL(x.url); Chat.imagenes.splice(i, 1); renderChat(); break; }
     case "subir-comp": elegirComprobante(b.dataset.id, b.dataset.p); break;
-    case "excel": excelPagos(); break;
     case "salir": if (window.EquusNube) EquusNube.salir(); break;
     case "drive-sync": clearTimeout(Drive.timer); Drive.fallo = null; if (Store.mcp && Store.mcp.conectar) Store.mcp.conectar().catch(() => {}); sincronizarDrive(true); break;
     case "confirmar-llenar": llenar(); break;

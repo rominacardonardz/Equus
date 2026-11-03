@@ -134,47 +134,96 @@ function filasComp(comps, inscs, nombres) {
 
 /* ------------------------------------------------------------ formato de las pestañas (solo al crearlas) */
 const ENCABEZADOS = {
-  tania: ["Mes", "Fecha", "Alumno", "Clases", "Monto", "¿Pagó?", "Forma de pago", "Le quedan", "Clave (no tocar)"],
-  edwin: ["Mes", "Fecha", "Alumno", "Clases", "Monto", "¿Pagó?", "Forma de pago", "Le quedan", "Clave (no tocar)"],
-  comp: ["Mes", "Competencia", "Fechas", "Alumno", "Maestro", "Pruebas", "Total", "Pagado", "Falta", "¿Pagó?", "Forma de pago", "Clave (no tocar)"],
-  resumen: ["Mes", "Clases · Tania", "Clases · Edwin", "Competencias", "TOTAL COBRADO", "Por cobrar (clases)", "Por cobrar (competencias)"],
+  tania: ["Mes", "Fecha", "Alumno", "Clases", "✎ Monto", "✎ ¿Pagó?", "✎ Forma de pago", "Le quedan", "Clave (no tocar)"],
+  edwin: ["Mes", "Fecha", "Alumno", "Clases", "✎ Monto", "✎ ¿Pagó?", "✎ Forma de pago", "Le quedan", "Clave (no tocar)"],
+  comp: ["Mes", "Competencia", "Fechas", "Alumno", "Maestro", "Pruebas", "Total", "✎ Pagado", "Falta", "¿Pagó?", "✎ Forma de pago", "Clave (no tocar)"],
+  resumen: ["Mes", "Clases · Tania", "Clases · Edwin", "Competencias", "TOTAL COBRADO", "Por cobrar · clases", "Por cobrar · competencias"],
 };
-const ANCHOS = { tania: [130, 95, 190, 70, 95, 80, 120, 85, 40], edwin: [130, 95, 190, 70, 95, 80, 120, 85, 40],
-  comp: [130, 190, 100, 170, 80, 70, 95, 95, 95, 80, 120, 40], resumen: [150, 120, 120, 120, 140, 140, 160] };
+const ANCHOS = { tania: [140, 100, 210, 70, 110, 95, 140, 95, 30], edwin: [140, 100, 210, 70, 110, 95, 140, 95, 30],
+  comp: [130, 200, 110, 190, 90, 75, 105, 110, 105, 90, 140, 30], resumen: [160, 135, 135, 135, 160, 160, 190] };
 const EDITABLES = { tania: [4, 5, 6], edwin: [4, 5, 6], comp: [7, 10] };
 const TITULOS = {
-  tania: ["Pagos de Tania", "Puedes cambiar las celdas amarillas (Monto, ¿Pagó? y Forma de pago); se pasan solas a la agenda. Lo demás viene de la agenda."],
-  edwin: ["Pagos de Edwin", "Puedes cambiar las celdas amarillas (Monto, ¿Pagó? y Forma de pago); se pasan solas a la agenda. Lo demás viene de la agenda."],
-  comp: ["Pagos de competencias", "Celdas amarillas: escribe en Pagado el total que ya pagó y en Forma de pago cómo pagó; la agenda registra la diferencia como un pago nuevo."],
-  resumen: ["Resumen por mes", "Se calcula solo con las otras pestañas. No hace falta editar nada aquí."],
+  tania: ["Pagos de Tania", "✎ Las columnas amarillas se pueden cambiar aquí (Monto, ¿Pagó?, Forma de pago) y pasan solas a la agenda. Lo demás se llena desde la agenda."],
+  edwin: ["Pagos de Edwin", "✎ Las columnas amarillas se pueden cambiar aquí (Monto, ¿Pagó?, Forma de pago) y pasan solas a la agenda. Lo demás se llena desde la agenda."],
+  comp: ["Pagos de competencias", "✎ En Pagado escribe el total que ya pagó cada alumno y en Forma de pago cómo pagó; la agenda registra la diferencia como un pago nuevo."],
+  resumen: ["Resumen por mes", "Se calcula solo con las otras pestañas: lo cobrado de clases de Tania y de Edwin, competencias y lo que falta por cobrar."],
 };
+/* Renglón 3: los números clave de la pestaña (fórmulas). */
+const KPIS = {
+  tania: ["Cobrado", "=SUMIFS(E5:E,F5:F,\"Sí\")", "", "Por cobrar", "=SUMIFS(E5:E,F5:F,\"No\")", "", "Paquetes", "=COUNTA(I5:I)"],
+  edwin: ["Cobrado", "=SUMIFS(E5:E,F5:F,\"Sí\")", "", "Por cobrar", "=SUMIFS(E5:E,F5:F,\"No\")", "", "Paquetes", "=COUNTA(I5:I)"],
+  comp: ["Total a cobrar", "=SUM(G5:G)", "", "Cobrado", "=SUM(H5:H)", "", "Falta", "=SUM(I5:I)"],
+  resumen: ["Cobrado (todo)", "=SUM(E5:E)", "", "Por cobrar (todo)", "=SUM(F5:F)+SUM(G5:G)"],
+};
+const TINTE = { tania: "#E6F4F3", edwin: "#E9EDF3", comp: "#E7F2EC", resumen: "#E8EEF5" };
+const FORMATO_VERSION = 2;
+const colorDe = tipo => COLOR[tipo === "tania" || tipo === "edwin" ? tipo : tipo === "comp" ? "comp" : "resumen"];
 function formatoPestana(sheetId, tipo) {
-  const n = ENCABEZADOS[tipo].length, fondo = color(COLOR[tipo === "tania" || tipo === "edwin" ? tipo : tipo === "comp" ? "comp" : "resumen"]);
+  const n = ENCABEZADOS[tipo].length, fuerte = color(colorDe(tipo)), tinte = color(TINTE[tipo]);
   const rango = (r1, r2, c1, c2) => ({ sheetId, startRowIndex: r1, endRowIndex: r2, startColumnIndex: c1, endColumnIndex: c2 });
+  const fmt = (r, f) => ({ repeatCell: { range: r, cell: { userEnteredFormat: f }, fields: "userEnteredFormat" } });
+  const alto = (a, b, px) => ({ updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: a, endIndex: b }, properties: { pixelSize: px }, fields: "pixelSize" } });
+  const linea = { style: "SOLID", color: color("#D5DBE3") };
   const reqs = [
-    { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 4, hideGridlines: true }, tabColor: fondo }, fields: "gridProperties.frozenRowCount,gridProperties.hideGridlines,tabColor" } },
-    { mergeCells: { range: rango(0, 1, 0, n), mergeType: "MERGE_ALL" } }, { mergeCells: { range: rango(1, 2, 0, n), mergeType: "MERGE_ALL" } },
-    { repeatCell: { range: rango(0, 1, 0, n), cell: { userEnteredFormat: { backgroundColor: fondo, textFormat: { foregroundColor: color("#FFFFFF"), bold: true, fontSize: 16 }, verticalAlignment: "MIDDLE" } }, fields: "userEnteredFormat" } },
-    { repeatCell: { range: rango(1, 2, 0, n), cell: { userEnteredFormat: { backgroundColor: color("#F1F5F7"), textFormat: { italic: true, fontSize: 10, foregroundColor: color("#45526A") }, wrapStrategy: "WRAP" } }, fields: "userEnteredFormat" } },
-    { repeatCell: { range: rango(3, 4, 0, n), cell: { userEnteredFormat: { backgroundColor: color("#DCE6EE"), textFormat: { bold: true }, horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE", wrapStrategy: "WRAP" } }, fields: "userEnteredFormat" } },
-    { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 }, properties: { pixelSize: 40 }, fields: "pixelSize" } },
-    { updateDimensionProperties: { range: { sheetId, dimension: "ROWS", startIndex: 1, endIndex: 2 }, properties: { pixelSize: 36 }, fields: "pixelSize" } },
+    { updateSheetProperties: { properties: { sheetId, gridProperties: { frozenRowCount: 4, hideGridlines: true }, tabColor: fuerte }, fields: "gridProperties.frozenRowCount,gridProperties.hideGridlines,tabColor" } },
+    // Base de toda la pestaña
+    fmt(rango(0, 3000, 0, n), { textFormat: { fontFamily: "Roboto", fontSize: 11, foregroundColor: color("#1F2A37") }, verticalAlignment: "MIDDLE" }),
+    // 1: título
+    { mergeCells: { range: rango(0, 1, 0, n), mergeType: "MERGE_ALL" } },
+    fmt(rango(0, 1, 0, n), { backgroundColor: fuerte, textFormat: { fontFamily: "Playfair Display", foregroundColor: color("#FFFFFF"), bold: true, fontSize: 20 }, verticalAlignment: "MIDDLE", padding: { left: 12 } }),
+    // 2: instrucciones
+    { mergeCells: { range: rango(1, 2, 0, n), mergeType: "MERGE_ALL" } },
+    fmt(rango(1, 2, 0, n), { backgroundColor: tinte, textFormat: { fontFamily: "Roboto", italic: true, fontSize: 10, foregroundColor: color("#45526A") }, wrapStrategy: "WRAP", verticalAlignment: "MIDDLE", padding: { left: 12 } }),
+    // 3: números clave
+    fmt(rango(2, 3, 0, n), { backgroundColor: color("#FFFFFF"), textFormat: { fontFamily: "Roboto", fontSize: 10, foregroundColor: color("#6B7486") }, verticalAlignment: "MIDDLE", horizontalAlignment: "RIGHT" }),
+    // 4: encabezados
+    fmt(rango(3, 4, 0, n), { backgroundColor: fuerte, textFormat: { fontFamily: "Roboto", bold: true, fontSize: 10, foregroundColor: color("#FFFFFF") }, horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE", wrapStrategy: "WRAP" }),
+    alto(0, 1, 52), alto(1, 2, 40), alto(2, 3, 38), alto(3, 4, 38), alto(4, 3000, 28),
     ...ANCHOS[tipo].map((px, c) => ({ updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: c, endIndex: c + 1 }, properties: { pixelSize: px }, fields: "pixelSize" } })),
-    { addBanding: { bandedRange: { range: rango(4, 3000, 0, n), rowProperties: { firstBandColor: color("#FFFFFF"), secondBandColor: color("#F6F8FA") } } } },
+    { addBanding: { bandedRange: { range: rango(4, 3000, 0, n), rowProperties: { firstBandColor: color("#FFFFFF"), secondBandColor: color("#F7F9FB") } } } },
+    { updateBorders: { range: rango(3, 3000, 0, n), innerHorizontal: linea, bottom: linea } },
+    // Números al centro; nombres a la izquierda y en negritas
+    fmt(rango(4, 3000, 0, n), { horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE", textFormat: { fontFamily: "Roboto", fontSize: 11, foregroundColor: color("#1F2A37") } }),
   ];
+  const izq = tipo === "comp" ? [1, 3] : tipo === "resumen" ? [0] : [2];
+  izq.forEach(c => reqs.push(fmt(rango(4, 3000, c, c + 1), { horizontalAlignment: "LEFT", verticalAlignment: "MIDDLE", padding: { left: 8 }, textFormat: { fontFamily: "Roboto", bold: true, fontSize: 11, foregroundColor: color("#1F2A37") } })));
+  if (tipo !== "resumen") reqs.push(fmt(rango(4, 3000, 0, 1), { horizontalAlignment: "LEFT", padding: { left: 8 }, verticalAlignment: "MIDDLE", textFormat: { fontFamily: "Roboto", fontSize: 10, foregroundColor: color("#6B7486") } }));
   if (tipo !== "resumen") reqs.push({ updateDimensionProperties: { range: { sheetId, dimension: "COLUMNS", startIndex: n - 1, endIndex: n }, properties: { hiddenByUser: true }, fields: "hiddenByUser" } });
   const dinero = tipo === "comp" ? [6, 7, 8] : tipo === "resumen" ? [1, 2, 3, 4, 5, 6] : [4];
-  dinero.forEach(c => reqs.push({ repeatCell: { range: rango(4, 3000, c, c + 1), cell: { userEnteredFormat: { numberFormat: { type: "CURRENCY", pattern: "\"$\"#,##0" } } }, fields: "userEnteredFormat.numberFormat" } }));
+  const MONEDA = { type: "CURRENCY", pattern: "\"$\"#,##0" };
+  dinero.forEach(c => reqs.push({ repeatCell: { range: rango(4, 3000, c, c + 1), cell: { userEnteredFormat: { numberFormat: MONEDA } }, fields: "userEnteredFormat.numberFormat" } }));
   if (tipo === "tania" || tipo === "edwin") reqs.push({ repeatCell: { range: rango(4, 3000, 1, 2), cell: { userEnteredFormat: { numberFormat: { type: "DATE", pattern: "dd/mm/yyyy" } } }, fields: "userEnteredFormat.numberFormat" } });
-  (EDITABLES[tipo] || []).forEach(c => reqs.push({ repeatCell: { range: rango(4, 3000, c, c + 1), cell: { userEnteredFormat: { backgroundColor: color(AMARILLO) } }, fields: "userEnteredFormat.backgroundColor" } }));
-  const lista = (c, valores) => ({ setDataValidation: { range: rango(4, 3000, c, c + 1), rule: { condition: { type: "ONE_OF_LIST", values: valores.map(v => ({ userEnteredValue: v })) }, strict: false, showCustomUi: true } } });
-  const pinta = (c, texto, fondoH, letraH, i) => ({ addConditionalFormatRule: { index: i, rule: { ranges: [rango(4, 3000, c, c + 1)],
-    booleanRule: { condition: { type: "TEXT_EQ", values: [{ userEnteredValue: texto }] }, format: { backgroundColor: color(fondoH), textFormat: { bold: true, foregroundColor: color(letraH) } } } } } });
-  if (tipo === "tania" || tipo === "edwin") reqs.push(lista(5, ["Sí", "No"]), lista(6, ["Efectivo", "Transferencia"]), pinta(5, "Sí", "#DFF0E7", "#1F6B4F", 0), pinta(5, "No", "#FBE6E2", "#A33227", 1));
-  if (tipo === "comp") reqs.push(lista(10, ["Efectivo", "Transferencia"]), pinta(9, "Sí", "#DFF0E7", "#1F6B4F", 0), pinta(9, "Parcial", "#FAF0D4", "#7A5A10", 1), pinta(9, "No", "#FBE6E2", "#A33227", 2));
+  if (tipo === "resumen") reqs.push(fmt(rango(4, 3000, 4, 5), { horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE", numberFormat: MONEDA, backgroundColor: tinte, textFormat: { fontFamily: "Roboto", bold: true, fontSize: 12, foregroundColor: fuerte } }));
+  // Números clave del renglón 3: etiqueta gris y valor grande
+  [1, 4, 7].filter(c => c < n && KPIS[tipo][c]).forEach(c => reqs.push(fmt(rango(2, 3, c, c + 1), { horizontalAlignment: "LEFT", verticalAlignment: "MIDDLE", numberFormat: c === 7 && tipo !== "comp" ? { type: "NUMBER", pattern: "0" } : MONEDA,
+    textFormat: { fontFamily: "Roboto", bold: true, fontSize: 15, foregroundColor: c === 4 && tipo !== "comp" ? color("#A33227") : c === 7 && tipo === "comp" ? color("#A33227") : fuerte } })));
+  // Columnas editables: amarillo suave y encabezado dorado
+  (EDITABLES[tipo] || []).forEach(c => {
+    reqs.push({ repeatCell: { range: rango(4, 3000, c, c + 1), cell: { userEnteredFormat: { backgroundColor: color(AMARILLO) } }, fields: "userEnteredFormat.backgroundColor" } });
+    reqs.push(fmt(rango(3, 4, c, c + 1), { backgroundColor: color("#C9A227"), textFormat: { fontFamily: "Roboto", bold: true, fontSize: 10, foregroundColor: color("#FFFFFF") }, horizontalAlignment: "CENTER", verticalAlignment: "MIDDLE", wrapStrategy: "WRAP" }));
+  });
+  const lista = (c, valores) => ({ setDataValidation: { range: rango(4, 3000, c, c + 1), rule: { condition: { type: "ONE_OF_LIST", values: valores.map(v => ({ userEnteredValue: v })) }, strict: true, showCustomUi: true } } });
+  let i = 0;
+  const pinta = (c, cond, valor, fondoH, letraH) => ({ addConditionalFormatRule: { index: i++, rule: { ranges: [rango(4, 3000, c, c + 1)],
+    booleanRule: { condition: { type: cond, values: [{ userEnteredValue: valor }] }, format: { ...(fondoH ? { backgroundColor: color(fondoH) } : {}), textFormat: { bold: true, foregroundColor: color(letraH) } } } } } });
+  if (tipo === "tania" || tipo === "edwin") reqs.push(lista(5, ["Sí", "No"]), lista(6, ["Efectivo", "Transferencia"]),
+    pinta(5, "TEXT_EQ", "Sí", "#DFF0E7", "#1F6B4F"), pinta(5, "TEXT_EQ", "No", "#FBE6E2", "#A33227"), pinta(7, "NUMBER_LESS_THAN_EQ", "1", null, "#A33227"));
+  if (tipo === "comp") reqs.push(lista(10, ["Efectivo", "Transferencia"]),
+    pinta(9, "TEXT_EQ", "Sí", "#DFF0E7", "#1F6B4F"), pinta(9, "TEXT_EQ", "Parcial", "#FAF0D4", "#7A5A10"), pinta(9, "TEXT_EQ", "No", "#FBE6E2", "#A33227"), pinta(8, "NUMBER_GREATER", "0", null, "#A33227"));
   // Aviso (no bloqueo) al querer editar lo que viene de la agenda
   const libres = EDITABLES[tipo] || [];
   for (let c = 0; c < n; c++) if (!libres.includes(c)) reqs.push({ addProtectedRange: { protectedRange: { range: rango(4, 3000, c, c + 1), warningOnly: true, description: "Viene de la agenda" } } });
+  return reqs;
+}
+/* Quita el formato anterior de una pestaña (para volver a darle el formato nuevo). */
+function limpiarPestana(sh) {
+  const id = sh.properties.sheetId; const reqs = [];
+  (sh.bandedRanges || []).forEach(b => reqs.push({ deleteBanding: { bandedRangeId: b.bandedRangeId } }));
+  (sh.protectedRanges || []).forEach(p => reqs.push({ deleteProtectedRange: { protectedRangeId: p.protectedRangeId } }));
+  for (let k = (sh.conditionalFormats || []).length - 1; k >= 0; k--) reqs.push({ deleteConditionalFormatRule: { sheetId: id, index: k } });
+  reqs.push({ unmergeCells: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 4 } } });
+  reqs.push({ setDataValidation: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 3000 } } });
+  reqs.push({ repeatCell: { range: { sheetId: id, startRowIndex: 0, endRowIndex: 3000 }, cell: { userEnteredFormat: {} }, fields: "userEnteredFormat" } });
   return reqs;
 }
 
@@ -191,9 +240,19 @@ async function sincronizar(cfg, quien) {
     const r = await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: faltan.map(([, t]) => ({ addSheet: { properties: { title: t } } })) }) });
     (r.replies || []).forEach((x, n) => { existentes[faltan[n][1]] = x.addSheet.properties.sheetId; });
     await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: faltan.flatMap(([tipo, t]) => formatoPestana(existentes[t], tipo)) }) });
+    await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: Object.values(TABS).map((t, k) => ({ updateSheetProperties: { properties: { sheetId: existentes[t], index: k }, fields: "index" } })) }) }).catch(() => {});
     // La hoja vacía que trae Google por omisión se borra si no tiene nada nuestro
     const sobrante = (meta.sheets || []).find(s => !Object.values(TABS).includes(s.properties.title));
     if (sobrante && (meta.sheets || []).length === 1) await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: [{ deleteSheet: { sheetId: sobrante.properties.sheetId } }] }) }).catch(() => {});
+  }
+  if (cfg.formato !== FORMATO_VERSION) {
+    const det = await google(token, `/${id}?fields=sheets(properties(sheetId,title),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId),conditionalFormats)`);
+    const nuestras = (det.sheets || []).filter(sh => Object.values(TABS).includes(sh.properties.title) && !faltan.some(([, t]) => t === sh.properties.title));
+    if (nuestras.length) {
+      await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: nuestras.flatMap(limpiarPestana) }) });
+      const tipoDe = t => Object.entries(TABS).find(([, x]) => x === t)[0];
+      await google(token, `/${id}:batchUpdate`, { method: "POST", body: JSON.stringify({ requests: nuestras.flatMap(sh => formatoPestana(sh.properties.sheetId, tipoDe(sh.properties.title))) }) });
+    }
   }
   // 2. Leer lo que hay en la hoja (celdas editables) y compararlo con lo que se escribió la vez pasada
   const q = (t, r) => `ranges=${encodeURIComponent(`'${t}'!${r}`)}`;
@@ -247,7 +306,7 @@ async function sincronizar(cfg, quien) {
   const filasRes = meses.map((m, n) => { const r = 5 + n, t = mesTxt(m);
     return [t, `=SUMIFS(${pt}!E:E,${pt}!A:A,A${r},${pt}!F:F,"Sí")`, `=SUMIFS(${pe}!E:E,${pe}!A:A,A${r},${pe}!F:F,"Sí")`, `=SUMIFS(${pc}!H:H,${pc}!A:A,A${r})`,
       `=B${r}+C${r}+D${r}`, `=SUMIFS(${pt}!E:E,${pt}!A:A,A${r},${pt}!F:F,"No")+SUMIFS(${pe}!E:E,${pe}!A:A,A${r},${pe}!F:F,"No")`, `=SUMIFS(${pc}!I:I,${pc}!A:A,A${r})`]; });
-  const enc = tipo => [[TITULOS[tipo][0]], [TITULOS[tipo][1]], [], ENCABEZADOS[tipo]];
+  const enc = tipo => [[TITULOS[tipo][0]], [TITULOS[tipo][1]], KPIS[tipo], ENCABEZADOS[tipo]];
   await google(token, `/${id}/values:batchClear`, { method: "POST", body: JSON.stringify({ ranges: [`${pt}!A5:I3000`, `${pe}!A5:I3000`, `${pc}!A5:L3000`, `'${TABS.resumen}'!A5:G400`] }) });
   await google(token, `/${id}/values:batchUpdate`, { method: "POST", body: JSON.stringify({ valueInputOption: "USER_ENTERED", data: [
     { range: `${pt}!A1`, values: [...enc("tania"), ...fT.map(x => x.valores)] },
@@ -260,7 +319,7 @@ async function sincronizar(cfg, quien) {
   [...fT, ...fE].forEach(x => { exportados[x.clave] = x.exp; }); fC.forEach(x => { exportados[x.clave] = x.exp; });
   // Número de cada pestaña, para enlaces que abren directo una pestaña (#gid=)
   const gids = Object.fromEntries(Object.entries(TABS).map(([k, t]) => [k, existentes[t]]).filter(([, v]) => v != null));
-  const nuevo = { ...cfg, exportados, gids, ultimo: Date.now(), por: quien || "", error: "", url: `https://docs.google.com/spreadsheets/d/${id}/edit`, titulo: (meta.properties && meta.properties.title) || "" };
+  const nuevo = { ...cfg, exportados, gids, formato: FORMATO_VERSION, ultimo: Date.now(), por: quien || "", error: "", url: `https://docs.google.com/spreadsheets/d/${id}/edit`, titulo: (meta.properties && meta.properties.title) || "" };
   await guardarDoc("config/sheets", nuevo);
   return { cambios: cambios.tania.length + cambios.edwin.length + cambios.comp.length, url: nuevo.url };
 }
