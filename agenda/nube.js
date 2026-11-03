@@ -260,7 +260,7 @@
       return r.json().catch(() => ({ ok: false, error: "Respuesta inesperada del servidor." }));
     },
     sync() { return this.pedir({ accion: "sync" }); },
-    conectar(hoja) { return this.pedir({ accion: "conectar", hoja }); },
+    conectar(hoja, tipo) { return this.pedir({ accion: "conectar", hoja, tipo }); },
   };
 
   /* ------------------------------- Excel siempre al día (lugar fijo) */

@@ -1666,7 +1666,7 @@ function vistaCompetencias() {
       ${c.limite ? `<span class="sub">Inscripción hasta el ${fechaLarga(c.limite)}</span>` : ""}
       <div class="acc"><button class="btn btn-2 btn-mini" data-act="comp-editar" data-id="${c.id}">Editar</button>
         ${nPr ? `<button class="btn btn-2 btn-mini" data-act="comp-pdf" data-id="${c.id}">${ICONO_PDF}PDF del programa</button>` : ""}
-        ${botonHoja("comp")}</div></section>
+        ${botonHoja("comp", tituloHojaComp(c))}</div></section>
     <div class="segmento" role="group" aria-label="Sección">${tabs.map(([k, t]) => `<button data-act="comp-vista" data-k="${k}" aria-pressed="${compVista === k}">${t}</button>`).join("")}</div>
     ${cuerpo}
     ${c.notas ? `<div class="nota"><b>Notas:</b> ${esc(c.notas)}</div>` : ""}`;
@@ -1682,7 +1682,8 @@ function listaCompetencias() {
       <span class="sub">${plural(ins.length, "alumno")} · ${plural(nPr, "prueba")}${enCurso ? ` · <b style="color:var(--ok)">En curso</b>` : c.limite && c.limite >= hoy ? ` · inscripción hasta el ${fechaCorta(c.limite)}` : ""}</span></button>`; };
   return `
     <div class="titulo"><div><h2>Competencias</h2><p class="sub">Las ven Tania y Edwin.</p></div>
-      <button class="btn" data-act="comp-nueva">+ Competencia</button></div>
+      <div class="fila">${botonHoja("comp", "Resumen")}<button class="btn" data-act="comp-nueva">+ Competencia</button></div></div>
+    ${conectarHoja("comp")}
     ${sugeridasFaltan().length ? `<section class="hoy-card sec-comp"><header><h3>Calendario de noviembre</h3></header>
       ${sugeridasFaltan().map(x => `<div class="renglon"><span class="t">${esc(x.nombre)}</span><span class="x">${fechasTxt(x)}</span></div>`).join("")}
       <button class="btn" data-act="comp-sugeridas" style="justify-self:start">Agregar ${sugeridasFaltan().length === 1 ? "esta competencia" : `estas ${sugeridasFaltan().length} competencias`}</button>
@@ -1693,7 +1694,7 @@ function listaCompetencias() {
       ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
         return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
       <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
-        ${botonHoja("comp", "Abrir en Google Sheets")}</div></section>${tarjetaHojas(true)}` : ""}
+        </div></section>` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
     ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
@@ -1985,7 +1986,8 @@ function vistaPagos(clases) {
       <div class="total"><span class="sub">Cobrado en el mes</span><b>${cobrado ? dinero(cobrado) : "$0"}</b></div>
       <div class="chips"><span>Efectivo ${dinero(porMetodo("efectivo"))}</span><span>Transferencia ${dinero(porMetodo("transferencia"))}</span>
         <span class="${de("pendiente").length ? "mal" : ""}">${plural(de("pendiente").length, "debe", "deben")}</span></div>
-      ${hojaConectada() ? `<div style="display:flex; gap:.4rem; flex-wrap:wrap">${botonHoja(perfil, `Pagos de ${MAESTROS[perfil].nombre} en Google Sheets`)}</div>` : ""}
+      ${hojaConectada("pagos") ? `<div style="display:flex; gap:.4rem; flex-wrap:wrap">${botonHoja("pagos", `${MESES_LARGO[mm - 1]} ${y}`)}</div>` : ""}
+      ${Store.esDueno && Hojas.cfg && Hojas.cfg.error && Hojas.cfg.errorEn > (Hojas.cfg.ultimo || 0) ? `<p class="estado error">Google Sheets: ${esc(Hojas.cfg.error)}</p>` : ""}
       ${(() => { const cs = compsDelMes(mesPagos); if (!cs.length) return "";
         const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
         return `<div class="chips"><span style="background:var(--perfil-bg); color:var(--perfil); font-weight:600">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
@@ -2001,9 +2003,9 @@ function vistaPagos(clases) {
             return `<p class="sub-av">${esc(c.nombre)} · ${fechasTxt(c)}</p><p class="sub">Cobrado ${dinero$(pag)} de ${dinero$(tot)}${tot - pag > 0 ? ` · <b class="alerta-txt">falta ${dinero$(tot - pag)}</b>` : ""}</p>
               ${xs.length ? xs.map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
                 <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
-            + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button>${botonHoja("comp", "Abrir en Google Sheets")}</div>`
+            + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button></div>`
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
-      ${acordeon("hoja", "hoja", "Google Sheets", 0, tarjetaHojas(), "pago-sec")}
+      ${conectarHoja("pagos")}
     </div>`}`;
 }
 let pagoDetalle = null;
@@ -2791,7 +2793,10 @@ async function actualizarExcelVivo() {
    El servidor la sincroniza en los dos sentidos: después de cada cambio en la
    agenda (unos segundos después), al abrir la agenda y una vez al día solo. */
 const Hojas = { info:null, cfg:null, leido:false, timer:null, trabajando:false, revisado:false, msg:"" };
-const hojaConectada = () => !!(Hojas.cfg && Hojas.cfg.spreadsheetId);
+/* Dos archivos: pagos de clases (una pestaña por mes) y competencias (una por año).
+   La configuración anterior tenía uno solo (spreadsheetId): ese se volvió el de competencias. */
+const hojaDe = tipo => { const c = Hojas.cfg || {}; return c[tipo] || (tipo === "comp" && c.spreadsheetId ? { spreadsheetId:c.spreadsheetId } : null); };
+const hojaConectada = tipo => tipo ? !!(hojaDe(tipo) && hojaDe(tipo).spreadsheetId) : (hojaConectada("pagos") || hojaConectada("comp"));
 function programarHojas(espera = 8000) {
   if (!Store.hojas || !hojaConectada()) return;
   clearTimeout(Hojas.timer); Hojas.timer = setTimeout(() => sincronizarHojas(false), espera);
@@ -2814,39 +2819,31 @@ function revisarHojas() {
   /* Al abrir: trae lo que se editó en la hoja (si la última vez fue hace más de 3 minutos). */
   if (!Hojas.cfg.ultimo || Date.now() - Hojas.cfg.ultimo > 3 * 60000) programarHojas(2500);
 }
-/* Botón para abrir la hoja de Google directo en una pestaña (solo si ya está conectada). */
-const botonHoja = (k, texto) => hojaConectada() ? `<a class="btn btn-2 btn-mini" href="${esc(enlacePestana(k))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>${texto || "Google Sheets"}</a>` : "";
-const enlacePestana = k => { const c = Hojas.cfg || {}; return c.url ? (c.gids && c.gids[k] != null ? `${c.url}#gid=${c.gids[k]}` : c.url) : ""; };
-function tarjetaHojas(soloComp) {
-  if (!Store.hojas) return "";
-  const i = Hojas.info, c = Hojas.cfg || {};
-  const cab = `<section class="hoy-card sec-hoja" style="margin-top:.6rem"><header><h3>${soloComp ? "Google Sheets de competencias" : "Google Sheets (editable)"}</h3></header>`;
-  if (!i) return "";
-  if (!i.configurada) return `${cab}<p class="sub">Una hoja de Google que se edita en los dos sentidos: lo que cambies en la agenda aparece en la hoja, y lo que cambien en las celdas amarillas de la hoja pasa a la agenda. Falta terminar la configuración en Google y Vercel (Romina la está haciendo).</p></section>`;
-  if (!hojaConectada()) return `${cab}
-    ${Store.esDueno ? `<p class="sub">1. Crea una hoja en blanco en tu Google Drive (Google Sheets → En blanco) y ponle nombre, por ejemplo <b>Equus · Pagos</b>.<br>
-      2. Toca <b>Compartir</b> y agrega este correo como <b>Editor</b> (quita la palomita de “Notificar”):</p>
-      <div class="renglon"><span class="t" style="white-space:normal; overflow-wrap:anywhere"><b>${esc(i.correo)}</b></span><button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(i.correo)}">Copiar</button></div>
-      <p class="sub">3. Comparte la hoja también con Tania y Edwin como Editores.<br>4. Copia el enlace de la hoja (barra de direcciones) y pégalo aquí:</p>
-      <form id="f-hoja" style="display:flex; gap:.4rem; flex-wrap:wrap"><input type="url" id="h-url" required placeholder="https://docs.google.com/spreadsheets/d/…" style="flex:1; min-width:12rem; font:inherit; padding:.5rem .6rem; border:1px solid var(--line-fuerte); border-radius:var(--r-sm)">
-        <button class="btn btn-mini" type="submit" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Conectando…" : "Conectar"}</button></form>
-      ${Hojas.msg ? `<p class="estado error">${esc(Hojas.msg)}</p>` : ""}`
-      : `<p class="sub">Romina todavía no conecta la hoja de Google.</p>`}</section>`;
-  /* Enlaces directos a cada pestaña, para mandarlos por WhatsApp */
-  const pest = (t, k) => `<div class="renglon" style="flex-wrap:wrap"><span class="t"><b>${t}</b></span>
-    <a class="btn btn-mini" href="${esc(enlacePestana(k))}" target="_blank" rel="noopener">Abrir</a>
-    <button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(enlacePestana(k))}">Copiar enlace</button></div>`;
-  if (soloComp) return `${cab}${pest("Pestaña Competencias", "comp")}
-    <p class="sub">Abre directo la pestaña de competencias de la hoja de Google. Ahí se edita <b>Pagado</b> y <b>Forma de pago</b> (celdas amarillas) y pasa sola a la agenda.${c.ultimo ? ` Sincronizada ${haceCuanto(c.ultimo)}.` : ""}</p>
-    <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="hojas-sync" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Sincronizando…" : "Sincronizar ahora"}</button></div>
-    ${Hojas.msg || c.error ? `<p class="estado error">${esc(Hojas.msg || c.error)}</p>` : ""}</section>`;
-  return `${cab}
-    <div style="display:flex; gap:.4rem; flex-wrap:wrap"><a class="btn btn-mini" href="${esc(c.url)}" target="_blank" rel="noopener">Abrir la hoja</a>
-      <button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(c.url)}">Copiar enlace</button>
-      <button class="btn btn-2 btn-mini" data-act="hojas-sync" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Sincronizando…" : "Sincronizar ahora"}</button></div>
-    ${c.gids ? `<p class="sub-av">Enlaces directos a cada pestaña</p>${pest("Pagos de Tania", "tania")}${pest("Pagos de Edwin", "edwin")}${pest("Competencias", "comp")}${pest("Resumen", "resumen")}` : ""}
-    <p class="sub">${c.ultimo ? `Sincronizada ${haceCuanto(c.ultimo)}.` : ""} Las celdas amarillas (¿Pagó?, Forma de pago, Monto y, en competencias, Pagado) se pueden cambiar en la hoja y pasan a la agenda. Se sincroniza sola después de cada cambio en la agenda, al abrirla y una vez al día.</p>
-    ${Hojas.msg || c.error ? `<p class="estado error">${esc(Hojas.msg || c.error)}</p>` : ""}</section>`;
+/* Un solo botón para abrir la hoja en la pestaña correcta (el mes o el año). */
+const ICONO_SHEETS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></svg>`;
+/* Mismo nombre de pestaña que pone el servidor a cada competencia. */
+const tituloHojaComp = c => { const h = hojaDe("comp") || {}; const t = String(c.nombre || "Competencia").replace(/[\[\]*?:\\/]/g, " ").trim().slice(0, 90);
+  const conFecha = `${t} (${fechaCorta(c.inicio)} ${String(c.inicio).slice(0, 4)})`; return h.gids && h.gids[conFecha] != null && h.gids[t] == null ? conFecha : t; };
+function enlaceHoja(tipo, pestana) {
+  const h = hojaDe(tipo); if (!h || !h.spreadsheetId) return "";
+  const url = h.url || `https://docs.google.com/spreadsheets/d/${h.spreadsheetId}/edit`;
+  const gid = h.gids && (h.gids[pestana] ?? h.gids.Resumen);
+  return gid != null ? `${url}#gid=${gid}` : url;
+}
+const botonHoja = (tipo, pestana) => hojaConectada(tipo) ? `<a class="btn btn-2 btn-mini" href="${esc(enlaceHoja(tipo, pestana))}" target="_blank" rel="noopener">${ICONO_SHEETS}Abrir en Google Sheets</a>` : "";
+/* Solo para la dueña y solo mientras falte conectar esa hoja. */
+function conectarHoja(tipo) {
+  if (!Store.hojas || !Store.esDueno || !Hojas.info || hojaConectada(tipo)) return "";
+  const nombre = tipo === "pagos" ? "Equus · Pagos de clases" : "Equus · Competencias";
+  if (!Hojas.info.configurada) return "";
+  return `<section class="hoy-card sec-hoja"><header><h3>Conectar Google Sheets</h3></header>
+    <p class="sub">1. Crea una hoja en blanco en tu Google Drive (puedes llamarla <b>${nombre}</b>; la agenda le pone el nombre sola).<br>
+      2. Compártela como <b>Editor</b> con este correo (quita la palomita de “Notificar”) y también con Tania y Edwin:</p>
+    <div class="renglon"><span class="t" style="white-space:normal; overflow-wrap:anywhere"><b>${esc(Hojas.info.correo)}</b></span><button class="btn btn-2 btn-mini" data-act="copiar-enlace" data-u="${esc(Hojas.info.correo)}">Copiar</button></div>
+    <p class="sub">3. Pega aquí el enlace de la hoja:</p>
+    <form class="f-hoja" data-tipo="${tipo}" style="display:flex; gap:.4rem; flex-wrap:wrap"><input type="url" name="url" required placeholder="https://docs.google.com/spreadsheets/d/…" style="flex:1; min-width:12rem; font:inherit; padding:.5rem .6rem; border:1px solid var(--line-fuerte); border-radius:var(--r-sm)">
+      <button class="btn btn-mini" type="submit" ${Hojas.trabajando ? "disabled" : ""}>${Hojas.trabajando ? "Conectando…" : "Conectar"}</button></form>
+    ${Hojas.msg ? `<p class="estado error">${esc(Hojas.msg)}</p>` : ""}</section>`;
 }
 
 /* Al abrir la agenda: si los Excel de este perfil no existen o tienen más de 6 horas, se generan. */
@@ -4226,12 +4223,12 @@ document.addEventListener("click", async e => {
   }
 });
 document.addEventListener("submit", async e => {
-  if (e.target.id === "f-hoja") { e.preventDefault(); if (Hojas.trabajando) return;
-    const enlace = val("h-url");
+  if (e.target.classList.contains("f-hoja")) { e.preventDefault(); if (Hojas.trabajando) return;
+    const enlace = e.target.querySelector("input").value, tipo = e.target.dataset.tipo;
     Hojas.trabajando = true; Hojas.msg = ""; render();
-    const r = await Store.hojas.conectar(enlace); Hojas.trabajando = false;
+    const r = await Store.hojas.conectar(enlace, tipo); Hojas.trabajando = false;
     if (Store.db && Store.db.recargar) Store.db.recargar();
-    if (r && r.ok) { brindis("¡Hoja conectada! Ya se llenó con los datos de la agenda."); registrar("Conectó la hoja de Google Sheets"); } else Hojas.msg = (r && r.error) || "No se pudo conectar.";
+    if (r && r.ok) { brindis("¡Hoja conectada! Ya se llenó con los datos de la agenda."); registrar(`Conectó la hoja de Google Sheets de ${tipo === "pagos" ? "pagos de clases" : "competencias"}`); } else Hojas.msg = (r && r.error) || "No se pudo conectar.";
     render(); return; }
   if (e.target.id === "f-chat") { e.preventDefault(); enviarChat(val("chat-txt")); }
 });
