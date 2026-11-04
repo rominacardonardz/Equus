@@ -124,7 +124,23 @@ function contexto(datos, nombres) {
   const parcial = g => !!(g && (g.miembro.caballos || []).filter(Boolean).length);
   const partir = i => { const prs = i.pruebas || [], g = grupoDe(i); if (!g) return { g: null, del: [], propias: prs };
     const del = parcial(g) ? prs.filter(p => g.miembro.caballos.some(k => nombresIguales(k, nombreCab(p)))) : prs; return { g, del, propias: prs.filter(p => !del.includes(p)) }; };
-  return { cuentas, nombreDe, nombreCab, grupoDe, parcial, partir };
+  /* Tack room: alumnos (se divide entre los que pagan solos; puede compartirse entre semanas) y grupos. */
+  const esSilla = c => /silla/i.test(`${c.lugar || ""} ${c.nombre || ""}`);
+  const dia = x => Date.UTC(...String(x).split("-").map((n, k) => k === 1 ? Number(n) - 1 : Number(n)));
+  const tackAlumnosDe = c => {
+    if (c.tackAlumnos) return c.tackAlumnos.monto ? { monto: Number(c.tackAlumnos.monto) || 0, con: (c.tackAlumnos.con || []).filter(id => datos.comps[id]) } : null;
+    return esSilla(c) ? { monto: 7500, con: Object.values(datos.comps).filter(o => o.id !== c.id && esSilla(o) && o.inicio && c.inicio && Math.abs(dia(o.inicio) - dia(c.inicio)) <= 10 * 864e5).map(o => o.id) } : null;
+  };
+  const tackGrupoDe = (c, cid) => c.tackGrupos && c.tackGrupos[cid] != null ? Number(c.tackGrupos[cid]) || 0 : (esSilla(c) && cid === "casa-quiron" ? 7500 : 0);
+  const pagaSolo = i => { if (esJinete(i)) return false; const g = grupoDe(i); return !g || parcial(g); };
+  const parteTack = (i, c) => {
+    const t = tackAlumnosDe(c); if (!t || !pagaSolo(i)) return 0;
+    const comps = [c, ...t.con.map(id => datos.comps[id])].filter(Boolean).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)));
+    const quien = new Map();
+    for (const cc of comps) for (const x of Object.values(datos.inscs).filter(z => z.competenciaId === cc.id)) if (pagaSolo(x) && (x.pruebas || []).length && !quien.has(x.alumnoId)) quien.set(x.alumnoId, cc.id);
+    return quien.get(i.alumnoId) === c.id && quien.size ? Math.round(t.monto / quien.size) : 0;
+  };
+  return { cuentas, nombreDe, nombreCab, grupoDe, parcial, partir, tackGrupoDe, parteTack };
 }
 function cuentaGrupoServ(cx, cuenta, c, inscs) {
   let total = 0, pagado = 0; const prs = [], miembros = [];
@@ -134,6 +150,8 @@ function cuentaGrupoServ(cx, cuenta, c, inscs) {
     total += k.total; prs.push(...del); miembros.push(`${cx.nombreDe(i.alumnoId)}${par ? ` (${[...new Set(del.map(cx.nombreCab))].join(", ")})` : ""}: $${k.total.toLocaleString("es-MX")}`);
     if (!par) pagado += (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
   }
+  const tg = prs.length ? cx.tackGrupoDe(c, cuenta.id) : 0;
+  if (tg) { total += tg; miembros.push(`Tack room de ${cuenta.nombre}: $${tg.toLocaleString("es-MX")}`); }
   const pagos = (cuenta.pagos || []).filter(p => p.competenciaId === c.id);
   pagado += pagos.reduce((t, p) => t + (Number(p.monto) || 0), 0);
   return { total, pagado, prs, miembros, pagos };
@@ -352,7 +370,7 @@ function filasDeComp(c, inscs, nombres, caballos, cx) {
   return [...grupos, ...Object.values(inscs).filter(i => i.competenciaId === c.id).map(i => {
     const { g, propias } = cx.partir(i);
     if (esJinete(i) || (g && !cx.parcial(g)) || !propias.length) return null; // jinetes y miembros completos van en su grupo
-    const k = cuentaInscripcion(i, c, propias, false);
+    const k0 = cuentaInscripcion(i, c, propias, false), tack = cx.parteTack(i, c), k = { ...k0, total: k0.total + tack };
     const metodos = [...new Set((i.pagos || []).map(p => metodoTxt(p.metodo)).filter(Boolean))];
     const prs = (i.pruebas || []).slice().sort((x, y) => `${x.fecha}${x.hora}`.localeCompare(`${y.fecha}${y.hora}`));
     const detalle = prs.map(p => [fechaCorta(p.fecha), horaTxt(p.hora), p.categoria, p.caballoId ? (caballos[p.caballoId] || {}).nombre : p.caballoTxt].filter(Boolean).join(" · ")).join("\n");

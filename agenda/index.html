@@ -1688,6 +1688,8 @@ function cuentaGrupo(cuenta, c) {
     miembros.push({ i, nombre:a.nombre, k, parcial }); total += k.total; prs.push(...delGrupo);
     if (!parcial) pagadoInd += (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
   }
+  const tg = prs.length ? tackGrupoDe(c, cuenta.id) : 0;
+  if (tg) { lineas.push([`Tack room de ${cuenta.nombre}`, tg]); total += tg; }
   const pagos = (cuenta.pagos || []).filter(p => p.competenciaId === c.id);
   const pagado = pagadoInd + pagos.reduce((t, p) => t + (Number(p.monto) || 0), 0);
   return { lineas, total, pagado, saldo:total - pagado, dias:0, caballos:0, miembros, pruebas:prs, pagos };
@@ -1724,12 +1726,41 @@ function bloqueGrupo(i, c, conAcciones) {
       : `<button class="btn btn-2 btn-mini" data-act="comp-pagos" data-id="${c.id}">Ver y registrar pagos</button>`}</div>
   </div>`;
 }
+/* ---- Tack room
+   Alumnos: un tack room que se divide entre los alumnos que pagan solos (no jinetes ni miembros
+   completos de un grupo). Puede compartirse entre varias competencias (La Silla: uno para las dos
+   semanas): cada alumno paga su parte una sola vez, en la primera a la que va.
+   Grupos (Casa Quirón): su propio tack room por competencia, a la cuenta del grupo.
+   En La Silla, si no se ha puesto nada: alumnos $7,500 por las dos semanas; Casa Quirón $7,500 por semana. */
+const esSilla = c => /silla/i.test(`${c.lugar || ""} ${c.nombre || ""}`);
+const sillaHermanas = c => Object.values(S.competencias || {}).filter(o => o.id !== c.id && esSilla(o) && o.inicio && c.inicio
+  && Math.abs(deIso(o.inicio) - deIso(c.inicio)) <= 10 * 864e5);
+function tackAlumnosDe(c) {
+  if (c.tackAlumnos) return c.tackAlumnos.monto ? { monto:Number(c.tackAlumnos.monto) || 0, con:(c.tackAlumnos.con || []).filter(id => S.competencias[id]) } : null;
+  return esSilla(c) ? { monto:7500, con:sillaHermanas(c).map(o => o.id), solo:true } : null;
+}
+function tackGrupoDe(c, cuentaId) {
+  if (c.tackGrupos && c.tackGrupos[cuentaId] != null) return Number(c.tackGrupos[cuentaId]) || 0;
+  return esSilla(c) && cuentaId === "casa-quiron" ? 7500 : 0;
+}
+const pagaSolo = i => { if (esJinete(i) || i.grupo) return false; const g = grupoDe(i); return !g || parcialEnGrupo(g); };
+function parteTack(i, c) {
+  const t = tackAlumnosDe(c); if (!t || !pagaSolo(i)) return { monto:0 };
+  const comps = [c, ...t.con.map(id => S.competencias[id])].filter(Boolean).sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)));
+  const quien = new Map();
+  for (const cc of comps) for (const x of inscritosDe(cc.id)) if (pagaSolo(x) && (x.pruebas || []).length && !quien.has(x.alumnoId)) quien.set(x.alumnoId, cc.id);
+  if (quien.get(i.alumnoId) !== c.id || !quien.size) return { monto:0, ya:quien.has(i.alumnoId) };
+  return { monto:Math.round(t.monto / quien.size), n:quien.size, total:t.monto, semanas:comps.length };
+}
+const conTack = (k, i, c) => { const t = parteTack(i, c); if (!t.monto) return k;
+  const lineas = [...k.lineas, [`Tack room (${dinero$(t.total)} ÷ ${plural(t.n, "alumno")}${t.semanas > 1 ? `, ${t.semanas} semanas` : ""})`, t.monto]];
+  return { ...k, lineas, total:k.total + t.monto, saldo:k.saldo + t.monto }; };
 function cuentaInscripcion(i, c) {
   if (i.grupo) return S.cuentas[i.grupo] ? cuentaGrupo(S.cuentas[i.grupo], c) : { lineas:[], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
   const { g, propias } = partirInscripcion(i);
   if (g && !parcialEnGrupo(g)) return { lineas:[[`Va en la cuenta de ${g.cuenta.nombre}`, 0]], total:0, pagado:0, saldo:0, dias:0, caballos:0, enGrupo:g.cuenta.nombre };
   if (esJinete(i)) return { lineas:[["Jinete (sin cobro)", 0]], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
-  return calcularCuenta(i, c, propias, false);
+  return conTack(calcularCuenta(i, c, propias, false), i, c);
 }
 /* soloCaballos: solo lo de los caballos (pruebas y caballeriza), para quien va parcial en un grupo. */
 function calcularCuenta(i, c, prs, soloCaballos) {
@@ -1928,6 +1959,14 @@ function hojaCompetencia(id) {
       <label class="campo">Fecha límite de inscripción (opcional)<input type="date" id="cp-limite" value="${c ? c.limite || "" : ""}"></label>
       <fieldset class="salud-campos" style="grid-template-columns:1fr"><legend>Costos (se usan para calcular lo que paga cada alumno)</legend>
         ${COSTOS.map(([k, n]) => `<label class="campo">${n}<input type="number" min="0" step="1" inputmode="numeric" class="cp-costo" data-k="${k}" value="${cs[k] ?? ""}" placeholder="0"></label>`).join("")}</fieldset>
+      ${(() => { const ta = c ? tackAlumnosDe(c) : null, otras = Object.values(S.competencias || {}).filter(o => !c || o.id !== c.id).filter(o => !c || !c.inicio || !o.inicio || Math.abs(deIso(o.inicio) - deIso(c.inicio)) <= 21 * 864e5)
+          .sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)));
+        return `<fieldset class="salud-campos" style="grid-template-columns:1fr"><legend>Tack room</legend>
+        <label class="campo">Tack room de alumnos (total)<input type="number" min="0" step="1" inputmode="numeric" id="cp-tack" value="${ta ? ta.monto : ""}" placeholder="0"></label>
+        <p class="sub" style="margin:0">Se divide entre los alumnos que pagan solos (no jinetes ni Casa Quirón). Si es el mismo tack room para otra semana, márcala: cada alumno paga su parte una sola vez.</p>
+        ${otras.length ? `<div style="display:grid; gap:.3rem">${otras.map(o => `<label style="display:flex; gap:.5rem; align-items:center"><input type="checkbox" class="cp-tack-con" value="${o.id}" ${ta && ta.con.includes(o.id) ? "checked" : ""}> Compartido con ${esc(o.nombre)} (${fechasTxt(o)})</label>`).join("")}</div>` : ""}
+        ${cuentasActivas().map(cu => `<label class="campo">Tack room de ${esc(cu.nombre)}<input type="number" min="0" step="1" inputmode="numeric" class="cp-tack-g" data-g="${cu.id}" value="${c ? tackGrupoDe(c, cu.id) || "" : ""}" placeholder="0"></label>`).join("")}
+        ${c && esSilla(c) && !c.tackAlumnos ? `<p class="sub" style="margin:0">Ya vienen puestos los de La Silla: alumnos $7,500 por las dos semanas y Casa Quirón $7,500 por semana.</p>` : ""}</fieldset>`; })()}
       <label class="campo">Notas (hora de llegada, reglamento, traslado)<textarea id="cp-notas">${esc(c && c.notas)}</textarea></label>
       <button class="btn btn-bloque" type="submit">${c ? "Guardar" : "Agregar competencia"}</button>
       ${c ? `<button class="btn btn-peligro btn-bloque" type="button" data-act="comp-borrar" data-id="${c.id}">Borrar competencia</button>` : ""}
@@ -1937,8 +1976,18 @@ function hojaCompetencia(id) {
     const x = { ...(c ? clon(c) : { id:nuevoId(), creado:Date.now(), autor:perfil }), nombre:val("cp-nombre").trim(), lugar:val("cp-lugar").trim(),
       inicio:val("cp-inicio"), fin:val("cp-fin") && val("cp-fin") >= val("cp-inicio") ? val("cp-fin") : val("cp-inicio"), limite:val("cp-limite"), notas:val("cp-notas").trim(), costos:{} };
     document.querySelectorAll(".cp-costo").forEach(i => { x.costos[i.dataset.k] = i.value === "" ? 0 : Number(i.value) || 0; });
+    const con = [...document.querySelectorAll(".cp-tack-con:checked")].map(i => i.value);
+    x.tackAlumnos = { monto:Number(val("cp-tack")) || 0, con };
+    x.tackGrupos = {}; document.querySelectorAll(".cp-tack-g").forEach(i => { x.tackGrupos[i.dataset.g] = Number(i.value) || 0; });
     if (!x.nombre || !x.inicio) return;
     cerrarHoja();
+    // El tack room compartido se anota igual en las otras semanas (y se quita de las que ya no van)
+    const antes = (c && c.tackAlumnos && c.tackAlumnos.con) || [];
+    for (const oid of new Set([...con, ...antes])) { const o = S.competencias[oid]; if (!o) continue;
+      const o2 = clon(o), resto = con.filter(z => z !== oid);
+      if (con.includes(oid)) o2.tackAlumnos = { monto:x.tackAlumnos.monto, con:[x.id, ...resto] };
+      else if (o2.tackAlumnos) o2.tackAlumnos = { ...o2.tackAlumnos, con:(o2.tackAlumnos.con || []).filter(z => z !== x.id) };
+      try { await Store.guardarCompetencia(o2); } catch (e3) {} }
     try { await Store.guardarCompetencia(x); compSel = x.id; brindis("Competencia guardada"); registrar(`${c ? "Editó" : "Agregó"} la competencia ${x.nombre} (${fechasTxt(x)})`); } catch (e2) {}
     render();
   });
