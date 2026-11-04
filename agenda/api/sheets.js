@@ -110,8 +110,39 @@ function saldoAlumno(a, aid, semanas) {
   const compradas = (a.paquetes || []).reduce((t, p) => t + (Number(p.clases) || 0), 0);
   return compradas - usadas;
 }
-function cuentaInscripcion(i, c) {
-  const cs = (c && c.costos) || {}, aj = i.ajustes || {}, prs = i.pruebas || [];
+/* Cuentas de grupo (igual que en la agenda): un miembro sin caballos paga todo en el grupo;
+   con caballos, solo las pruebas con esos caballos (prueba y caballeriza). Los jinetes sin grupo no pagan. */
+const normTxt = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const nombresIguales = (a, b) => { const x = normTxt(a), y = normTxt(b); return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " ")); };
+const esJinete = i => String((i && i.alumnoId) || "").startsWith("jinete:");
+function contexto(datos, nombres) {
+  const cuentas = Object.values(datos.cuentas || {}).filter(x => x && !x.borrado);
+  const nombreDe = id => String(id || "").startsWith("jinete:") ? String(id).slice(7) : nombres[id];
+  const nombreCab = p => p.caballoId ? ((datos.caballos[p.caballoId] || {}).nombre || "") : (p.caballoTxt || "");
+  const grupoDe = i => { const n = nombreDe(i.alumnoId); if (!n) return null;
+    for (const cuenta of cuentas) for (const miembro of cuenta.miembros || []) if (nombresIguales(miembro.nombre, n)) return { cuenta, miembro }; return null; };
+  const parcial = g => !!(g && (g.miembro.caballos || []).filter(Boolean).length);
+  const partir = i => { const prs = i.pruebas || [], g = grupoDe(i); if (!g) return { g: null, del: [], propias: prs };
+    const del = parcial(g) ? prs.filter(p => g.miembro.caballos.some(k => nombresIguales(k, nombreCab(p)))) : prs; return { g, del, propias: prs.filter(p => !del.includes(p)) }; };
+  return { cuentas, nombreDe, nombreCab, grupoDe, parcial, partir };
+}
+function cuentaGrupoServ(cx, cuenta, c, inscs) {
+  let total = 0, pagado = 0; const prs = [], miembros = [];
+  for (const i of Object.values(inscs).filter(x => x.competenciaId === c.id)) {
+    const { g, del } = cx.partir(i); if (!g || g.cuenta.id !== cuenta.id || !del.length) continue;
+    const par = cx.parcial(g); const k = cuentaInscripcion(i, c, del, par);
+    total += k.total; prs.push(...del); miembros.push(`${cx.nombreDe(i.alumnoId)}${par ? ` (${[...new Set(del.map(cx.nombreCab))].join(", ")})` : ""}: $${k.total.toLocaleString("es-MX")}`);
+    if (!par) pagado += (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  }
+  const pagos = (cuenta.pagos || []).filter(p => p.competenciaId === c.id);
+  pagado += pagos.reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  return { total, pagado, prs, miembros, pagos };
+}
+function cuentaInscripcion(i, c, soloPruebas, soloCaballos) {
+  const cs = (c && c.costos) || {}, aj = soloCaballos ? {} : (i.ajustes || {}), prs = soloPruebas || i.pruebas || [];
+  if (soloCaballos) { const dias0 = new Set(prs.map(p => p.fecha).filter(Boolean)).size, cab0 = new Set(prs.map(p => p.caballoId || p.caballoTxt).filter(Boolean)).size || (prs.length ? 1 : 0);
+    const num0 = (v, d) => v === "" || v == null ? Number(d) || 0 : Number(v) || 0;
+    return { total: prs.reduce((t, p) => t + num0(p.costo, cs.prueba), 0) + (Number(cs.caballeriza) || 0) * dias0 * cab0, pagado: 0 }; }
   const num = (v, d) => v === "" || v == null ? Number(d) || 0 : Number(v) || 0;
   const dias = aj.dias !== "" && aj.dias != null ? Number(aj.dias) || 0 : new Set(prs.map(p => p.fecha).filter(Boolean)).size;
   const caballos = new Set(prs.map(p => p.caballoId || p.caballoTxt).filter(Boolean)).size || (prs.length ? 1 : 0);
@@ -311,16 +342,24 @@ function filasPagos(perfil, alumnos, semanas) {
   }
   return filas.sort((x, y) => String(x.valores[0]).localeCompare(String(y.valores[0])) || String(x.valores[1]).localeCompare(String(y.valores[1])));
 }
-function filasDeComp(c, inscs, nombres, caballos) {
-  return Object.values(inscs).filter(i => i.competenciaId === c.id).map(i => {
-    const k = cuentaInscripcion(i, c);
+function filasDeComp(c, inscs, nombres, caballos, cx) {
+  const grupos = cx.cuentas.map(cu => ({ cu, k: cuentaGrupoServ(cx, cu, c, inscs) })).filter(x => x.k.prs.length).map(({ cu, k }) => {
+    const metodos = [...new Set(k.pagos.map(p => metodoTxt(p.metodo)).filter(Boolean))], id = `grupo:${cu.id}:${c.id}`;
+    return { clave: `comp|${id}`, nombre: cu.nombre,
+      valores: [cu.nombre, "Cuenta de grupo", k.prs.length, k.total, k.pagado, null, null, metodos.length === 1 ? metodos[0] : metodos.join(" y "), k.miembros.join("\n"), `comp|${id}`],
+      exp: { pagado: k.pagado, f: metodos.length === 1 ? metodos[0] : "" } };
+  });
+  return [...grupos, ...Object.values(inscs).filter(i => i.competenciaId === c.id).map(i => {
+    const { g, propias } = cx.partir(i);
+    if (esJinete(i) || (g && !cx.parcial(g)) || !propias.length) return null; // jinetes y miembros completos van en su grupo
+    const k = cuentaInscripcion(i, c, propias, false);
     const metodos = [...new Set((i.pagos || []).map(p => metodoTxt(p.metodo)).filter(Boolean))];
     const prs = (i.pruebas || []).slice().sort((x, y) => `${x.fecha}${x.hora}`.localeCompare(`${y.fecha}${y.hora}`));
     const detalle = prs.map(p => [fechaCorta(p.fecha), horaTxt(p.hora), p.categoria, p.caballoId ? (caballos[p.caballoId] || {}).nombre : p.caballoTxt].filter(Boolean).join(" · ")).join("\n");
     return { clave: `comp|${i.id}`, nombre: nombres[i.alumnoId] || "Alumno borrado",
       valores: [nombres[i.alumnoId] || "Alumno borrado", MAESTROS[i.maestro] || "", prs.length, k.total, k.pagado, null, null, metodos.length === 1 ? metodos[0] : metodos.join(" y "), detalle, `comp|${i.id}`],
       exp: { pagado: k.pagado, f: metodos.length === 1 ? metodos[0] : "" } };
-  }).sort((x, y) => x.nombre.localeCompare(y.nombre, "es"));
+  }).filter(Boolean)].sort((x, y) => x.nombre.localeCompare(y.nombre, "es"));
 }
 
 /* ------------------------------------------------------------ escribir un archivo */
@@ -393,7 +432,7 @@ async function sincronizar(cfg, quien) {
   const exp = cfg.exportados || {};
   const datos = {
     tania: await leerColeccion("maestros/tania/alumnos"), edwin: await leerColeccion("maestros/edwin/alumnos"),
-    comps: await leerColeccion("competencias"), inscs: Object.fromEntries(Object.entries(await leerColeccion("inscripciones")).filter(([, i]) => !String(i.alumnoId || "").startsWith("jinete:"))), caballos: await leerColeccion("caballos"),
+    comps: await leerColeccion("competencias"), inscs: await leerColeccion("inscripciones"), caballos: await leerColeccion("caballos"), cuentas: await leerColeccion("cuentas"),
   };
   const nombres = {}; for (const p of ["tania", "edwin"]) for (const [aid, a] of Object.entries(datos[p])) nombres[aid] = a && a.nombre;
   // 1. Traer lo que se editó en las hojas desde la última vez
@@ -420,6 +459,15 @@ async function sincronizar(cfg, quien) {
     const filas = await leerArchivo(token, C);
     for (const f of filas) {
       const clave = String(f[9] || ""); const e = exp[clave]; if (!e || !clave.startsWith("comp|")) continue;
+      if (clave.startsWith("comp|grupo:")) { // pago a la cuenta del grupo
+        const [, cuId, cid] = clave.slice(5).split(":"); const cu = datos.cuentas[cuId], c = datos.comps[cid]; if (!cu || !c) continue;
+        const pagado = numero(f[4]); if (pagado === null || pagado === e.pagado) continue;
+        const dif = pagado - e.pagado; const met = metodoDe(f[7]) || "";
+        cu.pagos = [...(cu.pagos || []), { id: nuevoId(), competenciaId: cid, monto: dif, metodo: met, fecha: hoyMx(), nota: "desde Google Sheets" }];
+        await guardarDoc(`cuentas/${cuId}`, cu); datos.cuentas[cuId] = { ...cu, _rev: (Number(cu._rev) || 0) + 1 };
+        (cambios[cu.maestro === "edwin" ? "edwin" : "tania"]).push(`Desde Google Sheets: ${dif > 0 ? "pago" : "ajuste"} de $${Math.abs(dif).toLocaleString("es-MX")}${met ? ` (${metodoTxt(met)})` : ""} de ${cu.nombre} en ${c.nombre}`);
+        continue;
+      }
       const i = datos.inscs[clave.slice(5)]; const c = i && datos.comps[i.competenciaId]; if (!c) continue;
       const pagado = numero(f[4]); if (pagado === null || pagado === e.pagado) continue;
       const dif = pagado - e.pagado; const met = metodoDe(f[7]) || "";
@@ -447,7 +495,7 @@ async function sincronizar(cfg, quien) {
     const pestanas = comps.map(c => {
       let t = String(c.nombre || "Competencia").replace(/[\[\]*?:\\/]/g, " ").trim().slice(0, 90);
       if (usados.has(t)) t = `${t} (${fechaCorta(c.inicio)} ${String(c.inicio).slice(0, 4)})`; usados.add(t);
-      const filas = filasDeComp(c, datos.inscs, nombres, datos.caballos);
+      const filas = filasDeComp(c, datos.inscs, nombres, datos.caballos, contexto(datos, nombres));
       filas.forEach(f => { exportados[f.clave] = f.exp; });
       // Primero los que deben (de más a menos), luego los que ya pagaron
       filas.sort((x, y) => ((y.valores[3] - y.valores[4]) - (x.valores[3] - x.valores[4])) || x.nombre.localeCompare(y.nombre, "es"));

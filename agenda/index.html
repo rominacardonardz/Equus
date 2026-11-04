@@ -811,7 +811,7 @@ const linkWa = (tel, texto) => `https://wa.me/${telWa(tel)}?text=${encodeURIComp
    Guardado. Cada maestro tiene su carpeta: maestros/<id>/alumnos y
    maestros/<id>/semanas. Los caballos son de los dos: caballos/<id>.
    ========================================================================== */
-const S = { alumnos:{}, semanas:{}, otras:{}, otrosAlumnos:{}, caballos:{}, historial:{}, pendientes:{}, competencias:{}, inscripciones:{}, cargado:false,
+const S = { alumnos:{}, semanas:{}, otras:{}, otrosAlumnos:{}, caballos:{}, historial:{}, pendientes:{}, competencias:{}, inscripciones:{}, cuentas:{}, cargado:false,
   crudos:{}, papelera:{}, caballosCrudos:{}, caballosPapelera:{} };
 /* Lo que se manda a la papelera lleva "borrado" (fecha); aquí se separa de lo vigente. */
 function repartir() {
@@ -852,7 +852,7 @@ const Store = {
     this.cerrar(); if (typeof ExcelVivo !== "undefined") { ExcelVivo.revisado = false; ExcelVivo.leido = false; Hojas.revisado = false; Hojas.leido = false; } S.alumnos = {}; S.crudos = {}; S.papelera = {}; S.semanas = {}; S.otras = {}; S.otrosAlumnos = {}; S.historial = {}; S.cargado = false; Chat.mensajes = []; Chat.deshacer = null;
     if (!this.db) {
       const T = this.local(); const L = T[p] || {}; S.crudos = L.alumnos || {}; S.semanas = L.semanas || {}; Chat.mensajes = L.chat || []; S.historial = L.historial || {};
-      S.otras = (T[otro(p)] || {}).semanas || {}; S.otrosAlumnos = (T[otro(p)] || {}).alumnos || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; S.competencias = T.competencias || {}; S.inscripciones = T.inscripciones || {}; repartir(); S.cargado = true; render(); return;
+      S.otras = (T[otro(p)] || {}).semanas || {}; S.otrosAlumnos = (T[otro(p)] || {}).alumnos || {}; S.caballosCrudos = T.caballos || {}; S.pendientes = T.pendientes || {}; S.competencias = T.competencias || {}; S.inscripciones = T.inscripciones || {}; S.cuentas = T.cuentas || {}; repartir(); S.cargado = true; render(); return;
     }
     let listos = 0; const listo = () => { if (++listos >= 2) S.cargado = true; };
     const err = e => { if (e && e.code === "revoked") brindis("Se perdió el acceso al guardado. Recarga la página."); };
@@ -871,6 +871,8 @@ const Store = {
     /* Competencias e inscripciones son de los dos maestros. */
     sub("competencias", o => { S.competencias = o; });
     sub("inscripciones", o => { S.inscripciones = o; });
+    /* Cuentas de grupo (ej. Casa Quirón): varios jinetes pagan en una sola cuenta. */
+    sub("cuentas", o => { S.cuentas = o; });
     sub(`maestros/${p}/historial`, o => { S.historial = o; });
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
@@ -900,6 +902,8 @@ const Store = {
   async guardarCompetencia(x) { S.competencias = { ...S.competencias, [x.id]: x }; await this.escribir(`competencias/${x.id}`, x); },
   async borrarCompetencia(id) { const o = { ...S.competencias }; delete o[id]; S.competencias = o; await this.escribir(`competencias/${id}`, null); },
   async guardarInscripcion(x) { S.inscripciones = { ...S.inscripciones, [x.id]: x }; await this.escribir(`inscripciones/${x.id}`, x); },
+  async guardarCuenta(x) { S.cuentas = { ...S.cuentas, [x.id]: x }; await this.escribir(`cuentas/${x.id}`, x); },
+  async borrarCuenta(id) { const o = { ...S.cuentas }; delete o[id]; S.cuentas = o; await this.escribir(`cuentas/${id}`, null); },
   async borrarInscripcion(id) { const o = { ...S.inscripciones }; delete o[id]; S.inscripciones = o; await this.escribir(`inscripciones/${id}`, null); },
   async guardarPendiente(x) { S.pendientes = { ...S.pendientes, [x.id]: x }; await this.escribir(`pendientes/${x.id}`, x); },
   async borrarPendiente(id) { const o = { ...S.pendientes }; delete o[id]; S.pendientes = o; await this.escribir(`pendientes/${id}`, null); },
@@ -1379,7 +1383,7 @@ function vistaHoy(clases) {
   const deben = activos.filter(a => { const dm = (a.paquetes || []).filter(p => (p.fecha || "").startsWith(mes)); return dm.length && !dm.every(p => p.pagado); });
   const pocas = activos.map(a => ({ a, k:cuenta(a.id, clases) })).filter(({ a, k }) => !k.ilimitado && k.saldo <= 1 && !deben.includes(a));
   const salud = alertasSalud();
-  const debenComp = Object.values(S.inscripciones || {}).filter(i => i.maestro === perfil && !esJinete(i) && S.competencias[i.competenciaId])
+  const debenComp = Object.values(S.competencias || {}).flatMap(c => cobrablesDe(c.id)).filter(i => i.maestro === perfil)
     .map(i => ({ i, c:S.competencias[i.competenciaId], k:cuentaInscripcion(i, S.competencias[i.competenciaId]) })).filter(x => x.k.saldo > 0 && x.c.inicio <= iso(sumarDias(new Date(), 14)));
   const cabs = clasesDeCaballos().filter(c => c.fecha === hoy);
   const llenos = caballosLista().filter(c => Number(c.maxDia) && cabs.filter(x => x.caballoId === c.id).length > Number(c.maxDia));
@@ -1531,8 +1535,8 @@ function vistaReporte() {
    Un archivo con todo lo que guarda la agenda (de los dos maestros). Los
    comprobantes (fotos y PDF) no van dentro: se quedan en Supabase. */
 const COLS_RESPALDO = () => [...Object.keys(MAESTROS).flatMap(m => [`maestros/${m}/alumnos`, `maestros/${m}/semanas`, `maestros/${m}/historial`, `maestros/${m}/chat`]),
-  "caballos", "pendientes", "competencias", "inscripciones", "config", "usuarios"];
-const RUTA_VALIDA = p => /^(maestros\/(tania|edwin)\/(alumnos|semanas|historial|chat)|caballos|pendientes|competencias|inscripciones|config|usuarios)\/[A-Za-z0-9_\-.~:@+]{1,200}$/.test(p);
+  "caballos", "pendientes", "competencias", "inscripciones", "cuentas", "config", "usuarios"];
+const RUTA_VALIDA = p => /^(maestros\/(tania|edwin)\/(alumnos|semanas|historial|chat)|caballos|pendientes|competencias|inscripciones|cuentas|config|usuarios)\/[A-Za-z0-9_\-.~:@+]{1,200}$/.test(p);
 let ultimoRespaldo = null;
 async function descargarRespaldo() {
   const docs = {};
@@ -1617,16 +1621,61 @@ let compSel = null, compVista = "inscritos", inscDetalle = null;
 const dinero$ = n => "$" + Math.round(Number(n) || 0).toLocaleString("es-MX");
 /* Jinetes: compiten pero no son alumnos (sin cobros ni ficha). Se guardan como alumnoId "jinete:Nombre". */
 const esJinete = i => String((i && i.alumnoId) || "").startsWith("jinete:");
-const alumnoDe = id => String(id || "").startsWith("jinete:") ? { id, nombre:String(id).slice(7), jinete:true, maestro:perfil } : (S.alumnos[id] ? { ...S.alumnos[id], id, maestro:perfil } : S.otrosAlumnos[id] ? { ...S.otrosAlumnos[id], id, maestro:otro(perfil) } : null);
+const alumnoDe = id => String(id || "").startsWith("grupo:") ? (S.cuentas[String(id).slice(6)] ? { id, nombre:S.cuentas[String(id).slice(6)].nombre, grupo:true, maestro:perfil } : null) : String(id || "").startsWith("jinete:") ? { id, nombre:String(id).slice(7), jinete:true, maestro:perfil } : (S.alumnos[id] ? { ...S.alumnos[id], id, maestro:perfil } : S.otrosAlumnos[id] ? { ...S.otrosAlumnos[id], id, maestro:otro(perfil) } : null);
 const diasComp = c => { const r = []; if (!c.inicio) return r; let d = deIso(c.inicio); const f = c.fin && c.fin >= c.inicio ? c.fin : c.inicio;
   for (let i = 0; i < 31 && iso(d) <= f; i++) { r.push(iso(d)); d = sumarDias(d, 1); } return r; };
 const inscritosDe = cid => Object.values(S.inscripciones || {}).filter(i => i.competenciaId === cid);
-const cobrablesDe = cid => inscritosDe(cid).filter(i => !esJinete(i));
+const cobrablesDe = cid => [...inscritosDe(cid).filter(i => { if (esJinete(i)) return false; const g = grupoDe(i); return !g || parcialEnGrupo(g); }), ...gruposDe(cid)];
 const fechasTxt = c => c.inicio === c.fin || !c.fin ? fechaLarga(c.inicio) : `${fechaLarga(c.inicio)} al ${fechaLarga(c.fin)}`;
+/* ---- Cuentas de grupo (ej. Casa Quirón)
+   Un miembro sin caballos anotados paga TODO en la cuenta del grupo.
+   Un miembro con caballos (ej. Tania con Kannuca y Clavelita) solo carga al grupo
+   las pruebas con esos caballos (prueba y caballeriza); lo demás no es del grupo. */
+const nombresIguales = (a, b) => { const x = normTxt(a), y = normTxt(b); return !!x && !!y && (x === y || x.startsWith(y + " ") || y.startsWith(x + " ")); };
+const cuentasActivas = () => Object.values(S.cuentas || {}).filter(x => x && !x.borrado);
+function grupoDe(i) {
+  if (!i || i.grupo) return null; const a = alumnoDe(i.alumnoId); if (!a) return null;
+  for (const cuenta of cuentasActivas()) for (const miembro of cuenta.miembros || []) if (nombresIguales(miembro.nombre, a.nombre)) return { cuenta, miembro };
+  return null;
+}
+const parcialEnGrupo = g => !!(g && (g.miembro.caballos || []).filter(Boolean).length);
+function partirInscripcion(i) {
+  const prs = i.pruebas || [], g = grupoDe(i);
+  if (!g) return { g:null, delGrupo:[], propias:prs };
+  const del = parcialEnGrupo(g) ? prs.filter(p => g.miembro.caballos.some(k => nombresIguales(k, nombreCab(p)))) : prs;
+  return { g, delGrupo:del, propias:prs.filter(p => !del.includes(p)) };
+}
+function cuentaGrupo(cuenta, c) {
+  const lineas = [], miembros = []; let total = 0, pagadoInd = 0; const prs = [];
+  for (const i of inscritosDe(c.id)) {
+    const { g, delGrupo } = partirInscripcion(i); if (!g || g.cuenta.id !== cuenta.id || !delGrupo.length) continue;
+    const parcial = parcialEnGrupo(g), k = calcularCuenta(i, c, delGrupo, parcial), a = alumnoDe(i.alumnoId) || {};
+    lineas.push([`${a.nombre || "—"}${parcial ? ` (${[...new Set(delGrupo.map(nombreCab))].join(", ")})` : ""} · ${plural(delGrupo.length, "prueba")}`, k.total]);
+    miembros.push({ i, nombre:a.nombre, k, parcial }); total += k.total; prs.push(...delGrupo);
+    if (!parcial) pagadoInd += (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  }
+  const pagos = (cuenta.pagos || []).filter(p => p.competenciaId === c.id);
+  const pagado = pagadoInd + pagos.reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  return { lineas, total, pagado, saldo:total - pagado, dias:0, caballos:0, miembros, pruebas:prs, pagos };
+}
+/* La cuenta del grupo se maneja como una inscripción más (id "grupo:cuenta:competencia"). */
+function inscripcionGrupo(cuenta, c) {
+  const k = cuentaGrupo(cuenta, c);
+  return { id:`grupo:${cuenta.id}:${c.id}`, grupo:cuenta.id, competenciaId:c.id, alumnoId:`grupo:${cuenta.id}`, maestro:cuenta.maestro || "tania", pagos:k.pagos, pruebas:k.pruebas, ajustes:{} };
+}
+const gruposDe = cid => { const c = S.competencias[cid]; return c ? cuentasActivas().map(cu => inscripcionGrupo(cu, c)).filter(x => x.pruebas.length) : []; };
+const inscripcionPorId = id => S.inscripciones[id] || (String(id).startsWith("grupo:") ? (() => { const [, cu, cid] = String(id).split(":");
+  return S.cuentas[cu] && S.competencias[cid] ? inscripcionGrupo(S.cuentas[cu], S.competencias[cid]) : null; })() : null);
 function cuentaInscripcion(i, c) {
+  if (i.grupo) return S.cuentas[i.grupo] ? cuentaGrupo(S.cuentas[i.grupo], c) : { lineas:[], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
+  const { g, propias } = partirInscripcion(i);
+  if (g && !parcialEnGrupo(g)) return { lineas:[[`Va en la cuenta de ${g.cuenta.nombre}`, 0]], total:0, pagado:0, saldo:0, dias:0, caballos:0, enGrupo:g.cuenta.nombre };
   if (esJinete(i)) return { lineas:[["Jinete (sin cobro)", 0]], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
-  const cs = (c && c.costos) || {}, aj = i.ajustes || {};
-  const prs = i.pruebas || [];
+  return calcularCuenta(i, c, propias, false);
+}
+/* soloCaballos: solo lo de los caballos (pruebas y caballeriza), para quien va parcial en un grupo. */
+function calcularCuenta(i, c, prs, soloCaballos) {
+  const cs = (c && c.costos) || {}, aj = soloCaballos ? {} : (i.ajustes || {});
   const num = (v, d) => v === "" || v == null ? Number(d) || 0 : Number(v) || 0;
   const dias = aj.dias !== "" && aj.dias != null ? Number(aj.dias) || 0 : new Set(prs.map(p => p.fecha).filter(Boolean)).size;
   const caballos = new Set(prs.map(p => p.caballoId || p.caballoTxt).filter(Boolean)).size || (prs.length ? 1 : 0);
@@ -1637,9 +1686,9 @@ function cuentaInscripcion(i, c) {
     ["Viáticos", num(aj.viaticos, cs.viaticos)],
     [`Caballeriza (${plural(caballos, "caballo")} × ${plural(dias, "día")})`, aj.caballeriza !== "" && aj.caballeriza != null ? Number(aj.caballeriza) || 0 : (Number(cs.caballeriza) || 0) * dias * caballos],
     ["Otros", Number(aj.otros) || 0],
-  ].filter(([, v], k) => v || k === 0);
+  ].filter(([n, v], k) => (v || k === 0) && (!soloCaballos || k === 0 || /^Caballeriza/.test(n)));
   const total = lineas.reduce((t, [, v]) => t + v, 0);
-  const pagado = (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
+  const pagado = soloCaballos ? 0 : (i.pagos || []).reduce((t, p) => t + (Number(p.monto) || 0), 0);
   return { lineas, total, pagado, saldo: total - pagado, dias, caballos };
 }
 /* Avisos: competencia en curso, o inscripción que cierra en 7 días o menos. */
@@ -1692,6 +1741,11 @@ function listaCompetencias() {
       ${sugeridasFaltan().map(x => `<div class="renglon"><span class="t">${esc(x.nombre)}</span><span class="x">${fechasTxt(x)}</span></div>`).join("")}
       <button class="btn" data-act="comp-sugeridas" style="justify-self:start">Agregar ${sugeridasFaltan().length === 1 ? "esta competencia" : `estas ${sugeridasFaltan().length} competencias`}</button>
       <p class="sub">Después pon sus costos en Editar.</p></section>` : ""}
+    ${acordeon("comp-cuentas", "comp", "Cuentas de grupo", cuentasActivas().length, `
+      <p class="sub" style="margin:0">Jinetes que pagan juntos en una sola cuenta (por ejemplo, Casa Quirón). Sus pruebas se cobran a la cuenta del grupo, no a cada uno.</p>
+      ${cuentasActivas().map(cu => `<div class="fila-pago"><button class="fila-t" data-act="cuenta-editar" data-id="${cu.id}"><b>${esc(cu.nombre)}</b>
+        <span class="q">${(cu.miembros || []).map(m => esc(m.nombre) + ((m.caballos || []).length ? ` (solo ${esc(m.caballos.join(", "))})` : "")).join(" · ")}</span></button><span></span></div>`).join("")}
+      <button class="btn btn-2 btn-mini" data-act="cuenta-editar" style="justify-self:start">+ Cuenta de grupo</button>`, "comp-sec")}
     ${todas.length ? `<section class="hoy-card sec-comp"><header><h3>Pagos del mes</h3>
         <div class="navsem"><button class="flecha" data-act="mes" data-d="-1" aria-label="Mes anterior">‹</button><span class="mes" style="font-size:1rem">${MESES_LARGO[Number(mesPagos.slice(5, 7)) - 1]} ${mesPagos.slice(0, 4)}</span>
           <button class="flecha" data-act="mes" data-d="1" aria-label="Mes siguiente">›</button></div></header>
@@ -1715,7 +1769,7 @@ function inscritosComp(c, ins) {
     ${!ins.length ? `<p class="sub">Todavía no hay alumnos inscritos.</p>` : `<div class="tarjeta" style="padding:.3rem .9rem">${ins.map(({ i, a }) => {
       const ab = inscDetalle === i.id; const prs = (i.pruebas || []).slice().sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
       return `<div class="fila-pago"><button class="fila-t" data-act="insc-ver" data-id="${i.id}" aria-expanded="${ab}"><b>${esc(a ? a.nombre : "Alumno borrado")}</b>
-          <span class="q">${plural(prs.length, "prueba")} · ${esJinete(i) ? "jinete" : esc(MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "")}</span></button>
+          <span class="q">${plural(prs.length, "prueba")} · ${esJinete(i) ? "jinete" : esc(MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "")}${(g => g ? ` · ${esc(g.cuenta.nombre)}${parcialEnGrupo(g) ? " (algunos caballos)" : ""}` : "")(grupoDe(i))}</span></button>
         ${prs.some(p => ch.has(p.id)) ? `<span class="pastilla p-vencido">⚠</span>` : "<span></span>"}
         ${ab ? `<div class="detalle">${diasComp(c).filter(f => prs.some(p => p.fecha === f)).map(f => `<p class="sub-av">${fechaLarga(f)}</p>${prs.filter(p => p.fecha === f).map(p => filaPrueba(p, ch)).join("")}`).join("")}
           <div class="acc"><button class="btn btn-2 btn-mini" data-act="insc-editar" data-id="${i.id}">Editar pruebas y resultados</button>
@@ -1739,7 +1793,7 @@ function programaComp(c) {
         <span class="det">${esc(nombreCab(p))}${ch.has(p.id) ? ` · <span class="choque">⚠ caballo con menos de 45 min</span>` : ""}${p.resultado ? ` · <b>${esc(p.resultado)}</b>` : ""}</span></div>`).join("") : `<p class="sub">Sin pruebas este día.</p>`}</section>`; }).join("");
 }
 function pagosComp(c, ins) {
-  ins = ins.filter(x => !esJinete(x.i));
+  ins = cobrablesDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) })).sort((x, y) => (x.a ? x.a.nombre : "").localeCompare(y.a ? y.a.nombre : "", "es"));
   const cuentas = ins.map(x => ({ ...x, k:cuentaInscripcion(x.i, c) }));
   const tot = cuentas.reduce((t, x) => t + x.k.total, 0), pag = cuentas.reduce((t, x) => t + x.k.pagado, 0);
   return `<div class="resumen-pago"><div class="total"><span class="sub">Cobrado</span><b>${dinero$(pag)}</b></div>
@@ -1755,7 +1809,7 @@ function pagosComp(c, ins) {
             <span class="tot">Falta</span><span class="tot ${k.saldo > 0 ? "alerta-txt" : ""}">${dinero$(Math.max(0, k.saldo))}</span></div>
           ${i.ajustes && i.ajustes.nota ? `<p class="sub">${esc(i.ajustes.nota)}</p>` : ""}
           <div class="acc"><button class="btn btn-mini" data-act="insc-pago" data-id="${i.id}">Registrar pago</button>
-            <button class="btn btn-2 btn-mini" data-act="insc-editar" data-id="${i.id}" data-montos="1">Ajustar montos</button>
+            ${i.grupo ? "" : `<button class="btn btn-2 btn-mini" data-act="insc-editar" data-id="${i.id}" data-montos="1">Ajustar montos</button>`}
             ${a && a.telefono && k.saldo > 0 ? `<a class="btn btn-wa btn-mini" href="${linkWa(a.telefono, `Hola ${primerNombre(a.tutor || a.nombre)}, de ${c.nombre} quedan pendientes ${dinero$(k.saldo)} (total ${dinero$(k.total)}). ¿Me confirmas el pago? — ${MAESTROS[perfil].nombre}`)}" target="_blank" rel="noopener">${ICONO_WA}Recordar</a>` : ""}</div></div>` : ""}</div>`; }).join("")}</div>`}
     <p class="sub">El total se calcula con los costos de la competencia (Editar). En “Ajustar montos” cambias lo de un alumno: días, transporte, viáticos, descuentos u otros cargos.</p>`;
 }
@@ -2005,8 +2059,32 @@ function hojaImportar(cid) {
     });
   });
 }
+function hojaCuenta(id) {
+  const cu = id ? S.cuentas[id] : null;
+  const primera = !cu && !cuentasActivas().length; // la primera vez se llena con Casa Quirón
+  const texto = cu ? (cu.miembros || []).map(m => m.nombre + ((m.caballos || []).length ? ": " + m.caballos.join(", ") : "")).join("\n")
+    : primera ? "Romina Cardona\nNicolás Cardona\nFabrice Lyon\nCarlos Felipe Mahecha Mora\nTania Leal Cavazos: Kannuca, Clavelita\nEdwin: Rodano" : "";
+  abrirHoja(`${cabHoja(cu ? esc(cu.nombre) : "Cuenta de grupo", "Varios jinetes, una sola cuenta")}
+    <form id="f-cuenta" style="display:grid; gap:.7rem">
+      <label class="campo">Nombre<input type="text" id="cu-nombre" required value="${esc(cu ? cu.nombre : primera ? "Casa Quirón" : "")}" placeholder="Casa Quirón"></label>
+      <label class="campo">Quién lleva la cuenta<select id="cu-maestro">${Object.keys(MAESTROS).map(m => `<option value="${m}" ${(cu ? cu.maestro : perfil) === m ? "selected" : ""}>${MAESTROS[m].nombre}</option>`).join("")}</select></label>
+      <label class="campo">Jinetes (uno por renglón)<textarea id="cu-miembros" rows="7" placeholder="Romina Cardona&#10;Tania Leal Cavazos: Kannuca, Clavelita">${esc(texto)}</textarea></label>
+      <p class="sub" style="margin:0">Si después del nombre pones <b>:</b> y caballos, solo cuentan para el grupo las pruebas con esos caballos. Sin caballos, todo lo de ese jinete va al grupo.</p>
+      <button class="btn btn-bloque" type="submit">Guardar</button>
+      ${cu ? `<button class="btn btn-peligro btn-bloque" type="button" data-act="cuenta-borrar" data-id="${cu.id}">Borrar cuenta</button>` : ""}
+    </form>`);
+  document.getElementById("f-cuenta").addEventListener("submit", async e => {
+    e.preventDefault();
+    const miembros = val("cu-miembros").split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => { const k = l.search(/[:;]/);
+      return k < 0 ? { nombre:l, caballos:[] } : { nombre:l.slice(0, k).trim(), caballos:l.slice(k + 1).split(",").map(x => x.trim()).filter(Boolean) }; }).filter(m => m.nombre);
+    const x = { ...(cu ? clon(cu) : { id:nuevoId(), creado:Date.now(), pagos:[] }), nombre:val("cu-nombre").trim(), maestro:val("cu-maestro"), miembros };
+    if (!x.nombre) return; cerrarHoja();
+    try { await Store.guardarCuenta(x); brindis("Cuenta guardada"); registrar(`${cu ? "Editó" : "Creó"} la cuenta de grupo ${x.nombre}: ${miembros.map(m => m.nombre + (m.caballos.length ? ` (${m.caballos.join(", ")})` : "")).join(", ")}`); } catch (e2) {}
+    render();
+  });
+}
 function hojaPagoComp(id) {
-  const i = S.inscripciones[id]; const c = i && S.competencias[i.competenciaId]; if (!c) return;
+  const i = inscripcionPorId(id); const c = i && S.competencias[i.competenciaId]; if (!c) return;
   const k = cuentaInscripcion(i, c); const a = alumnoDe(i.alumnoId) || {};
   abrirHoja(`${cabHoja("Registrar pago", `${esc(a.nombre || "")} · ${esc(c.nombre)}`)}
     <form id="f-pagoc" style="display:grid; gap:.7rem">
@@ -2020,9 +2098,10 @@ function hojaPagoComp(id) {
   document.getElementById("f-pagoc").addEventListener("submit", async e => {
     e.preventDefault(); const m = Number(val("pc-monto")); if (!m) return;
     if (m > Math.max(0, k.saldo)) { brindis(k.saldo > 0 ? `Solo falta ${dinero$(k.saldo)}. Revisa el monto o ajusta sus montos.` : "Ya pagó todo. Si hay un cargo extra, agrégalo en Ajustar montos."); return; }
-    const x = clon(i); x.pagos = [...(x.pagos || []), { id:nuevoId(), monto:m, metodo:val("pc-metodo"), fecha:val("pc-fecha") || hoyIso() }];
+    const pago = { id:nuevoId(), monto:m, metodo:val("pc-metodo"), fecha:val("pc-fecha") || hoyIso() };
     cerrarHoja();
-    try { await Store.guardarInscripcion(x); brindis(`Pago de ${dinero$(m)} guardado`); registrar(`Registró pago de ${dinero$(m)} (${metodoTxt(val("pc-metodo")) || ""}) de ${a.nombre} para ${c.nombre}`); } catch (e2) {}
+    try { if (i.grupo) { const cu = clon(S.cuentas[i.grupo]); cu.pagos = [...(cu.pagos || []), { ...pago, competenciaId:c.id }]; await Store.guardarCuenta(cu); }
+      else { const x = clon(i); x.pagos = [...(x.pagos || []), pago]; await Store.guardarInscripcion(x); } brindis(`Pago de ${dinero$(m)} guardado`); registrar(`Registró pago de ${dinero$(m)} (${metodoTxt(val("pc-metodo")) || ""}) de ${a.nombre} para ${c.nombre}`); } catch (e2) {}
     render();
   });
 }
@@ -4114,13 +4193,23 @@ document.addEventListener("click", async e => {
         brindis(`${plural(n, "competencia")} agregada${n === 1 ? "" : "s"}. Pon sus costos en Editar.`); registrar(`Agregó ${plural(n, "competencia")} del calendario: ${faltan.map(x => x.nombre).join(", ")}`); } catch (e2) {}
       render(); break;
     }
+    case "cuenta-editar": hojaCuenta(b.dataset.id); break;
     case "insc-importar": hojaImportar(b.dataset.c); break;
     case "insc-nueva": if (!alumnosActivos().length && !Object.keys(S.otrosAlumnos).length) { brindis("Primero da de alta alumnos."); break; } hojaInscripcion(b.dataset.c); break;
     case "insc-editar": { const i = S.inscripciones[b.dataset.id]; if (i) hojaInscripcion(i.competenciaId, i.id, !!b.dataset.montos); break; }
     case "insc-ver": inscDetalle = inscDetalle === b.dataset.id ? null : b.dataset.id; render(); break;
     case "insc-pago": hojaPagoComp(b.dataset.id); break;
+    case "cuenta-borrar": {
+      if (!confirmarDosVeces(b, "cu" + b.dataset.id, "Toca otra vez para borrar la cuenta")) return;
+      const cu = S.cuentas[b.dataset.id]; cerrarHoja();
+      try { await Store.guardarCuenta({ ...clon(cu), borrado:Date.now() }); brindis("Cuenta borrada: sus jinetes vuelven a pagar cada uno"); registrar(`Borró la cuenta de grupo ${cu.nombre}`); } catch (e2) {}
+      render(); break;
+    }
     case "pc-ultimo": {
-      const i = clon(S.inscripciones[b.dataset.id]); if (!i || !(i.pagos || []).length) break; const q = i.pagos.pop(); cerrarHoja();
+      const i = clon(inscripcionPorId(b.dataset.id)); if (!i || !(i.pagos || []).length) break; cerrarHoja(); let q;
+      if (i.grupo) { const cu = clon(S.cuentas[i.grupo]); const k = (cu.pagos || []).map(p => p.competenciaId).lastIndexOf(i.competenciaId); if (k < 0) { brindis("Ese pago está en la inscripción de un miembro."); break; }
+        q = cu.pagos.splice(k, 1)[0]; try { await Store.guardarCuenta(cu); brindis("Pago quitado"); registrar(`Quitó un pago de ${dinero$(q.monto)} de ${cu.nombre} (${(S.competencias[i.competenciaId] || {}).nombre})`); } catch (e2) {} render(); break; }
+      q = i.pagos.pop();
       try { await Store.guardarInscripcion(i); brindis("Pago quitado"); registrar(`Quitó un pago de ${dinero$(q.monto)} de ${(alumnoDe(i.alumnoId) || {}).nombre} (${(S.competencias[i.competenciaId] || {}).nombre})`); } catch (e2) {}
       render(); break;
     }
