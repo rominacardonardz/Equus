@@ -497,8 +497,8 @@ async function sincronizar(cfg, quien) {
       if (usados.has(t)) t = `${t} (${fechaCorta(c.inicio)} ${String(c.inicio).slice(0, 4)})`; usados.add(t);
       const filas = filasDeComp(c, datos.inscs, nombres, datos.caballos, contexto(datos, nombres));
       filas.forEach(f => { exportados[f.clave] = f.exp; });
-      // Primero los que deben (de más a menos), luego los que ya pagaron
-      filas.sort((x, y) => ((y.valores[3] - y.valores[4]) - (x.valores[3] - x.valores[4])) || x.nombre.localeCompare(y.nombre, "es"));
+      // Primero las cuentas de grupo (Casa Quirón), luego los que deben (de más a menos) y al final los que ya pagaron
+      filas.sort((x, y) => (Number(y.valores[1] === "Cuenta de grupo") - Number(x.valores[1] === "Cuenta de grupo")) || ((y.valores[3] - y.valores[4]) - (x.valores[3] - x.valores[4])) || x.nombre.localeCompare(y.nombre, "es"));
       return { titulo: t, c, alumnos: filas.length, plan: planCompetencia(c, filas) };
     });
     const q = t => `'${t.replace(/'/g, "''")}'`;

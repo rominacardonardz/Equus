@@ -690,6 +690,13 @@ main.wrap{padding-bottom:3rem}
 .entrar-otro{font:inherit; background:none; border:0; color:var(--ink-2); text-decoration:underline; cursor:pointer}
 .sesion{color:var(--ink-3); font-size:.9rem}
 .sesion button{font:inherit; background:none; border:0; padding:0; color:inherit; text-decoration:underline; cursor:pointer}
+.grupo-cuenta{border:1.5px solid var(--perfil, #0B6E72); border-radius:14px; padding:.75rem .85rem; display:grid; gap:.5rem; background:var(--perfil-bg, #EAF5F5); margin:.4rem 0 .7rem}
+.grupo-cab{display:flex; justify-content:space-between; align-items:center; gap:.5rem}
+.grupo-cab b{font-size:1rem}
+.grupo-num{display:flex; flex-wrap:wrap; gap:.3rem 1rem; font-size:.86rem}
+.grupo-miembros{display:grid; grid-template-columns:1fr auto; gap:.2rem .8rem; font-size:.84rem; border-top:1px solid var(--line); padding-top:.45rem}
+.grupo-miembros span:nth-child(2n){text-align:right; font-variant-numeric:tabular-nums}
+.grupo-pagos{font-size:.78rem; color:var(--ink-2)}
 </style>
 </head>
 <body>
@@ -872,7 +879,7 @@ const Store = {
     sub("competencias", o => { S.competencias = o; });
     sub("inscripciones", o => { S.inscripciones = o; });
     /* Cuentas de grupo (ej. Casa Quirón): varios jinetes pagan en una sola cuenta. */
-    sub("cuentas", o => { S.cuentas = o; });
+    sub("cuentas", o => { S.cuentas = o; crearCasaQuiron(); });
     sub(`maestros/${p}/historial`, o => { S.historial = o; });
     /* Dónde vive la hoja de pagos en Google Drive (la conecta la dueña de la agenda). */
     this.quitar.push(this.db.doc("config/drive").onSnapshot(sn => { Drive.cfg = (sn.exists && sn.data()) || {}; render(); }, err));
@@ -1658,6 +1665,16 @@ function cuentaGrupo(cuenta, c) {
   const pagado = pagadoInd + pagos.reduce((t, p) => t + (Number(p.monto) || 0), 0);
   return { lineas, total, pagado, saldo:total - pagado, dias:0, caballos:0, miembros, pruebas:prs, pagos };
 }
+let quironRevisado = false;
+async function crearCasaQuiron() {
+  if (quironRevisado || !Store.db || Object.keys(S.cuentas || {}).length) return; quironRevisado = true;
+  try {
+    const sn = await Store.db.doc("cuentas/casa-quiron").get(); if (sn.exists) return; // ya existe (aunque esté borrada)
+    await Store.guardarCuenta({ id:"casa-quiron", nombre:"Casa Quirón", maestro:"tania", creado:Date.now(), pagos:[], miembros:[
+      { nombre:"Romina Cardona", caballos:[] }, { nombre:"Nicolás Cardona", caballos:[] }, { nombre:"Fabrice Lyon", caballos:[] },
+      { nombre:"Carlos Felipe Mahecha Mora", caballos:[] }, { nombre:"Tania Leal Cavazos", caballos:["Kannuca", "Clavelita"] }, { nombre:"Edwin", caballos:["Rodano"] }] });
+  } catch (e) { quironRevisado = false; }
+}
 /* La cuenta del grupo se maneja como una inscripción más (id "grupo:cuenta:competencia"). */
 function inscripcionGrupo(cuenta, c) {
   const k = cuentaGrupo(cuenta, c);
@@ -1666,6 +1683,20 @@ function inscripcionGrupo(cuenta, c) {
 const gruposDe = cid => { const c = S.competencias[cid]; return c ? cuentasActivas().map(cu => inscripcionGrupo(cu, c)).filter(x => x.pruebas.length) : []; };
 const inscripcionPorId = id => S.inscripciones[id] || (String(id).startsWith("grupo:") ? (() => { const [, cu, cid] = String(id).split(":");
   return S.cuentas[cu] && S.competencias[cid] ? inscripcionGrupo(S.cuentas[cu], S.competencias[cid]) : null; })() : null);
+/* Cuenta de grupo como bloque aparte: total, pagado, falta y lo de cada jinete. */
+function bloqueGrupo(i, c, conAcciones) {
+  const k = cuentaInscripcion(i, c), cu = S.cuentas[i.grupo] || {};
+  const est = k.saldo <= 0 && k.total ? ["e-asistio", "Pagado ✓"] : k.pagado ? ["e-aviso", `Falta ${dinero$(k.saldo)}`] : ["e-falta", "Debe"];
+  return `<div class="grupo-cuenta">
+    <div class="grupo-cab"><div><b>${esc(cu.nombre || "Grupo")}</b> <span class="sub">· cuenta de grupo · ${plural((k.miembros || []).length, "jinete")}</span></div><span class="pastilla ${est[0]}">${est[1]}</span></div>
+    <div class="grupo-num"><span>Total <b>${dinero$(k.total)}</b></span><span>Pagado <b>${dinero$(k.pagado)}</b></span><span>Falta <b class="${k.saldo > 0 ? "alerta-txt" : ""}">${dinero$(Math.max(0, k.saldo))}</b></span></div>
+    <div class="grupo-miembros">${k.lineas.map(([n, v]) => `<span>${esc(n)}</span><span>${dinero$(v)}</span>`).join("")}</div>
+    ${(k.pagos || []).length ? `<div class="grupo-pagos">${k.pagos.map(pg => `Pago ${fechaCorta(pg.fecha)} · ${metodoTxt(pg.metodo) || "—"} · ${dinero$(pg.monto)}`).join(" &nbsp;·&nbsp; ")}</div>` : ""}
+    <div class="acc" style="display:flex; gap:.35rem; flex-wrap:wrap">${conAcciones
+      ? `<button class="btn btn-mini" data-act="insc-pago" data-id="${i.id}">Registrar pago del grupo</button><button class="btn btn-2 btn-mini" data-act="cuenta-editar" data-id="${i.grupo}">Editar jinetes del grupo</button>`
+      : `<button class="btn btn-2 btn-mini" data-act="comp-pagos" data-id="${c.id}">Ver y registrar pagos</button>`}</div>
+  </div>`;
+}
 function cuentaInscripcion(i, c) {
   if (i.grupo) return S.cuentas[i.grupo] ? cuentaGrupo(S.cuentas[i.grupo], c) : { lineas:[], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
   const { g, propias } = partirInscripcion(i);
@@ -1799,7 +1830,9 @@ function pagosComp(c, ins) {
   return `<div class="resumen-pago"><div class="total"><span class="sub">Cobrado</span><b>${dinero$(pag)}</b></div>
       <div class="chips"><span>Total ${dinero$(tot)}</span><span class="${tot - pag > 0 ? "mal" : ""}">Falta ${dinero$(tot - pag)}</span>
         <span>Prueba ${dinero$((c.costos || {}).prueba)}</span></div></div>
-    ${!ins.length ? `<p class="sub">Inscribe alumnos para ver sus cuentas.</p>` : `<div class="tarjeta" style="padding:.3rem .9rem">${cuentas.map(({ i, a, k }) => {
+    ${cuentas.filter(x => x.i.grupo).map(x => bloqueGrupo(x.i, c, true)).join("")}
+    ${cuentas.some(x => x.i.grupo) && cuentas.some(x => !x.i.grupo) ? `<p class="sub-av">Alumnos</p>` : ""}
+    ${!ins.length ? `<p class="sub">Inscribe alumnos para ver sus cuentas.</p>` : !cuentas.some(x => !x.i.grupo) ? "" : `<div class="tarjeta" style="padding:.3rem .9rem">${cuentas.filter(x => !x.i.grupo).map(({ i, a, k }) => {
       const ab = inscDetalle === "p-" + i.id;
       return `<div class="fila-pago"><button class="fila-t" data-act="insc-ver" data-id="p-${i.id}" aria-expanded="${ab}"><b>${esc(a ? a.nombre : "—")}</b><span class="q">${dinero$(k.total)}</span></button>
         <span class="pastilla ${k.saldo <= 0 && k.total ? "e-asistio" : k.pagado ? "e-aviso" : "e-falta"}">${k.saldo <= 0 && k.total ? "Pagado ✓" : k.pagado ? `Falta ${dinero$(k.saldo)}` : "Debe"}</span>
@@ -2198,8 +2231,9 @@ function vistaPagos(clases) {
         return acordeon("compsPagos", "comp", "Competencias", deben, cs.length ? cs.map(c => { const xs = filasC.filter(x => x.c.id === c.id).sort((p, q) => (p.a ? p.a.nombre : "").localeCompare(q.a ? q.a.nombre : ""));
             const tot = xs.reduce((t, x) => t + x.k.total, 0), pag = xs.reduce((t, x) => t + x.k.pagado, 0);
             return `<p class="sub-av">${esc(c.nombre)} · ${fechasTxt(c)}</p><p class="sub">Cobrado ${dinero$(pag)} de ${dinero$(tot)}${tot - pag > 0 ? ` · <b class="alerta-txt">falta ${dinero$(tot - pag)}</b>` : ""}</p>
-              ${xs.length ? xs.map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
-                <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
+              ${xs.filter(x => x.i.grupo).map(x => bloqueGrupo(x.i, c, false)).join("")}
+              ${xs.some(x => !x.i.grupo) ? xs.filter(x => !x.i.grupo).map(x => `<div class="fila-pago"><button class="fila-t" data-act="comp-pagos" data-id="${c.id}"><b>${esc(x.a ? x.a.nombre : "—")}</b><span class="q">${dinero$(x.k.total)}</span></button>
+                <span class="pastilla ${x.k.saldo <= 0 && x.k.total ? "e-asistio" : x.k.pagado ? "e-aviso" : "e-falta"}">${x.k.saldo <= 0 && x.k.total ? "Pagado ✓" : x.k.pagado ? `Falta ${dinero$(x.k.saldo)}` : "Debe"}</span></div>`).join("") : xs.length ? "" : `<p class="sub">Sin inscritos.</p>`}`; }).join("")
             + `<div style="margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-2 btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos</button></div>`
           : `<p class="sub">No hay competencias este mes.</p>`, "pago-sec"); })()}
       ${conectarHoja("pagos")}
@@ -2934,8 +2968,15 @@ async function pdfPagosCompetencias(m) {
       if (y > H - 150) { doc.addPage(); y = 50; }
       doc.setTextColor(...C.texto); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(pdfTxt(`${d.c.nombre} · ${fechasTxt(d.c)}`), 40, y);
       doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.text(pdfTxt(`Cobrado ${dinero$(d.pag)} de ${dinero$(d.tot)} · falta ${dinero$(d.tot - d.pag)}`), 40, y + 15); y += 24;
-      y = d.xs.length ? pdfTabla(ctx, y, [{ t:"Alumno", x:40, max:24 }, { t:"Maestro", x:180 }, { t:"Pruebas", x:250 }, { t:"Total", x:310 }, { t:"Pagado", x:380 }, { t:"Falta", x:445 }, { t:"Estado", x:505 }],
-        d.xs.map(({ i, a, k }) => [a.nombre, MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "", String((i.pruebas || []).length), dinero$(k.total), dinero$(k.pagado), dinero$(Math.max(0, k.saldo)),
+      for (const g of d.xs.filter(x => x.i.grupo)) {
+        if (y > H - 150) { doc.addPage(); y = 50; }
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(...C.texto);
+        doc.text(pdfTxt(`${g.a.nombre} (cuenta de grupo) · total ${dinero$(g.k.total)} · pagado ${dinero$(g.k.pagado)} · falta ${dinero$(Math.max(0, g.k.saldo))}`), 40, y); y += 6;
+        y = pdfTabla(ctx, y, [{ t:"Jinete", x:40, max:60 }, { t:"Monto", x:445 }], g.k.lineas.map(([n, v]) => [n, dinero$(v)])) + 22;
+      }
+      const solos = d.xs.filter(x => !x.i.grupo);
+      y = solos.length ? pdfTabla(ctx, y, [{ t:"Alumno", x:40, max:24 }, { t:"Maestro", x:180 }, { t:"Pruebas", x:250 }, { t:"Total", x:310 }, { t:"Pagado", x:380 }, { t:"Falta", x:445 }, { t:"Estado", x:505 }],
+        solos.map(({ i, a, k }) => [a.nombre, MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "", String((i.pruebas || []).length), dinero$(k.total), dinero$(k.pagado), dinero$(Math.max(0, k.saldo)),
           k.saldo <= 0 && k.total ? "Pagado" : k.pagado ? "Parcial" : "Debe"])) + 26 : y + 20;
     }
     if (pagos.length) {
