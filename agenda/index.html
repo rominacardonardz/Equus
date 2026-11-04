@@ -697,6 +697,33 @@ main.wrap{padding-bottom:3rem}
 .grupo-miembros{display:grid; grid-template-columns:1fr auto; gap:.2rem .8rem; font-size:.84rem; border-top:1px solid var(--line); padding-top:.45rem}
 .grupo-miembros span:nth-child(2n){text-align:right; font-variant-numeric:tabular-nums}
 .grupo-pagos{font-size:.78rem; color:var(--ink-2)}
+/* ---- Celular: tocar cómodo y leer sin forzar la vista ---- */
+.hoy-card header{flex-wrap:wrap; row-gap:.4rem}
+.hoy-card header h3{white-space:nowrap}
+.hoy-card header .navsem{flex-wrap:nowrap; margin-left:auto}
+.cuadre{font-size:.8rem; color:var(--ink-2); margin:.1rem 0 0}
+.cuadre b{color:var(--ink)}
+@media (max-width: 700px){
+  input[type="text"],input[type="date"],input[type="number"],input[type="tel"],input[type="email"],input[type="password"],input[type="time"],textarea,select{font-size:16px}
+  .pestanas button{min-height:44px}
+  .marca small{font-size:.7rem}
+  .pastilla{font-size:.74rem; padding:.2rem .55rem}
+  .etiqueta,.mes-dn{font-size:.72rem}
+  .hg-dia small,.chip-dia small,.dia-b small,.saldo .l,.cupo,.estado-btn small{font-size:.72rem}
+  .kpis .t,.md-mas{font-size:.7rem}
+  .md-l,.md-n,.pc .dt{font-size:.7rem}
+  th{font-size:.7rem}
+  table.resp td[data-label]::before{font-size:.68rem}
+  .fila-pago .fila-t .q{font-size:.8rem}
+  .btn-mini{min-height:38px}
+  .segmento button{min-height:40px; padding:.35rem .8rem; font-size:.84rem}
+  .flecha{width:2.6rem; height:2.6rem}
+  .perfil,.yo{min-height:42px}
+  .fila-pago .fila-t{min-height:40px}
+  .ver{min-height:40px; display:inline-flex; align-items:center}
+  .renglon{min-height:44px}
+  [data-act="comp-vista"]{min-height:40px}
+}
 </style>
 </head>
 <body>
@@ -1763,11 +1790,12 @@ function listaCompetencias() {
     const enCurso = c.inicio <= hoy && (c.fin || c.inicio) >= hoy;
     return `<button class="comp-card" data-act="comp-abrir" data-id="${c.id}"><b>${esc(c.nombre)}</b>
       <span class="sub">${c.lugar ? esc(c.lugar) + " · " : ""}${fechasTxt(c)}</span>
-      <span class="sub">${plural(ins.length, "alumno")} · ${plural(nPr, "prueba")}${enCurso ? ` · <b style="color:var(--ok)">En curso</b>` : c.limite && c.limite >= hoy ? ` · inscripción hasta el ${fechaCorta(c.limite)}` : ""}</span></button>`; };
+      <span class="sub">${plural(ins.filter(i => !esJinete(i)).length, "alumno")}${ins.some(esJinete) ? ` · ${plural(ins.filter(esJinete).length, "jinete")}` : ""} · ${plural(nPr, "prueba")}${enCurso ? ` · <b style="color:var(--ok)">En curso</b>` : c.limite && c.limite >= hoy ? ` · inscripción hasta el ${fechaCorta(c.limite)}` : ""}</span></button>`; };
   return `
     <div class="titulo"><div><h2>Competencias</h2><p class="sub">Las ven Tania y Edwin.</p></div>
       <div class="fila">${botonHoja("comp", "Resumen")}<button class="btn" data-act="comp-nueva">+ Competencia</button></div></div>
     ${conectarHoja("comp")}
+    ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
     ${sugeridasFaltan().length ? `<section class="hoy-card sec-comp"><header><h3>Calendario de noviembre</h3></header>
       ${sugeridasFaltan().map(x => `<div class="renglon"><span class="t">${esc(x.nombre)}</span><span class="x">${fechasTxt(x)}</span></div>`).join("")}
       <button class="btn" data-act="comp-sugeridas" style="justify-self:start">Agregar ${sugeridasFaltan().length === 1 ? "esta competencia" : `estas ${sugeridasFaltan().length} competencias`}</button>
@@ -1786,7 +1814,6 @@ function listaCompetencias() {
         </div></section>` : ""}
     ${!todas.length ? `<div class="vacio"><b>Aquí van las competencias</b>con sus inscripciones, programa por día, pagos y resultados.
       <button class="btn" data-act="comp-nueva">+ Agregar la primera</button></div>` : ""}
-    ${prox.length ? `<section class="seccion"><h3>Próximas</h3><div>${prox.map(tarjeta).join("")}</div></section>` : ""}
     ${pas.length ? acordeon("comp-pasadas", "comp", "Pasadas", pas.length, pas.map(tarjeta).join(""), "comp-sec") : ""}`;
 }
 function filaPrueba(p, ch) {
@@ -1823,13 +1850,25 @@ function programaComp(c) {
       ${xs.length ? xs.map(p => `<div class="prueba"><span class="h">${p.hora ? fmtHora(p.hora) : "—"}</span><span><span class="cat">${esc(p.categoria || "—")}</span> · ${esc(p.a ? p.a.nombre : "—")}</span>${p.numero ? `<span class="sub">#${esc(p.numero)}</span>` : "<span></span>"}
         <span class="det">${esc(nombreCab(p))}${ch.has(p.id) ? ` · <span class="choque">⚠ caballo con menos de 45 min</span>` : ""}${p.resultado ? ` · <b>${esc(p.resultado)}</b>` : ""}</span></div>`).join("") : `<p class="sub">Sin pruebas este día.</p>`}</section>`; }).join("");
 }
+/* Cuántas pruebas de la competencia se cobran y cuáles no (jinetes sin grupo), para cuadrar totales. */
+function cuadrePruebas(c) {
+  const todas = inscritosDe(c.id).reduce((t, i) => t + (i.pruebas || []).length, 0);
+  const sin = [];
+  for (const i of inscritosDe(c.id)) {
+    const { g, propias } = partirInscripcion(i); const a = alumnoDe(i.alumnoId) || {};
+    const libres = esJinete(i) ? (g ? propias.length : (i.pruebas || []).length) : 0;
+    if (libres) sin.push(`${a.nombre} (${libres})`);
+  }
+  const nSin = sin.reduce((t, x) => t + Number(x.match(/\((\d+)\)$/)[1]), 0);
+  return `<p class="cuadre"><b>${plural(todas, "prueba")}</b>: ${plural(todas - nSin, "se cobra", "se cobran")}${nSin ? ` · ${nSin} sin cobro: ${esc(sin.join(", "))}` : ""}${(c.costos || {}).prueba ? ` · ${dinero$((c.costos || {}).prueba)} c/u` : ` · <b class="alerta-txt">falta poner el costo por prueba (Editar)</b>`}</p>`;
+}
 function pagosComp(c, ins) {
   ins = cobrablesDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) })).sort((x, y) => (x.a ? x.a.nombre : "").localeCompare(y.a ? y.a.nombre : "", "es"));
   const cuentas = ins.map(x => ({ ...x, k:cuentaInscripcion(x.i, c) }));
   const tot = cuentas.reduce((t, x) => t + x.k.total, 0), pag = cuentas.reduce((t, x) => t + x.k.pagado, 0);
   return `<div class="resumen-pago"><div class="total"><span class="sub">Cobrado</span><b>${dinero$(pag)}</b></div>
       <div class="chips"><span>Total ${dinero$(tot)}</span><span class="${tot - pag > 0 ? "mal" : ""}">Falta ${dinero$(tot - pag)}</span>
-        <span>Prueba ${dinero$((c.costos || {}).prueba)}</span></div></div>
+        <span>Prueba ${dinero$((c.costos || {}).prueba)}</span></div>${cuadrePruebas(c)}</div>
     ${cuentas.filter(x => x.i.grupo).map(x => bloqueGrupo(x.i, c, true)).join("")}
     ${cuentas.some(x => x.i.grupo) && cuentas.some(x => !x.i.grupo) ? `<p class="sub-av">Alumnos</p>` : ""}
     ${!ins.length ? `<p class="sub">Inscribe alumnos para ver sus cuentas.</p>` : !cuentas.some(x => !x.i.grupo) ? "" : `<div class="tarjeta" style="padding:.3rem .9rem">${cuentas.filter(x => !x.i.grupo).map(({ i, a, k }) => {
