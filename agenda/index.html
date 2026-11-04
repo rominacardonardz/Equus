@@ -1609,7 +1609,7 @@ const COMPETENCIAS_SUGERIDAS = [
   { nombre:"Querétaro", lugar:"Querétaro", inicio:"2026-11-26", fin:"2026-11-29" },
 ];
 const sugeridasFaltan = () => COMPETENCIAS_SUGERIDAS.filter(x => x.fin >= hoyIso() && !Object.values(S.competencias || {}).some(c => c.inicio === x.inicio && normaliza(c.lugar) === normaliza(x.lugar)));
-const CATEGORIAS = [".60 m", ".75 m", ".80 m", ".90 m", "1.00 m", "1.15 m"];
+const CATEGORIAS = [".60 m", ".75 m", ".80 m", ".90 m", "1.00 m", "1.10 m", "1.15 m"];
 const RESULTADOS = ["1º", "2º", "3º", "4º", "5º", "6º", "Listón", "Sin faltas", "Eliminado", "Retirado"];
 const COSTOS = [["prueba", "Costo por prueba"], ["inscripcion", "Inscripción (por alumno)"], ["transporte", "Transporte (por alumno)"],
   ["viaticos", "Viáticos (por alumno)"], ["caballeriza", "Caballeriza (por caballo y por día)"]];
@@ -1707,7 +1707,7 @@ function filaPrueba(p, ch) {
 }
 function inscritosComp(c, ins) {
   const ch = choques(c.id);
-  return `<div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn" data-act="insc-nueva" data-c="${c.id}">+ Inscribir alumno</button></div>
+  return `<div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn" data-act="insc-nueva" data-c="${c.id}">+ Inscribir alumno</button><button class="btn btn-2" data-act="insc-importar" data-c="${c.id}">Importar lista</button></div>
     ${!ins.length ? `<p class="sub">Todavía no hay alumnos inscritos.</p>` : `<div class="tarjeta" style="padding:.3rem .9rem">${ins.map(({ i, a }) => {
       const ab = inscDetalle === i.id; const prs = (i.pruebas || []).slice().sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
       return `<div class="fila-pago"><button class="fila-t" data-act="insc-ver" data-id="${i.id}" aria-expanded="${ab}"><b>${esc(a ? a.nombre : "Alumno borrado")}</b>
@@ -1885,6 +1885,112 @@ function hojaInscripcion(cid, id, montos) {
     try { await Store.guardarInscripcion(x); brindis(i ? "Guardado" : `${a.nombre} quedó inscrito`);
       registrar(`${i ? "Editó la inscripción" : "Inscribió"} a ${a.nombre} en ${c.nombre}: ${pruebas.map(p => `${p.categoria} ${fechaCorta(p.fecha)}${p.hora ? " " + fmtHora(p.hora) : ""}${p.resultado ? " (" + p.resultado + ")" : ""}`).join(", ")}`); } catch (e2) {}
     render();
+  });
+}
+/* Importar una lista de inscritos pegada (de Excel, WhatsApp o escrita a mano).
+   Un renglón por jinete y caballo: Jinete; Caballo; categoría del 1er día; 2º día; …
+   Reconoce a los alumnos y caballos que ya existen; los demás se crean o se escriben tal cual. */
+const normTxt = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+function normCategoria(x) {
+  const t = String(x || "").trim().toLowerCase().replace(",", ".").replace(/\s*(m|mt|mts|metros)\.?$/, "").trim();
+  if (!t || /^[-—–x]$/.test(t)) return "";
+  const n = Number(t); if (!isFinite(n) || n <= 0 || n > 2.5) return String(x).trim();
+  return (n < 1 ? "." + n.toFixed(2).split(".")[1] : n.toFixed(2)) + " m";
+}
+function leerLista(texto, dias) {
+  const filas = [];
+  for (const linea of String(texto || "").split(/\r?\n/)) {
+    if (!linea.trim()) continue;
+    const cs = (linea.includes("\t") ? linea.split("\t") : /[;|]/.test(linea) ? linea.split(/[;|]/) : linea.split(/\s{2,}/)).map(x => x.trim());
+    if (!cs[0] || /^(jinete|alumno|nombre|total)\b/i.test(cs[0])) continue;
+    const pruebas = [];
+    dias.forEach((f, k) => { const cat = normCategoria(cs[2 + k]); if (cat) pruebas.push({ fecha:f, categoria:cat }); });
+    filas.push({ nombre:cs[0], caballo:cs[1] || "", pruebas });
+  }
+  return filas;
+}
+const todosLosAlumnos = () => [...alumnosActivos().map(a => ({ id:a.id, nombre:a.nombre, m:perfil })),
+  ...Object.entries(S.otrosAlumnos).filter(([, a]) => !a.baja && !a.borrado).map(([id, a]) => ({ id, nombre:a.nombre, m:otro(perfil) }))]
+  .sort((x, y) => (x.nombre || "").localeCompare(y.nombre || "", "es"));
+function buscarAlumnoPorNombre(nombre) {
+  const todos = todosLosAlumnos(), n = normTxt(nombre), pal = n.split(" ");
+  let r = todos.filter(a => normTxt(a.nombre) === n);
+  if (!r.length) r = todos.filter(a => { const x = normTxt(a.nombre); return x && (x.startsWith(n + " ") || n.startsWith(x + " ")); });
+  if (!r.length && pal.length > 1) r = todos.filter(a => { const xp = normTxt(a.nombre).split(" "); return xp.length > 1 && xp[0] === pal[0] && xp[1] === pal[1]; });
+  return r.length === 1 ? r[0] : null;
+}
+function buscarCaballoPorNombre(txt) {
+  const n = normTxt(txt); if (!n) return null;
+  const ks = caballosLista();
+  let r = ks.filter(k => normTxt(k.nombre) === n);
+  if (!r.length) r = ks.filter(k => { const x = normTxt(k.nombre); return x && (n.startsWith(x + " ") || x.startsWith(n + " ")); });
+  return r.length === 1 ? r[0] : null;
+}
+function hojaImportar(cid) {
+  const c = S.competencias[cid]; if (!c) return; const dias = diasComp(c);
+  let grupos = [];
+  abrirHoja(`${cabHoja("Importar lista", esc(c.nombre))}
+    <div style="display:grid; gap:.7rem">
+      <p class="sub" style="margin:0">Pega la lista: un renglón por jinete y caballo, separado con <b>;</b> (o copiado de Excel).<br>
+        <b>Jinete; Caballo; ${dias.map(f => esc(fechaCorta(f))).join("; ")}</b><br>En cada día va la categoría (.80, 1.00m…) o nada si ese día no compite.</p>
+      <textarea id="imp-texto" rows="8" style="font-size:.85rem" placeholder="Keira Castañeda; Imperial; ; .90; .90; .90"></textarea>
+      <button class="btn btn-bloque" type="button" id="imp-revisar">Revisar</button>
+      <div id="imp-rev" style="display:grid; gap:.6rem"></div>
+    </div>`);
+  const caja = document.getElementById("imp-rev");
+  document.getElementById("imp-revisar").addEventListener("click", () => {
+    const porJ = new Map();
+    leerLista(val("imp-texto"), dias).forEach(f => { const k = normTxt(f.nombre); if (!porJ.has(k)) porJ.set(k, { nombre:f.nombre, filas:[] }); porJ.get(k).filas.push(f); });
+    grupos = [...porJ.values()];
+    if (!grupos.length) { caja.innerHTML = `<p class="estado error">No encontré renglones. Revisa que cada uno tenga Jinete; Caballo; y las categorías.</p>`; return; }
+    const todos = todosLosAlumnos(); let nPr = 0;
+    caja.innerHTML = grupos.map((g, gi) => {
+      const match = buscarAlumnoPorNombre(g.nombre);
+      const opts = `<option value="nuevo:${perfil}" ${match ? "" : "selected"}>Crear alumno nuevo de ${MAESTROS[perfil].nombre}</option>
+        <option value="nuevo:${otro(perfil)}">Crear alumno nuevo de ${MAESTROS[otro(perfil)].nombre}</option><option value="">No importar</option>
+        ${todos.map(a => `<option value="${a.id}" ${match && match.id === a.id ? "selected" : ""}>${esc(a.nombre)} · ${MAESTROS[a.m].nombre}</option>`).join("")}`;
+      const lis = g.filas.map(f => { const k = buscarCaballoPorNombre(f.caballo); nPr += f.pruebas.length;
+        return `<li>${f.caballo ? (k ? `<b>${esc(k.nombre)}</b> <span class="sub">(de tus caballos)</span>` : esc(f.caballo)) : `<i>sin caballo</i>`}: ${f.pruebas.length ? f.pruebas.map(p => `${esc(fechaCorta(p.fecha))} ${esc(p.categoria)}`).join(" · ") : `<i>sin pruebas</i>`}</li>`; }).join("");
+      return `<div style="border:1px solid var(--line); border-radius:12px; padding:.6rem .7rem; display:grid; gap:.35rem">
+        <div style="display:flex; justify-content:space-between; gap:.5rem; align-items:baseline"><b>${esc(g.nombre)}</b>${match ? `<span class="sub">ya existe ✓</span>` : `<span class="sub">nuevo</span>`}</div>
+        <select class="imp-al" data-g="${gi}" aria-label="Alumno para ${esc(g.nombre)}">${opts}</select>
+        <ul style="margin:0; padding-left:1.1rem; font-size:.85rem">${lis}</ul></div>`;
+    }).join("") + `<button class="btn btn-bloque" type="button" id="imp-guardar">Importar ${plural(nPr, "prueba")} de ${plural(grupos.length, "jinete")}</button>
+      <p class="sub" style="margin:0">Las horas, números y costos se pueden poner después en cada inscripción. Si alguien ya estaba inscrito, solo se agregan sus pruebas que falten.</p>`;
+    document.getElementById("imp-guardar").addEventListener("click", async e => {
+      e.target.disabled = true; e.target.textContent = "Guardando…";
+      const elegidos = [...caja.querySelectorAll(".imp-al")].map(x => x.value);
+      let nuevas = 0, creados = 0, repetidas = 0, jin = 0;
+      const clave = p => `${p.fecha}|${normTxt(p.categoria)}|${p.caballoId || normTxt(p.caballoTxt)}`;
+      try {
+        for (let gi = 0; gi < grupos.length; gi++) {
+          const g = grupos[gi], v = elegidos[gi]; if (!v) continue;
+          let alumnoId, m;
+          if (v.startsWith("nuevo:")) {
+            m = v.slice(6); const a = { id:nuevoId(), nombre:g.nombre, paquetes:[], horario:[], alta:hoyIso(), notas:"" };
+            if (m === perfil) await Store.guardarAlumno(a);
+            else { S.otrosAlumnos = { ...S.otrosAlumnos, [a.id]: a }; await Store.escribir(`maestros/${m}/alumnos/${a.id}`, a); }
+            alumnoId = a.id; creados++;
+          } else { alumnoId = v; m = S.alumnos[v] ? perfil : otro(perfil); }
+          const prs = g.filas.flatMap(f => { const k = buscarCaballoPorNombre(f.caballo);
+            return f.pruebas.map(p => ({ id:nuevoId(), fecha:p.fecha, hora:"", categoria:p.categoria, caballoId:k ? k.id : "", caballoTxt:k ? "" : f.caballo, numero:"", costo:null, resultado:"" })); });
+          const ya = inscritosDe(cid).find(i => i.alumnoId === alumnoId);
+          if (ya) {
+            const x = clon(ya); const tiene = new Set((x.pruebas || []).map(clave)); const add = prs.filter(p => !tiene.has(clave(p)));
+            repetidas += prs.length - add.length; if (!add.length) continue;
+            x.pruebas = [...(x.pruebas || []), ...add]; await Store.guardarInscripcion(x); nuevas += add.length; jin++;
+          } else if (prs.length) {
+            await Store.guardarInscripcion({ id:nuevoId(), competenciaId:cid, alumnoId, maestro:m, creado:Date.now(), pagos:[], pruebas:prs,
+              ajustes:{ dias:null, inscripcion:null, transporte:null, viaticos:null, caballeriza:null, otros:null, nota:"" } });
+            nuevas += prs.length; jin++;
+          }
+        }
+        cerrarHoja();
+        brindis(`Listo: ${plural(nuevas, "prueba")} de ${plural(jin, "jinete")}${creados ? ` · ${plural(creados, "alumno nuevo", "alumnos nuevos")}` : ""}${repetidas ? ` · ${repetidas} ya estaban` : ""}`);
+        registrar(`Importó la lista de ${c.nombre}: ${plural(nuevas, "prueba")} de ${plural(jin, "jinete")}${creados ? `, ${plural(creados, "alumno nuevo", "alumnos nuevos")}` : ""}`);
+      } catch (e2) { brindis("No se pudo guardar todo. Revisa la lista e inténtalo de nuevo: lo que ya se guardó no se duplica."); }
+      render();
+    });
   });
 }
 function hojaPagoComp(id) {
@@ -3996,6 +4102,7 @@ document.addEventListener("click", async e => {
         brindis(`${plural(n, "competencia")} agregada${n === 1 ? "" : "s"}. Pon sus costos en Editar.`); registrar(`Agregó ${plural(n, "competencia")} del calendario: ${faltan.map(x => x.nombre).join(", ")}`); } catch (e2) {}
       render(); break;
     }
+    case "insc-importar": hojaImportar(b.dataset.c); break;
     case "insc-nueva": if (!alumnosActivos().length && !Object.keys(S.otrosAlumnos).length) { brindis("Primero da de alta alumnos."); break; } hojaInscripcion(b.dataset.c); break;
     case "insc-editar": { const i = S.inscripciones[b.dataset.id]; if (i) hojaInscripcion(i.competenciaId, i.id, !!b.dataset.montos); break; }
     case "insc-ver": inscDetalle = inscDetalle === b.dataset.id ? null : b.dataset.id; render(); break;
