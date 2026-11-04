@@ -393,7 +393,7 @@ async function sincronizar(cfg, quien) {
   const exp = cfg.exportados || {};
   const datos = {
     tania: await leerColeccion("maestros/tania/alumnos"), edwin: await leerColeccion("maestros/edwin/alumnos"),
-    comps: await leerColeccion("competencias"), inscs: await leerColeccion("inscripciones"), caballos: await leerColeccion("caballos"),
+    comps: await leerColeccion("competencias"), inscs: Object.fromEntries(Object.entries(await leerColeccion("inscripciones")).filter(([, i]) => !String(i.alumnoId || "").startsWith("jinete:"))), caballos: await leerColeccion("caballos"),
   };
   const nombres = {}; for (const p of ["tania", "edwin"]) for (const [aid, a] of Object.entries(datos[p])) nombres[aid] = a && a.nombre;
   // 1. Traer lo que se editó en las hojas desde la última vez

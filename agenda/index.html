@@ -1379,7 +1379,7 @@ function vistaHoy(clases) {
   const deben = activos.filter(a => { const dm = (a.paquetes || []).filter(p => (p.fecha || "").startsWith(mes)); return dm.length && !dm.every(p => p.pagado); });
   const pocas = activos.map(a => ({ a, k:cuenta(a.id, clases) })).filter(({ a, k }) => !k.ilimitado && k.saldo <= 1 && !deben.includes(a));
   const salud = alertasSalud();
-  const debenComp = Object.values(S.inscripciones || {}).filter(i => i.maestro === perfil && S.competencias[i.competenciaId])
+  const debenComp = Object.values(S.inscripciones || {}).filter(i => i.maestro === perfil && !esJinete(i) && S.competencias[i.competenciaId])
     .map(i => ({ i, c:S.competencias[i.competenciaId], k:cuentaInscripcion(i, S.competencias[i.competenciaId]) })).filter(x => x.k.saldo > 0 && x.c.inicio <= iso(sumarDias(new Date(), 14)));
   const cabs = clasesDeCaballos().filter(c => c.fecha === hoy);
   const llenos = caballosLista().filter(c => Number(c.maxDia) && cabs.filter(x => x.caballoId === c.id).length > Number(c.maxDia));
@@ -1504,7 +1504,7 @@ function vistaReporte() {
         <p class="sub">${nuevos.map(({ a, m }) => `${esc(a.nombre)} (${MAESTROS[m].nombre})`).join(", ")}</p>` : ""}
       ${bajas.length ? `<p class="sub-av">Bajas del mes</p><p class="sub">${bajas.map(({ a, m }) => `${esc(a.nombre)} (${MAESTROS[m].nombre})`).join(", ")}</p>` : ""}`, "rep-sec")}
     ${(() => { const cs = Object.values(S.competencias || {}).filter(c => (c.inicio || "").startsWith(mesRep) || (c.fin || "").startsWith(mesRep));
-      const filas = cs.map(c => { const ins = inscritosDe(c.id); const ks = ins.map(i => cuentaInscripcion(i, c));
+      const filas = cs.map(c => { const ins = cobrablesDe(c.id); const ks = ins.map(i => cuentaInscripcion(i, c));
         const res = ins.flatMap(i => (i.pruebas || []).filter(p => p.resultado && /^[1-3]º$/.test(p.resultado)));
         return { c, ins:ins.length, pruebas:ins.reduce((t, i) => t + (i.pruebas || []).length, 0), total:ks.reduce((t, k) => t + k.total, 0), pagado:ks.reduce((t, k) => t + k.pagado, 0), podios:res.length }; });
       return acordeon("rep-comp", "comp", "Competencias del mes", cs.length, cs.length ? `<div class="tabla-wrap"><table class="tabla-rep"><thead><tr><th>Competencia</th><th>Alumnos</th><th>Pruebas</th><th>Podios</th><th>Cobrado</th><th>Falta</th></tr></thead><tbody>
@@ -1615,12 +1615,16 @@ const COSTOS = [["prueba", "Costo por prueba"], ["inscripcion", "Inscripción (p
   ["viaticos", "Viáticos (por alumno)"], ["caballeriza", "Caballeriza (por caballo y por día)"]];
 let compSel = null, compVista = "inscritos", inscDetalle = null;
 const dinero$ = n => "$" + Math.round(Number(n) || 0).toLocaleString("es-MX");
-const alumnoDe = id => (S.alumnos[id] ? { ...S.alumnos[id], id, maestro:perfil } : S.otrosAlumnos[id] ? { ...S.otrosAlumnos[id], id, maestro:otro(perfil) } : null);
+/* Jinetes: compiten pero no son alumnos (sin cobros ni ficha). Se guardan como alumnoId "jinete:Nombre". */
+const esJinete = i => String((i && i.alumnoId) || "").startsWith("jinete:");
+const alumnoDe = id => String(id || "").startsWith("jinete:") ? { id, nombre:String(id).slice(7), jinete:true, maestro:perfil } : (S.alumnos[id] ? { ...S.alumnos[id], id, maestro:perfil } : S.otrosAlumnos[id] ? { ...S.otrosAlumnos[id], id, maestro:otro(perfil) } : null);
 const diasComp = c => { const r = []; if (!c.inicio) return r; let d = deIso(c.inicio); const f = c.fin && c.fin >= c.inicio ? c.fin : c.inicio;
   for (let i = 0; i < 31 && iso(d) <= f; i++) { r.push(iso(d)); d = sumarDias(d, 1); } return r; };
 const inscritosDe = cid => Object.values(S.inscripciones || {}).filter(i => i.competenciaId === cid);
+const cobrablesDe = cid => inscritosDe(cid).filter(i => !esJinete(i));
 const fechasTxt = c => c.inicio === c.fin || !c.fin ? fechaLarga(c.inicio) : `${fechaLarga(c.inicio)} al ${fechaLarga(c.fin)}`;
 function cuentaInscripcion(i, c) {
+  if (esJinete(i)) return { lineas:[["Jinete (sin cobro)", 0]], total:0, pagado:0, saldo:0, dias:0, caballos:0 };
   const cs = (c && c.costos) || {}, aj = i.ajustes || {};
   const prs = i.pruebas || [];
   const num = (v, d) => v === "" || v == null ? Number(d) || 0 : Number(v) || 0;
@@ -1691,7 +1695,7 @@ function listaCompetencias() {
     ${todas.length ? `<section class="hoy-card sec-comp"><header><h3>Pagos del mes</h3>
         <div class="navsem"><button class="flecha" data-act="mes" data-d="-1" aria-label="Mes anterior">‹</button><span class="mes" style="font-size:1rem">${MESES_LARGO[Number(mesPagos.slice(5, 7)) - 1]} ${mesPagos.slice(0, 4)}</span>
           <button class="flecha" data-act="mes" data-d="1" aria-label="Mes siguiente">›</button></div></header>
-      ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
+      ${(() => { const cs = compsDelMes(mesPagos); const ks = cs.flatMap(c => cobrablesDe(c.id).map(i => cuentaInscripcion(i, c))); const t = ks.reduce((a, k) => a + k.total, 0), pg = ks.reduce((a, k) => a + k.pagado, 0);
         return cs.length ? `<p class="sub">${plural(cs.length, "competencia")} · cobrado <b>${dinero$(pg)}</b> de ${dinero$(t)}${t - pg > 0 ? ` · <b class="alerta-txt">falta ${dinero$(t - pg)}</b>` : ""}</p>` : `<p class="sub">No hay competencias este mes.</p>`; })()}
       <div style="display:flex; gap:.4rem; flex-wrap:wrap"><button class="btn btn-mini" data-act="pdf-pagos-comp">${ICONO_PDF}PDF de pagos del mes</button>
         </div></section>` : ""}
@@ -1711,7 +1715,7 @@ function inscritosComp(c, ins) {
     ${!ins.length ? `<p class="sub">Todavía no hay alumnos inscritos.</p>` : `<div class="tarjeta" style="padding:.3rem .9rem">${ins.map(({ i, a }) => {
       const ab = inscDetalle === i.id; const prs = (i.pruebas || []).slice().sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
       return `<div class="fila-pago"><button class="fila-t" data-act="insc-ver" data-id="${i.id}" aria-expanded="${ab}"><b>${esc(a ? a.nombre : "Alumno borrado")}</b>
-          <span class="q">${plural(prs.length, "prueba")} · ${esc(MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "")}</span></button>
+          <span class="q">${plural(prs.length, "prueba")} · ${esJinete(i) ? "jinete" : esc(MAESTROS[i.maestro] ? MAESTROS[i.maestro].nombre : "")}</span></button>
         ${prs.some(p => ch.has(p.id)) ? `<span class="pastilla p-vencido">⚠</span>` : "<span></span>"}
         ${ab ? `<div class="detalle">${diasComp(c).filter(f => prs.some(p => p.fecha === f)).map(f => `<p class="sub-av">${fechaLarga(f)}</p>${prs.filter(p => p.fecha === f).map(p => filaPrueba(p, ch)).join("")}`).join("")}
           <div class="acc"><button class="btn btn-2 btn-mini" data-act="insc-editar" data-id="${i.id}">Editar pruebas y resultados</button>
@@ -1735,6 +1739,7 @@ function programaComp(c) {
         <span class="det">${esc(nombreCab(p))}${ch.has(p.id) ? ` · <span class="choque">⚠ caballo con menos de 45 min</span>` : ""}${p.resultado ? ` · <b>${esc(p.resultado)}</b>` : ""}</span></div>`).join("") : `<p class="sub">Sin pruebas este día.</p>`}</section>`; }).join("");
 }
 function pagosComp(c, ins) {
+  ins = ins.filter(x => !esJinete(x.i));
   const cuentas = ins.map(x => ({ ...x, k:cuentaInscripcion(x.i, c) }));
   const tot = cuentas.reduce((t, x) => t + x.k.total, 0), pag = cuentas.reduce((t, x) => t + x.k.pagado, 0);
   return `<div class="resumen-pago"><div class="total"><span class="sub">Cobrado</span><b>${dinero$(pag)}</b></div>
@@ -1836,7 +1841,8 @@ function hojaInscripcion(cid, id, montos) {
   const prs = i && (i.pruebas || []).length ? i.pruebas : [{ fecha:dias[0] }];
   abrirHoja(`${cabHoja(i ? esc((alumnoDe(i.alumnoId) || {}).nombre || "Inscripción") : "Inscribir alumno", esc(c.nombre))}
     <form id="f-insc" class="f-insc" style="display:grid; gap:.7rem">
-      ${i ? "" : `<label class="campo">Alumno<select id="in-alumno" required>${opciones.map(a => `<option value="${a.id}" data-m="${a.m}">${esc(a.nombre)} · ${MAESTROS[a.m].nombre}</option>`).join("")}</select></label>`}
+      ${i ? "" : `<label class="campo">Alumno<select id="in-alumno" required>${opciones.map(a => `<option value="${a.id}" data-m="${a.m}">${esc(a.nombre)} · ${MAESTROS[a.m].nombre}</option>`).join("")}<option value="jinete" data-m="${perfil}">Un jinete (no es alumno, sin cobro)…</option></select>
+        <input type="text" id="in-jinete" placeholder="Nombre del jinete" hidden></label>`}
       <div id="in-pruebas" style="display:grid; gap:.6rem">${prs.map((p, n) => filaPruebaForm(p, dias, n + 1)).join("")}</div>
       <button type="button" class="btn btn-2" data-act="pr-agregar">+ Otra prueba (otro día, otra categoría u otro caballo)</button>
       <fieldset class="salud-campos" id="in-montos" style="grid-template-columns:1fr 1fr"><legend>Montos de este alumno (vacío = el de la competencia)</legend>
@@ -1855,6 +1861,7 @@ function hojaInscripcion(cid, id, montos) {
   f.addEventListener("change", e => {
     if (e.target.classList.contains("pr-cat")) e.target.parentElement.querySelector(".pr-cat-otra").hidden = e.target.value !== "otra";
     if (e.target.classList.contains("pr-cab")) e.target.parentElement.querySelector(".pr-cab-otro").hidden = e.target.value !== "otro";
+    if (e.target.id === "in-alumno") { const j = document.getElementById("in-jinete"); j.hidden = e.target.value !== "jinete"; j.required = !j.hidden; }
   });
   f.addEventListener("click", e => {
     const b = e.target.closest("[data-act]"); if (!b) return;
@@ -1877,7 +1884,9 @@ function hojaInscripcion(cid, id, montos) {
     });
     const ajn = id => { const v = val(id); return v === "" ? null : Number(v) || 0; };
     const sel = document.getElementById("in-alumno");
-    const x = { ...(i ? clon(i) : { id:nuevoId(), competenciaId:cid, alumnoId:sel.value, maestro:sel.selectedOptions[0].dataset.m, creado:Date.now(), pagos:[] }), pruebas,
+    const jn = sel && sel.value === "jinete" ? val("in-jinete").trim() : "";
+    if (sel && sel.value === "jinete" && !jn) return;
+    const x = { ...(i ? clon(i) : { id:nuevoId(), competenciaId:cid, alumnoId:jn ? "jinete:" + jn : sel.value, maestro:sel.selectedOptions[0].dataset.m, creado:Date.now(), pagos:[] }), pruebas,
       ajustes:{ dias:ajn("in-dias"), inscripcion:ajn("in-inscripcion"), transporte:ajn("in-transporte"), viaticos:ajn("in-viaticos"), caballeriza:ajn("in-caballeriza"), otros:ajn("in-otros"), nota:val("in-nota").trim() } };
     if (!x.alumnoId) return;
     cerrarHoja();
@@ -1926,6 +1935,7 @@ function buscarCaballoPorNombre(txt) {
   if (!r.length) r = ks.filter(k => { const x = normTxt(k.nombre); return x && (n.startsWith(x + " ") || x.startsWith(n + " ")); });
   return r.length === 1 ? r[0] : null;
 }
+const jinetesConocidos = () => new Set(Object.values(S.inscripciones || {}).filter(esJinete).map(i => normTxt(i.alumnoId.slice(7))));
 function hojaImportar(cid) {
   const c = S.competencias[cid]; if (!c) return; const dias = diasComp(c);
   let grupos = [];
@@ -1943,16 +1953,17 @@ function hojaImportar(cid) {
     leerLista(val("imp-texto"), dias).forEach(f => { const k = normTxt(f.nombre); if (!porJ.has(k)) porJ.set(k, { nombre:f.nombre, filas:[] }); porJ.get(k).filas.push(f); });
     grupos = [...porJ.values()];
     if (!grupos.length) { caja.innerHTML = `<p class="estado error">No encontré renglones. Revisa que cada uno tenga Jinete; Caballo; y las categorías.</p>`; return; }
-    const todos = todosLosAlumnos(); let nPr = 0;
+    const todos = todosLosAlumnos(), conocidos = jinetesConocidos(); let nPr = 0;
     caja.innerHTML = grupos.map((g, gi) => {
-      const match = buscarAlumnoPorNombre(g.nombre);
-      const opts = `<option value="nuevo:${perfil}" ${match ? "" : "selected"}>Crear alumno nuevo de ${MAESTROS[perfil].nombre}</option>
+      const jin = conocidos.has(normTxt(g.nombre)), match = jin ? null : buscarAlumnoPorNombre(g.nombre);
+      const opts = `<option value="jinete" ${jin ? "selected" : ""}>Es jinete (no es alumno, sin cobro)</option>
+        <option value="nuevo:${perfil}" ${match || jin ? "" : "selected"}>Crear alumno nuevo de ${MAESTROS[perfil].nombre}</option>
         <option value="nuevo:${otro(perfil)}">Crear alumno nuevo de ${MAESTROS[otro(perfil)].nombre}</option><option value="">No importar</option>
         ${todos.map(a => `<option value="${a.id}" ${match && match.id === a.id ? "selected" : ""}>${esc(a.nombre)} · ${MAESTROS[a.m].nombre}</option>`).join("")}`;
       const lis = g.filas.map(f => { const k = buscarCaballoPorNombre(f.caballo); nPr += f.pruebas.length;
         return `<li>${f.caballo ? (k ? `<b>${esc(k.nombre)}</b> <span class="sub">(de tus caballos)</span>` : esc(f.caballo)) : `<i>sin caballo</i>`}: ${f.pruebas.length ? f.pruebas.map(p => `${esc(fechaCorta(p.fecha))} ${esc(p.categoria)}`).join(" · ") : `<i>sin pruebas</i>`}</li>`; }).join("");
       return `<div style="border:1px solid var(--line); border-radius:12px; padding:.6rem .7rem; display:grid; gap:.35rem">
-        <div style="display:flex; justify-content:space-between; gap:.5rem; align-items:baseline"><b>${esc(g.nombre)}</b>${match ? `<span class="sub">ya existe ✓</span>` : `<span class="sub">nuevo</span>`}</div>
+        <div style="display:flex; justify-content:space-between; gap:.5rem; align-items:baseline"><b>${esc(g.nombre)}</b>${jin ? `<span class="sub">jinete ✓</span>` : match ? `<span class="sub">ya existe ✓</span>` : `<span class="sub">nuevo</span>`}</div>
         <select class="imp-al" data-g="${gi}" aria-label="Alumno para ${esc(g.nombre)}">${opts}</select>
         <ul style="margin:0; padding-left:1.1rem; font-size:.85rem">${lis}</ul></div>`;
     }).join("") + `<button class="btn btn-bloque" type="button" id="imp-guardar">Importar ${plural(nPr, "prueba")} de ${plural(grupos.length, "jinete")}</button>
@@ -1966,7 +1977,8 @@ function hojaImportar(cid) {
         for (let gi = 0; gi < grupos.length; gi++) {
           const g = grupos[gi], v = elegidos[gi]; if (!v) continue;
           let alumnoId, m;
-          if (v.startsWith("nuevo:")) {
+          if (v === "jinete") { alumnoId = "jinete:" + g.nombre.trim(); m = perfil; }
+          else if (v.startsWith("nuevo:")) {
             m = v.slice(6); const a = { id:nuevoId(), nombre:g.nombre, paquetes:[], horario:[], alta:hoyIso(), notas:"" };
             if (m === perfil) await Store.guardarAlumno(a);
             else { S.otrosAlumnos = { ...S.otrosAlumnos, [a.id]: a }; await Store.escribir(`maestros/${m}/alumnos/${a.id}`, a); }
@@ -2095,14 +2107,14 @@ function vistaPagos(clases) {
       ${hojaConectada("pagos") ? `<div style="display:flex; gap:.4rem; flex-wrap:wrap">${botonHoja("pagos", `${MESES_LARGO[mm - 1]} ${y}`)}</div>` : ""}
       ${Store.esDueno && Hojas.cfg && Hojas.cfg.error && Hojas.cfg.errorEn > (Hojas.cfg.ultimo || 0) ? `<p class="estado error">Google Sheets: ${esc(Hojas.cfg.error)}</p>` : ""}
       ${(() => { const cs = compsDelMes(mesPagos); if (!cs.length) return "";
-        const ks = cs.flatMap(c => inscritosDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
+        const ks = cs.flatMap(c => cobrablesDe(c.id).map(i => cuentaInscripcion(i, c))); const tot = ks.reduce((t, k) => t + k.total, 0), pag = ks.reduce((t, k) => t + k.pagado, 0);
         return `<div class="chips"><span style="background:var(--perfil-bg); color:var(--perfil); font-weight:600">Competencias: cobrado ${dinero$(pag)} de ${dinero$(tot)}</span>${tot - pag > 0 ? `<span class="mal">falta ${dinero$(tot - pag)}</span>` : ""}</div>`; })()}
     </div>
     ${!activos.length ? `<div class="vacio"><b>Aquí verás los pagos</b>en cuanto des de alta alumnos con su paquete.</div>` : `<div>
       ${grupo("deben", "Deben su paquete", de("pendiente"))}
       ${grupo("pagaron", "Ya pagaron", de("pagado"))}
       ${grupo("sin", "Sin paquete este mes", de("sin"))}
-      ${(() => { const cs = compsDelMes(mesPagos); const filasC = cs.flatMap(c => inscritosDe(c.id).map(i => ({ c, i, a:alumnoDe(i.alumnoId), k:cuentaInscripcion(i, c) })));
+      ${(() => { const cs = compsDelMes(mesPagos); const filasC = cs.flatMap(c => cobrablesDe(c.id).map(i => ({ c, i, a:alumnoDe(i.alumnoId), k:cuentaInscripcion(i, c) })));
         const deben = filasC.filter(x => x.k.saldo > 0).length;
         return acordeon("compsPagos", "comp", "Competencias", deben, cs.length ? cs.map(c => { const xs = filasC.filter(x => x.c.id === c.id).sort((p, q) => (p.a ? p.a.nombre : "").localeCompare(q.a ? q.a.nombre : ""));
             const tot = xs.reduce((t, x) => t + x.k.total, 0), pag = xs.reduce((t, x) => t + x.k.pagado, 0);
@@ -2719,7 +2731,7 @@ async function libroCompetencias(m) {
     ws.mergeCells(4, 10, 4, 15); celda(ws, 4, 10, "DESGLOSE DEL TOTAL", { bold:true, size:10, color:MOR.tinta, fondo:MOR.suave });
     celda(ws, 4, 16, "", { fondo:MOR.suave }); ws.getRow(4).height = 20;
     encabezadosXL(ws, 5, ["Alumno", "Maestro", "¿Pagó?", "TOTAL", "Pagado", "Falta", "Forma de pago", "Pruebas", "Detalle de pruebas", "Pruebas $", "Inscripción", "Transporte", "Viáticos", "Caballeriza", "Otros", "Nota"], MOR);
-    const ins = inscritosDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
+    const ins = cobrablesDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
     const r1 = 6;
     ins.forEach(({ i, a, k }, n) => {
       const f = r1 + n, prs = (i.pruebas || []).slice().sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora));
@@ -2818,7 +2830,7 @@ async function pdfPagosCompetencias(m) {
   if (!window.jspdf) { brindis("No cargó el generador de PDF. Revisa tu conexión."); return; }
   m = m || mesPagos;
   const comps = compsDelMes(m);
-  const datos = comps.map(c => { const xs = inscritosDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
+  const datos = comps.map(c => { const xs = cobrablesDe(c.id).map(i => ({ i, a:alumnoDe(i.alumnoId) || { nombre:"Alumno borrado" }, k:cuentaInscripcion(i, c) })).sort((x, y) => x.a.nombre.localeCompare(y.a.nombre, "es"));
     return { c, xs, tot:xs.reduce((t, x) => t + x.k.total, 0), pag:xs.reduce((t, x) => t + x.k.pagado, 0) }; });
   const T = datos.reduce((t, d) => t + d.tot, 0), P = datos.reduce((t, d) => t + d.pag, 0);
   const pagos = datos.flatMap(d => d.xs.flatMap(({ i, a }) => (i.pagos || []).map(pg => ({ pg, c:d.c, a })))).sort((x, y) => String(x.pg.fecha).localeCompare(String(y.pg.fecha)));
